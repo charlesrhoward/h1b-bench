@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+import SiteSearch from "@/components/site-search";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -17,11 +18,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100">
         <header className="border-b border-zinc-800">
-          <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-6 py-4">
             <Link href="/" className="font-mono text-lg font-bold tracking-tight">
               H1B<span className="text-emerald-400">_</span>Bench
             </Link>
-            <nav className="flex gap-6 text-sm text-zinc-400">
+            <div className="order-3 w-full sm:order-2 sm:w-auto sm:flex-1 sm:px-4">
+              <div className="sm:mx-auto sm:max-w-md">
+                <SiteSearch />
+              </div>
+            </div>
+            <nav className="order-2 ml-auto flex gap-6 text-sm text-zinc-400 sm:order-3 sm:ml-0">
               <Link href="/employers" className="hover:text-zinc-100">Employers</Link>
               <Link href="/jobs" className="hover:text-zinc-100">Occupations</Link>
               <a

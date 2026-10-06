@@ -37,6 +37,19 @@ export default async function EmployerDetail({
         <p className="mt-1 text-zinc-400">
           {[employer.city, employer.state, employer.country].filter(Boolean).join(", ")}
         </p>
+        <a
+          href={`https://www.google.com/search?q=${encodeURIComponent(`${employer.name} official website`)}&btnI=1`}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-2 inline-flex items-center gap-1 rounded border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:border-emerald-500/60 hover:text-emerald-400"
+          title={`Open ${employer.name}'s website (via Google)`}
+        >
+          Website
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 17 17 7" />
+            <path d="M8 7h9v9" />
+          </svg>
+        </a>
       </div>
 
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">

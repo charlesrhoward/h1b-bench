@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getTopEmployers } from "@/lib/queries";
+import { getTopEmployers, searchEmployerHits } from "@/lib/queries";
 import { fmtInt, fmtPct } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -9,9 +9,56 @@ const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
 export default async function EmployersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ year?: string }>;
+  searchParams: Promise<{ year?: string; q?: string }>;
 }) {
-  const { year } = await searchParams;
+  const { year, q } = await searchParams;
+  const term = q?.trim() ?? "";
+
+  if (term) {
+    const hits = await searchEmployerHits(term);
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Employer search</h1>
+          <p className="mt-1 text-zinc-400">
+            {hits.length} {hits.length === 1 ? "match" : "matches"} for “{term}” · all-time H-1B filings
+          </p>
+        </div>
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Employer</th>
+              <th>Location</th>
+              <th className="text-right">H-1B filings (all years)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {hits.map((h, i) => (
+              <tr key={h.id}>
+                <td className="font-mono text-zinc-500">{i + 1}</td>
+                <td>
+                  <Link href={`/employers/${h.id}`} className="hover:text-emerald-400">
+                    {h.name}
+                  </Link>
+                </td>
+                <td className="text-zinc-400">
+                  {[h.city, h.state].filter(Boolean).join(", ") || "—"}
+                </td>
+                <td className="text-right font-mono">{fmtInt(h.filings)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {hits.length === 0 && (
+          <p className="text-sm text-zinc-500">
+            No employers matched. Try a shorter or different spelling — the search is typo-tolerant.
+          </p>
+        )}
+      </div>
+    );
+  }
+
   const fy = year ? Number(year) : 2025;
   const rows = await getTopEmployers(fy, 100);
 

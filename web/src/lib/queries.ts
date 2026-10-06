@@ -83,6 +83,19 @@ export async function searchEmployers(term: string, limit = 25) {
   return (data ?? []) as Employer[];
 }
 
+export type EmployerHit = {
+  id: number;
+  name: string;
+  city: string | null;
+  state: string | null;
+  filings: number;
+};
+
+export async function searchEmployerHits(term: string, limit = 100) {
+  const { data } = await supabase.rpc("search_employers", { q: term, lim: limit });
+  return (data ?? []) as EmployerHit[];
+}
+
 export async function getEmployer(id: number) {
   const { data } = await supabase.from("employers").select("*").eq("id", id).single();
   return data as Employer | null;
@@ -127,12 +140,17 @@ export async function getEmployerTopJobs(id: number, limit = 15) {
     .slice(0, limit);
 }
 
-export async function getJobStats(year = 2025, limit = 50) {
-  const { data } = await supabase
+export async function getJobStats(year = 2025, limit = 50, q?: string) {
+  let query = supabase
     .from("job_title_year_stats")
     .select("*")
     .eq("fiscal_year", year)
     .order("filings", { ascending: false })
-    .limit(limit);
+    .limit(q ? 100 : limit);
+  if (q) {
+    const safe = q.replace(/[(),."\\]/g, " ").trim();
+    if (safe) query = query.or(`soc_title.ilike.%${safe}%,soc_code.ilike.${safe}%`);
+  }
+  const { data } = await query;
   return (data ?? []) as JobYearStat[];
 }

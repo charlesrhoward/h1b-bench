@@ -9,18 +9,25 @@ const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ year?: string }>;
+  searchParams: Promise<{ year?: string; q?: string }>;
 }) {
-  const { year } = await searchParams;
+  const { year, q } = await searchParams;
   const fy = year ? Number(year) : 2025;
-  const rows = await getJobStats(fy);
+  const term = q?.trim() ?? "";
+  const rows = await getJobStats(fy, 50, term || undefined);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Occupation benchmarks</h1>
         <p className="mt-1 text-zinc-400">
-          LCA filings by SOC occupation code · FY{fy}
+          {term ? (
+            <>
+              {rows.length} {rows.length === 1 ? "occupation" : "occupations"} matching “{term}” · FY{fy}
+            </>
+          ) : (
+            <>LCA filings by SOC occupation code · FY{fy}</>
+          )}
         </p>
       </div>
 
@@ -28,7 +35,7 @@ export default async function JobsPage({
         {YEARS.map((y) => (
           <Link
             key={y}
-            href={`/jobs?year=${y}`}
+            href={`/jobs?year=${y}${term ? `&q=${encodeURIComponent(term)}` : ""}`}
             className={`rounded border px-3 py-1 font-mono text-sm ${
               y === fy
                 ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
@@ -38,6 +45,14 @@ export default async function JobsPage({
             FY{y}
           </Link>
         ))}
+        {term && (
+          <Link
+            href="/jobs"
+            className="rounded border border-zinc-700 px-3 py-1 text-sm text-zinc-400 hover:border-zinc-500"
+          >
+            Clear “{term}” ×
+          </Link>
+        )}
       </div>
 
       <table className="w-full">
@@ -66,6 +81,11 @@ export default async function JobsPage({
           ))}
         </tbody>
       </table>
+      {rows.length === 0 && (
+        <p className="text-sm text-zinc-500">
+          No occupations matched{term ? ` “${term}”` : ""} in FY{fy}.
+        </p>
+      )}
     </div>
   );
 }
