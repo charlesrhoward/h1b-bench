@@ -8,9 +8,22 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://h1b-webrenew.vercel.app"),
   title: "H1B Bench — Who sponsors, what they pay, when they file",
   description:
     "Benchmark every U.S. employer's H-1B / H-1B1 / E-3 visa filings from official DOL disclosure data: certification rates, wages, job titles, and trends since FY2020.",
+  openGraph: {
+    siteName: "H1B Bench",
+    title: "H1B Bench — Who sponsors, what they pay, when they file",
+    description:
+      "Benchmark every U.S. employer's H-1B / H-1B1 / E-3 visa filings from official DOL disclosure data: certification rates, wages, job titles, and trends since FY2020.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "H1B Bench — Who sponsors, what they pay, when they file",
+    description:
+      "Benchmark every U.S. employer's H-1B / H-1B1 / E-3 visa filings from official DOL disclosure data: certification rates, wages, job titles, and trends since FY2020.",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
