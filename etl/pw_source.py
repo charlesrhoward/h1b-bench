@@ -78,7 +78,8 @@ def attach_market_gap(df):
     gap = pd.read_parquet(os.path.join(OUT_DIR, "market_gap_filings.parquet"),
                           columns=["case_number", "wage_rate_of_pay_from", "local_median"])
     gap["below"] = gap["wage_rate_of_pay_from"] < gap["local_median"]
-    return df.merge(gap[["case_number", "below"]], left_on="CASE_NUMBER", right_on="case_number", how="left")
+    merged = df.merge(gap[["case_number", "below"]], left_on="CASE_NUMBER", right_on="case_number", how="left")
+    return merged.drop(columns=["case_number"])
 
 
 def source_table(df):
