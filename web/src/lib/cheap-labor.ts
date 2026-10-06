@@ -47,3 +47,61 @@ export function totalWageLevels(rows: DependencyProfile[]) {
     ] as const,
   };
 }
+
+export type MarketGapSummary = {
+  dependency: "all" | "true" | "false" | "unknown";
+  filings_certified: number;
+  filings_eligible: number;
+  filings_matched: number;
+  below_median: number;
+  median_gap: number;
+  median_gap_below: number | null;
+};
+
+export type EmployerMarketGap = {
+  employer_id: number;
+  filings_matched: number;
+  below_median: number;
+  median_gap: number;
+  employers?: { name: string } | null;
+};
+
+/** Below this many matched filings, an employer's below-median share is too noisy to rank. */
+export const MIN_RANKED_FILINGS = 500;
+
+/** Offered pay vs. local median, per dependency group (market_gap_summary). */
+export async function getMarketGapSummary(fy = CHEAP_LABOR_FY) {
+  const { data } = await supabase
+    .from("market_gap_summary")
+    .select("dependency, filings_certified, filings_eligible, filings_matched, below_median, median_gap, median_gap_below")
+    .eq("lca_fiscal_year", fy);
+  return (data ?? []) as MarketGapSummary[];
+}
+
+/** Large sponsors ranked by the share of filings that offer less than the local median. */
+export async function getBelowMedianLeaders(fy = CHEAP_LABOR_FY, limit = 15) {
+  const { data } = await supabase
+    .from("employer_market_gap")
+    .select("employer_id, filings_matched, below_median, median_gap, employers(name)")
+    .eq("lca_fiscal_year", fy)
+    .gte("filings_matched", MIN_RANKED_FILINGS);
+  const rows: EmployerMarketGap[] = (data ?? []).map((r) => ({
+    ...r,
+    // PostgREST returns the many-to-one embed as an object; supabase-js types it as an array.
+    employers: Array.isArray(r.employers) ? (r.employers[0] ?? null) : r.employers,
+  }));
+  return rows
+    .sort((a, b) => b.below_median / b.filings_matched - a.below_median / a.filings_matched)
+    .slice(0, limit);
+}
+
+/** One employer's offered pay vs. local median, or null when it has no matched filings. */
+export async function getEmployerMarketGap(employerId: number, fy = CHEAP_LABOR_FY) {
+  const { data } = await supabase
+    .from("employer_market_gap")
+    .select("employer_id, filings_matched, below_median, median_gap")
+    .eq("lca_fiscal_year", fy)
+    .eq("employer_id", employerId)
+    .maybeSingle();
+  return data as EmployerMarketGap | null;
+}
