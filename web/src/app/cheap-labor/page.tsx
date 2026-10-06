@@ -40,7 +40,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Is H-1B used as cheap labor? — H1B Bench",
   description:
-    "Federal data on H-1B pay: wage levels, employers that depend on H-1B workers, and pay at the legal minimum.",
+    "Federal data on H-1B pay and use: wage levels, pay below the local median, back wages, layoffs, lottery registrations, and green card filings.",
 };
 
 const DOL_SOURCE = `DOL OFLC LCA disclosure data, certified H-1B filings, FY${CHEAP_LABOR_FY}.`;
