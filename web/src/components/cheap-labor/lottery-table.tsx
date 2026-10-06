@@ -9,7 +9,12 @@ export function LotteryBars({ years }: { years: UscisRegistrationYear[] }) {
       {years.map((y) => (
         <div key={y.cap_fiscal_year} role="listitem" className="flex items-center gap-3">
           <span className="w-14 shrink-0 font-mono text-xs text-zinc-500">FY{y.cap_fiscal_year}</span>
+          <span className="sr-only">
+            {fmtInt(y.eligible_single)} for people with one registration, {fmtInt(y.eligible_multiple)} for people
+            with multiple registrations.
+          </span>
           <div
+            aria-hidden="true"
             className="flex h-4"
             style={{ width: `${(y.eligible_registrations / max) * 100}%` }}
             title={`${fmtInt(y.eligible_multiple)} of ${fmtInt(y.eligible_registrations)} for people with multiple registrations`}
@@ -19,7 +24,7 @@ export function LotteryBars({ years }: { years: UscisRegistrationYear[] }) {
           </div>
         </div>
       ))}
-      <div className="flex gap-4 pt-1 text-xs text-zinc-400">
+      <div aria-hidden="true" className="flex gap-4 pt-1 text-xs text-zinc-400">
         <span className="flex items-center gap-1.5">
           <span className="inline-block size-2.5 bg-zinc-600" /> One registration
         </span>
@@ -38,11 +43,11 @@ export function LotteryTable({ years }: { years: UscisRegistrationYear[] }) {
       <table className="w-full min-w-[40rem]">
         <thead>
           <tr>
-            <th>Cap year</th>
-            <th className="text-right">Eligible registrations</th>
-            <th className="text-right">For people with multiple</th>
-            <th className="text-right">Share</th>
-            <th className="text-right">Selected</th>
+            <th scope="col">Cap year</th>
+            <th scope="col" className="text-right">Eligible registrations</th>
+            <th scope="col" className="text-right">For people with multiple</th>
+            <th scope="col" className="text-right">Share</th>
+            <th scope="col" className="text-right">Selected</th>
           </tr>
         </thead>
         <tbody>

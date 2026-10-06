@@ -45,8 +45,8 @@ export default function LotterySection({ index, years }: { index: number; years:
         In FY{before.cap_fiscal_year},{" "}
         <span className="font-semibold text-zinc-100">{fmtInt(before.eligible_multiple)}</span> of{" "}
         {fmtInt(before.eligible_registrations)} eligible registrations were for people with more than
-        one registration. USCIS found registrations from related companies for the same person. It
-        opened fraud investigations and changed the rule.
+        one registration. USCIS cites evidence from the FY2023 and FY2024 lotteries. It opened fraud
+        investigations and changed the rule.
       </p>
       <LotteryBars years={years} />
       <p>

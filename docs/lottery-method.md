@@ -48,3 +48,10 @@ registrations. No other source is used and no value is estimated.
   cannot name companies.
 - "Selected registrations" is a count of registrations, not of people or of approved
   petitions.
+
+## Corrections
+
+- After code review: the Background paragraph says USCIS "found registrations from related
+  companies for the same person". The USCIS page gives that as an example of a false
+  attestation. Its stated finding is evidence from the FY2023 and FY2024 lotteries that led
+  to fraud investigations. The page copy uses the stated finding.
