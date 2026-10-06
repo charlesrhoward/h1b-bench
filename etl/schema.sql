@@ -4,7 +4,8 @@
 -- -> drop_headcount_insert_policy -> labor_pool -> drop_labor_pool_insert_policies -> labor_pool_fillable_view
 -- -> lca_dependency_profile -> lca_dependency_profile_yearly_floor -> lca_dependency_profile_exact_floor
 -- -> market_gap -> drop_market_gap_insert_policies -> pw_source -> drop_pw_source_insert_policies
--- -> whd_h1b -> drop_whd_h1b_insert_policies -> warn_h1b -> drop_warn_h1b_insert_policies.
+-- -> whd_h1b -> drop_whd_h1b_insert_policies -> warn_h1b -> drop_warn_h1b_insert_policies
+-- -> uscis_registrations.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -253,6 +254,25 @@ create table employer_warn (
   primary key (lca_fiscal_year, employer_id)
 );
 
+-- USCIS H-1B cap registration Historical Data table (docs/lottery-method.md), copied by
+-- hand from the USCIS "H-1B Electronic Registration Process" page, updated 09/21/2026.
+create table uscis_registrations (
+  cap_fiscal_year smallint primary key,
+  total_registrations integer not null,
+  eligible_registrations integer not null,
+  eligible_single integer not null,      -- people with no other eligible registration
+  eligible_multiple integer not null,    -- people with multiple eligible registrations
+  selected_registrations integer not null
+);
+
+insert into uscis_registrations values
+  (2021, 274237, 269424, 241299, 28125, 124415),
+  (2022, 308613, 301447, 211304, 90143, 131924),
+  (2023, 483927, 474421, 309241, 165180, 127600),
+  (2024, 780884, 758994, 350103, 408891, 188400),
+  (2025, 479953, 470342, 423028, 47314, 135137),
+  (2026, 358737, 343981, 336153, 7828, 120141);
+
 -- RLS: read-only public data
 alter table employers enable row level security;
 alter table lca_cases enable row level security;
@@ -271,6 +291,7 @@ alter table employer_whd_h1b enable row level security;
 alter table warn_h1b_summary enable row level security;
 alter table warn_h1b_companies enable row level security;
 alter table employer_warn enable row level security;
+alter table uscis_registrations enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
@@ -289,6 +310,7 @@ create policy "public read employer_whd_h1b" on employer_whd_h1b for select usin
 create policy "public read warn_h1b_summary" on warn_h1b_summary for select using (true);
 create policy "public read warn_h1b_companies" on warn_h1b_companies for select using (true);
 create policy "public read employer_warn" on employer_warn for select using (true);
+create policy "public read uscis_registrations" on uscis_registrations for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:

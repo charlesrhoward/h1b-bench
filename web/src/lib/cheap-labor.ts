@@ -266,3 +266,26 @@ export async function getEmployerWarn(employerId: number) {
     .maybeSingle();
   return data as EmployerWarn | null;
 }
+
+export type UscisRegistrationYear = {
+  cap_fiscal_year: number;
+  total_registrations: number;
+  eligible_registrations: number;
+  eligible_single: number;
+  eligible_multiple: number;
+  selected_registrations: number;
+};
+
+/** First cap year in which USCIS selected by person, not by registration. */
+export const BENEFICIARY_CENTRIC_FROM = 2025;
+
+/** USCIS H-1B cap registration counts per cap fiscal year, oldest first. */
+export async function getUscisRegistrations() {
+  const { data } = await supabase
+    .from("uscis_registrations")
+    .select(
+      "cap_fiscal_year, total_registrations, eligible_registrations, eligible_single, eligible_multiple, selected_registrations",
+    )
+    .order("cap_fiscal_year");
+  return (data ?? []) as UscisRegistrationYear[];
+}
