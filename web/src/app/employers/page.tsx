@@ -24,32 +24,34 @@ export default async function EmployersPage({
             {hits.length} {hits.length === 1 ? "match" : "matches"} for “{term}” · all-time H-1B filings
           </p>
         </div>
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Employer</th>
-              <th>Location</th>
-              <th className="text-right">H-1B filings (all years)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {hits.map((h, i) => (
-              <tr key={h.id}>
-                <td className="font-mono text-zinc-500">{i + 1}</td>
-                <td>
-                  <Link href={`/employers/${h.id}`} className="hover:text-emerald-400">
-                    {h.name}
-                  </Link>
-                </td>
-                <td className="text-zinc-400">
-                  {[h.city, h.state].filter(Boolean).join(", ") || "—"}
-                </td>
-                <td className="text-right font-mono">{fmtInt(h.filings)}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[30rem]">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Employer</th>
+                <th>Location</th>
+                <th className="text-right">H-1B filings (all years)</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {hits.map((h, i) => (
+                <tr key={h.id}>
+                  <td className="font-mono text-zinc-500">{i + 1}</td>
+                  <td>
+                    <Link href={`/employers/${h.id}`} className="hover:text-emerald-400">
+                      {h.name}
+                    </Link>
+                  </td>
+                  <td className="text-zinc-400">
+                    {[h.city, h.state].filter(Boolean).join(", ") || "—"}
+                  </td>
+                  <td className="text-right font-mono">{fmtInt(h.filings)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {hits.length === 0 && (
           <p className="text-sm text-zinc-500">
             No employers matched. Try a shorter or different spelling — the search is typo-tolerant.
@@ -87,42 +89,44 @@ export default async function EmployersPage({
         ))}
       </div>
 
-      <table className="w-full">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Employer</th>
-            <th>State</th>
-            <th className="text-right">Filings</th>
-            <th className="text-right">Certified</th>
-            <th className="text-right">Denied</th>
-            <th className="text-right">Workers</th>
-            <th className="text-right">Median wage</th>
-            <th>Top role</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={`${r.employer_id}-${r.fiscal_year}`}>
-              <td className="font-mono text-zinc-500">{i + 1}</td>
-              <td>
-                <Link href={`/employers/${r.employer_id}`} className="hover:text-emerald-400">
-                  {r.employers?.name}
-                </Link>
-              </td>
-              <td className="text-zinc-400">{r.employers?.state ?? "—"}</td>
-              <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-              <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
-              <td className="text-right font-mono text-zinc-500">{fmtInt(r.denied)}</td>
-              <td className="text-right font-mono">{fmtInt(r.worker_positions)}</td>
-              <td className="text-right font-mono">
-                {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
-              </td>
-              <td className="max-w-48 truncate text-zinc-400">{r.top_job_title ?? "—"}</td>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[52rem]">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Employer</th>
+              <th>State</th>
+              <th className="text-right">Filings</th>
+              <th className="text-right">Certified</th>
+              <th className="text-right">Denied</th>
+              <th className="text-right">Workers</th>
+              <th className="text-right">Median wage</th>
+              <th>Top role</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={`${r.employer_id}-${r.fiscal_year}`}>
+                <td className="font-mono text-zinc-500">{i + 1}</td>
+                <td>
+                  <Link href={`/employers/${r.employer_id}`} className="hover:text-emerald-400">
+                    {r.employers?.name}
+                  </Link>
+                </td>
+                <td className="text-zinc-400">{r.employers?.state ?? "—"}</td>
+                <td className="text-right font-mono">{fmtInt(r.filings)}</td>
+                <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
+                <td className="text-right font-mono text-zinc-500">{fmtInt(r.denied)}</td>
+                <td className="text-right font-mono">{fmtInt(r.worker_positions)}</td>
+                <td className="text-right font-mono">
+                  {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
+                </td>
+                <td className="max-w-48 truncate text-zinc-400">{r.top_job_title ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

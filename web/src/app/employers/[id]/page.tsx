@@ -64,36 +64,38 @@ export default async function EmployerDetail({
 
       <section>
         <h2 className="mb-4 text-lg font-semibold">By fiscal year · H-1B</h2>
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th>FY</th>
-              <th className="text-right">Filings</th>
-              <th className="text-right">Certified</th>
-              <th className="text-right">Denied</th>
-              <th className="text-right">Withdrawn</th>
-              <th className="text-right">Workers</th>
-              <th className="text-right">Median wage</th>
-              <th>Top worksite state</th>
-            </tr>
-          </thead>
-          <tbody>
-            {h1b.map((r) => (
-              <tr key={r.fiscal_year}>
-                <td className="font-mono">FY{r.fiscal_year}</td>
-                <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-                <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
-                <td className="text-right font-mono">{fmtInt(r.denied)}</td>
-                <td className="text-right font-mono">{fmtInt(r.withdrawn + r.certified_withdrawn)}</td>
-                <td className="text-right font-mono">{fmtInt(r.worker_positions)}</td>
-                <td className="text-right font-mono">
-                  {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
-                </td>
-                <td className="text-zinc-400">{r.top_worksite_state ?? "—"}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[44rem]">
+            <thead>
+              <tr>
+                <th>FY</th>
+                <th className="text-right">Filings</th>
+                <th className="text-right">Certified</th>
+                <th className="text-right">Denied</th>
+                <th className="text-right">Withdrawn</th>
+                <th className="text-right">Workers</th>
+                <th className="text-right">Median wage</th>
+                <th>Top worksite state</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {h1b.map((r) => (
+                <tr key={r.fiscal_year}>
+                  <td className="font-mono">FY{r.fiscal_year}</td>
+                  <td className="text-right font-mono">{fmtInt(r.filings)}</td>
+                  <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
+                  <td className="text-right font-mono">{fmtInt(r.denied)}</td>
+                  <td className="text-right font-mono">{fmtInt(r.withdrawn + r.certified_withdrawn)}</td>
+                  <td className="text-right font-mono">{fmtInt(r.worker_positions)}</td>
+                  <td className="text-right font-mono">
+                    {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
+                  </td>
+                  <td className="text-zinc-400">{r.top_worksite_state ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section>
@@ -101,28 +103,30 @@ export default async function EmployerDetail({
         <p className="mb-3 text-xs text-zinc-500">
           Based on the most recent 1,000 certified filings
         </p>
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th>Job title</th>
-              <th>SOC</th>
-              <th className="text-right">Certified filings</th>
-              <th className="text-right">Median wage</th>
-            </tr>
-          </thead>
-          <tbody>
-            {topJobs.map((j) => (
-              <tr key={j.title}>
-                <td>{j.title}</td>
-                <td className="font-mono text-zinc-400">{j.soc ?? "—"}</td>
-                <td className="text-right font-mono">{fmtInt(j.count)}</td>
-                <td className="text-right font-mono">
-                  {j.medianWage ? `$${fmtInt(j.medianWage)}` : "—"}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[30rem]">
+            <thead>
+              <tr>
+                <th>Job title</th>
+                <th>SOC</th>
+                <th className="text-right">Certified filings</th>
+                <th className="text-right">Median wage</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {topJobs.map((j) => (
+                <tr key={j.title}>
+                  <td>{j.title}</td>
+                  <td className="font-mono text-zinc-400">{j.soc ?? "—"}</td>
+                  <td className="text-right font-mono">{fmtInt(j.count)}</td>
+                  <td className="text-right font-mono">
+                    {j.medianWage ? `$${fmtInt(j.medianWage)}` : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );

@@ -55,32 +55,34 @@ export default async function JobsPage({
         )}
       </div>
 
-      <table className="w-full">
-        <thead>
-          <tr>
-            <th>SOC</th>
-            <th>Occupation</th>
-            <th className="text-right">Filings</th>
-            <th className="text-right">Certified</th>
-            <th className="text-right">Median wage</th>
-            <th className="text-right">Employers</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.soc_code}>
-              <td className="font-mono text-zinc-400">{r.soc_code}</td>
-              <td>{r.soc_title ?? "—"}</td>
-              <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-              <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
-              <td className="text-right font-mono">
-                {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
-              </td>
-              <td className="text-right font-mono">{fmtInt(r.distinct_employers)}</td>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[36rem]">
+          <thead>
+            <tr>
+              <th>SOC</th>
+              <th>Occupation</th>
+              <th className="text-right">Filings</th>
+              <th className="text-right">Certified</th>
+              <th className="text-right">Median wage</th>
+              <th className="text-right">Employers</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.soc_code}>
+                <td className="font-mono text-zinc-400">{r.soc_code}</td>
+                <td>{r.soc_title ?? "—"}</td>
+                <td className="text-right font-mono">{fmtInt(r.filings)}</td>
+                <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
+                <td className="text-right font-mono">
+                  {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
+                </td>
+                <td className="text-right font-mono">{fmtInt(r.distinct_employers)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {rows.length === 0 && (
         <p className="text-sm text-zinc-500">
           No occupations matched{term ? ` “${term}”` : ""} in FY{fy}.

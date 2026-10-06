@@ -54,34 +54,36 @@ export default async function Home() {
             Full leaderboard →
           </Link>
         </div>
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Employer</th>
-              <th className="text-right">Filings</th>
-              <th className="text-right">Certified</th>
-              <th className="text-right">Median wage</th>
-            </tr>
-          </thead>
-          <tbody>
-            {top.map((r, i) => (
-              <tr key={r.employer_id}>
-                <td className="font-mono text-zinc-500">{i + 1}</td>
-                <td>
-                  <Link href={`/employers/${r.employer_id}`} className="hover:text-emerald-400">
-                    {r.employers?.name}
-                  </Link>
-                </td>
-                <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-                <td className="text-right font-mono">{fmtPct(r.certified, r.filings)}</td>
-                <td className="text-right font-mono">
-                  {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[34rem]">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Employer</th>
+                <th className="text-right">Filings</th>
+                <th className="text-right">Certified</th>
+                <th className="text-right">Median wage</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {top.map((r, i) => (
+                <tr key={r.employer_id}>
+                  <td className="font-mono text-zinc-500">{i + 1}</td>
+                  <td>
+                    <Link href={`/employers/${r.employer_id}`} className="hover:text-emerald-400">
+                      {r.employers?.name}
+                    </Link>
+                  </td>
+                  <td className="text-right font-mono">{fmtInt(r.filings)}</td>
+                  <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
+                  <td className="text-right font-mono">
+                    {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );
