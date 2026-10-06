@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const { years, totalFilings, totalCertified, employerCount } = await getOverviewStats();
-  const top = await getTopEmployers(2025, 10);
+  const latestYear = years.at(-1)?.[0] ?? 2025;
+  const top = await getTopEmployers(latestYear, 10);
   const maxFilings = Math.max(...years.map(([, v]) => v.filings), 1);
 
   return (
@@ -49,8 +50,13 @@ export default async function Home() {
 
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Top H-1B sponsors · FY2025</h2>
-          <Link href="/employers" className="text-sm text-emerald-400 hover:underline">
+          <h2 className="text-lg font-semibold">
+            Top H-1B sponsors · FY{latestYear}
+            <span className="ml-2 align-middle font-mono text-xs font-normal text-zinc-500">
+              year to date
+            </span>
+          </h2>
+          <Link href={`/employers?year=${latestYear}`} className="text-sm text-emerald-400 hover:underline">
             Full leaderboard →
           </Link>
         </div>
