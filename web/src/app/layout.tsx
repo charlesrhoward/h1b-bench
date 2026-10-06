@@ -41,10 +41,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <SiteSearch />
               </div>
             </div>
-            <nav className="order-2 ml-auto flex gap-6 text-sm text-zinc-400 sm:order-3 sm:ml-0">
+            <nav className="order-2 ml-auto flex flex-wrap justify-end gap-x-6 gap-y-1 text-sm text-zinc-400 sm:order-3 sm:ml-0">
               <Link href="/employers" className="hover:text-zinc-100">Employers</Link>
               <Link href="/jobs" className="hover:text-zinc-100">Occupations</Link>
               <Link href="/labor-pool" className="hover:text-zinc-100">Labor pool</Link>
+              <Link href="/cheap-labor" className="hover:text-zinc-100">Cheap labor?</Link>
               <a
                 href="https://www.dol.gov/agencies/eta/foreign-labor/performance"
                 className="hover:text-zinc-100"
