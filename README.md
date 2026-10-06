@@ -103,15 +103,9 @@ data/                # raw xlsx + processed parquet (gitignored)
 
 ## Contributing
 
-Issues and PRs welcome. The most valuable contributions right now: employer name
-deduplication strategies, PERM ingestion, and frontend visualizations.
-
-Preflight runs locally and in CI (`.github/workflows/ci.yml`, required on `main`):
-
-- `pnpm install` in `web/` sets up a pre-commit hook (husky + lint-staged) that
-  runs `eslint --fix` on staged TS/TSX files and `tsc --noEmit`.
-- ESLint caps files at 500 lines, cyclomatic complexity at 10, and nesting depth at 3.
-- CI additionally runs `next build`. Pushes that fail preflight cannot merge.
+Issues and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for setup, preflight checks,
+and PR conventions. The most valuable contributions right now: employer entity resolution,
+PERM ingestion, and frontend visualizations.
 
 ## License
 

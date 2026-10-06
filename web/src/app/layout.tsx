@@ -6,6 +6,7 @@ import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const REPO_URL = "https://github.com/charlesrhoward/h1b-bench";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://h1b-webrenew.vercel.app"),
@@ -55,9 +56,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
         <main className="flex-1 mx-auto w-full max-w-6xl px-6 py-10">{children}</main>
-        <footer className="border-t border-zinc-800 py-6 text-center text-xs text-zinc-500">
-          Data: U.S. Department of Labor, Office of Foreign Labor Certification — LCA disclosure
-          files FY2020–FY2026 Q3. LCA certification is a filing step, not a visa grant.
+        <footer className="space-y-3 border-t border-zinc-800 px-6 py-6 text-center text-xs text-zinc-500">
+          <p>
+            Data: U.S. Department of Labor, Office of Foreign Labor Certification — LCA disclosure
+            files FY2020–FY2026 Q3. LCA certification is a filing step, not a visa grant.
+          </p>
+          <nav className="flex justify-center gap-5">
+            <a href={`${REPO_URL}/blob/main/CONTRIBUTING.md`} className="hover:text-zinc-300">
+              Contributing
+            </a>
+            <a href={`${REPO_URL}/blob/main/LICENSE`} className="hover:text-zinc-300">
+              MIT License
+            </a>
+            <a href={REPO_URL} className="hover:text-zinc-300">
+              GitHub
+            </a>
+          </nav>
         </footer>
       </body>
     </html>
