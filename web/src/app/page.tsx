@@ -13,23 +13,34 @@ export default async function Home() {
 
   return (
     <div className="space-y-12">
-      <section className="relative space-y-5 py-8 sm:py-14">
+      <section className="relative space-y-5 py-10 sm:py-20">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_55%_60%_at_78%_30%,rgba(16,185,129,0.14),transparent_70%)]"
+          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(to_right,#34d399_1px,transparent_1px),linear-gradient(to_bottom,#34d399_1px,transparent_1px)] [background-size:140px_140px] [mask-image:radial-gradient(ellipse_80%_80%_at_60%_30%,black,transparent_80%)]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-4 top-1/2 hidden w-64 -translate-y-1/2 sm:block md:w-80 lg:right-0 lg:w-96"
+          className="pointer-events-none absolute -top-16 right-0 -z-10 hidden w-[26rem] max-w-none sm:-top-20 sm:block sm:w-[34rem] lg:-right-6 lg:w-[44rem]"
         >
           <Image
-            src="/capitol.webp"
+            src="/capitol-wide.webp"
             alt=""
-            width={385}
-            height={385}
+            width={780}
+            height={480}
             priority
-            className="opacity-90 [mask-image:radial-gradient(closest-side,black_35%,transparent_98%)]"
+            className="h-auto w-full [mask-image:radial-gradient(ellipse_75%_70%_at_55%_45%,black_40%,transparent_78%)]"
           />
+        </div>
+        <div
+          aria-hidden
+          className="absolute right-2 top-24 hidden space-y-2.5 font-mono text-xs tracking-[0.2em] text-zinc-500 lg:block"
+        >
+          <p>DATA</p>
+          <p>PEOPLE</p>
+          <p>OPPORTUNITY</p>
+          <div className="pt-2">
+            <div className="h-0.5 w-7 bg-emerald-400" />
+          </div>
         </div>
         <p className="font-mono text-sm text-emerald-400">DOL OFLC disclosure data · FY2020–FY2026 Q3</p>
         <h1 className="max-w-3xl text-5xl font-bold tracking-tight sm:text-6xl">
