@@ -11,10 +11,17 @@ Inputs (data/raw/):
 
 Output: data/processed/labor_pool.parquet (one row per occupation group x state, plus
 state "US" for national), labor_pool_summary.parquet (headline per tier).
+
+  ./venv/bin/python -u etl/labor_pool.py            # compute + write parquet
+  (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u labor_pool.py --load)
+                                                     # also insert into labor_pool tables
+--load needs the temporary insert policies from etl/schema.sql; truncate both tables first
+on a refresh.
 """
 import glob
 import os
 import re
+import sys
 import zipfile
 
 import numpy as np
@@ -25,6 +32,7 @@ PUMS_ZIP = os.path.join(ROOT, "raw", "acs_pums_2024_1yr_csv_pus.zip")
 CROSSWALK = os.path.join(ROOT, "raw", "census_2018_occupation_crosswalk.xlsx")
 OUT_DIR = os.path.join(ROOT, "processed")
 LCA_YEAR = 2025
+ACS_YEAR = 2024
 REPLICATES = [f"PWGTP{i}" for i in range(1, 81)]
 Z90 = 1.645
 
@@ -209,6 +217,24 @@ def summarize(t):
           "share_covered": round(c / total, 4)} for tier, c in rows])
 
 
+def load_to_supabase(table, summary):
+    """Insert results with the publishable key (imports load_supabase lazily: it needs env vars)."""
+    from load_supabase import batched, post_batch, records
+
+    rows = table.assign(lca_fiscal_year=LCA_YEAR, acs_year=ACS_YEAR)
+    for c in ("supply_est", "supply_moe", "supply_recent_est", "supply_recent_moe"):
+        rows[c] = rows[c].round().astype(int)
+    cols = ["lca_fiscal_year", "acs_year", "occ_code", "state", "occ_title", "filings",
+            "new_positions", "supply_est", "supply_moe", "supply_recent_est",
+            "supply_recent_moe", "covered", "covered_recent"]
+    for batch in batched(records(rows, cols), 2000):
+        post_batch("labor_pool", batch)
+    tiers = summary.assign(lca_fiscal_year=LCA_YEAR, acs_year=ACS_YEAR)
+    post_batch("labor_pool_summary", records(
+        tiers, ["lca_fiscal_year", "acs_year", "tier", "filings_covered", "filings_total"]))
+    print(f"loaded {len(rows):,} labor_pool rows and {len(tiers)} summary rows", flush=True)
+
+
 def main():
     crosswalk = load_crosswalk()
     acs, socp_to_occp = read_unemployed_degreed()
@@ -234,6 +260,9 @@ def main():
             "supply_recent_est", "covered", "covered_recent"]
     with pd.option_context("display.width", 220, "display.max_colwidth", 42):
         print(top[cols].round(0).to_string(index=False))
+
+    if "--load" in sys.argv:
+        load_to_supabase(table, summary)
 
 
 if __name__ == "__main__":

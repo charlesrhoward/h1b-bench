@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import SiteSearch from "@/components/site-search";
+import { REPO_URL } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-const REPO_URL = "https://github.com/charlesrhoward/h1b-bench";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://h1b-webrenew.vercel.app"),
@@ -44,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <nav className="order-2 ml-auto flex gap-6 text-sm text-zinc-400 sm:order-3 sm:ml-0">
               <Link href="/employers" className="hover:text-zinc-100">Employers</Link>
               <Link href="/jobs" className="hover:text-zinc-100">Occupations</Link>
+              <Link href="/labor-pool" className="hover:text-zinc-100">Labor pool</Link>
               <a
                 href="https://www.dol.gov/agencies/eta/foreign-labor/performance"
                 className="hover:text-zinc-100"
