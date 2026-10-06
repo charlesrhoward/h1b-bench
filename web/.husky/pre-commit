@@ -1,0 +1,3 @@
+cd web
+pnpm lint-staged
+pnpm exec tsc --noEmit

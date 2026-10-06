@@ -1,0 +1,41 @@
+name: preflight
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  web:
+    name: preflight
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint (max 500 lines/file, complexity <= 10, depth <= 3)
+        run: pnpm exec eslint src --max-warnings 0
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      # Public publishable key — same one shipped to every browser; safe to inline.
+      - name: Build
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://skiuhovfpiaofmctajhr.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Zzz1XAfsHrVgUyzGscuDSA_JYGYiwdG
