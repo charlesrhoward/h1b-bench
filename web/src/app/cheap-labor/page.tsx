@@ -6,6 +6,7 @@ import { BelowMedianLeaders, MarketGapTable, fmtGap } from "@/components/cheap-l
 import { PwPublisherTable, PwSourceTable } from "@/components/cheap-labor/pw-source-tables";
 import BackWagesSection from "@/components/cheap-labor/sections/back-wages-section";
 import LotterySection from "@/components/cheap-labor/sections/lottery-section";
+import PermSection from "@/components/cheap-labor/sections/perm-section";
 import WarnSection from "@/components/cheap-labor/sections/warn-section";
 import WageLevelBar from "@/components/cheap-labor/wage-level-bar";
 import {
@@ -15,6 +16,8 @@ import {
   getBelowMedianLeaders,
   getDependencyProfile,
   getMarketGapSummary,
+  getPermLayoffEmployers,
+  getPermLockinSummary,
   getPwSourceSummary,
   getPwSurveyPublishers,
   getUscisRegistrations,
@@ -43,7 +46,7 @@ export const metadata: Metadata = {
 const DOL_SOURCE = `DOL OFLC LCA disclosure data, certified H-1B filings, FY${CHEAP_LABOR_FY}.`;
 
 export default async function CheapLaborPage() {
-  const [profile, marketGap, leaders, pwSources, publishers, whdYears, whdTop, warnSummary, warnCompanies, lottery] =
+  const [profile, marketGap, leaders, pwSources, publishers, whdYears, whdTop, warnSummary, warnCompanies, lottery, permSummary, permEmployers] =
     await Promise.all([
     getDependencyProfile(),
     getMarketGapSummary(),
@@ -55,6 +58,8 @@ export default async function CheapLaborPage() {
     getWarnSummary(),
     getWarnCompanies(),
     getUscisRegistrations(),
+    getPermLockinSummary(),
+    getPermLayoffEmployers(),
   ]);
   if (profile.length === 0) {
     return <p className="text-zinc-400">Results for FY{CHEAP_LABOR_FY} are not loaded yet.</p>;
@@ -82,6 +87,7 @@ export default async function CheapLaborPage() {
       <BackWagesSection index={5} years={whdYears} top={whdTop} />
       <WarnSection index={6} summary={warnSummary} companies={warnCompanies} />
       <LotterySection index={7} years={lottery} />
+      <PermSection index={8} summary={permSummary} employers={permEmployers} />
     </div>
   );
 }
