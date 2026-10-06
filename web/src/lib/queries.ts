@@ -68,7 +68,7 @@ export async function getTopEmployers(year?: number, limit = 50) {
     .order("filings", { ascending: false })
     .limit(limit);
   if (year) q = q.eq("fiscal_year", year);
-  else q = q.eq("fiscal_year", 2025);
+  else q = q.eq("fiscal_year", 2026);
   const { data } = await q;
   return (data ?? []) as EmployerYearStat[];
 }
@@ -140,7 +140,7 @@ export async function getEmployerTopJobs(id: number, limit = 15) {
     .slice(0, limit);
 }
 
-export async function getJobStats(year = 2025, limit = 50, q?: string) {
+export async function getJobStats(year = 2026, limit = 50, q?: string) {
   let query = supabase
     .from("job_title_year_stats")
     .select("*")

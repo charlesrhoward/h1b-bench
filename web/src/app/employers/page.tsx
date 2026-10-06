@@ -61,7 +61,7 @@ export default async function EmployersPage({
     );
   }
 
-  const fy = year ? Number(year) : 2025;
+  const fy = year ? Number(year) : 2026;
   const rows = await getTopEmployers(fy, 100);
 
   return (
@@ -70,6 +70,9 @@ export default async function EmployersPage({
         <h1 className="text-3xl font-bold">Employer leaderboard</h1>
         <p className="mt-1 text-zinc-400">
           H-1B Labor Condition Applications by employer · FY{fy}
+          {fy === YEARS[0] && (
+            <span className="ml-2 font-mono text-xs text-zinc-500">year to date</span>
+          )}
         </p>
       </div>
 

@@ -12,24 +12,13 @@ export default async function JobsPage({
   searchParams: Promise<{ year?: string; q?: string }>;
 }) {
   const { year, q } = await searchParams;
-  const fy = year ? Number(year) : 2025;
+  const fy = year ? Number(year) : 2026;
   const term = q?.trim() ?? "";
   const rows = await getJobStats(fy, 50, term || undefined);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Occupation benchmarks</h1>
-        <p className="mt-1 text-zinc-400">
-          {term ? (
-            <>
-              {rows.length} {rows.length === 1 ? "occupation" : "occupations"} matching “{term}” · FY{fy}
-            </>
-          ) : (
-            <>LCA filings by SOC occupation code · FY{fy}</>
-          )}
-        </p>
-      </div>
+      <Header fy={fy} term={term} count={rows.length} />
 
       <div className="flex flex-wrap gap-2">
         {YEARS.map((y) => (
@@ -88,6 +77,22 @@ export default async function JobsPage({
           No occupations matched{term ? ` “${term}”` : ""} in FY{fy}.
         </p>
       )}
+    </div>
+  );
+}
+
+function Header({ fy, term, count }: { fy: number; term: string; count: number }) {
+  return (
+    <div>
+      <h1 className="text-3xl font-bold">Occupation benchmarks</h1>
+      <p className="mt-1 text-zinc-400">
+        {term
+          ? `${count} ${count === 1 ? "occupation" : "occupations"} matching “${term}” · FY${fy}`
+          : `LCA filings by SOC occupation code · FY${fy}`}
+        {fy === YEARS[0] && (
+          <span className="ml-2 font-mono text-xs text-zinc-500">year to date</span>
+        )}
+      </p>
     </div>
   );
 }
