@@ -5,7 +5,14 @@ Computed with `etl/labor_pool.py` using the rules in
 Inputs: ACS 2024 1-year PUMS and FY2025 certified H-1B LCAs (539,245 filings with a mapped
 occupation; 0.04% of filings could not be mapped).
 
-## Headline: the "most" test does not pass
+> **Scope: unemployed only.** This test counts only people who are unemployed. It does not
+> count the underemployed: degree holders in jobs below their skills, and people who work
+> part time but want full-time work. It also does not count people who gave up the search
+> for work, or employed workers who could change jobs. The supply here is a floor, not the
+> full pool of American workers. A failed test does not show that Americans cannot fill the
+> other jobs.
+
+## Headline: the unemployed alone do not cover most filings
 
 | Tier | Filings in covered occupations | Share of all filings | Passes (>50%)? |
 |------|-------------------------------:|---------------------:|:--------------:|
@@ -26,6 +33,26 @@ short. The next largest computer, math, and engineering groups fall short too.
 The pool *is* large enough in **227 of 318** occupation groups that hire H-1B workers, but
 those groups hold only 21.9% of the filings. Note that this is a count of occupation
 groups, not the pre-set headline measure.
+
+## Measure 2 (added after Measure 1): positions the unemployed alone could fill
+
+**Not in the pre-set rules.** This measure was defined after the Measure 1 result above was
+seen, during review. It is reported separately and labeled that way on the site.
+
+Measure 1 counts an occupation only when the unemployed can fill *all* of its new H-1B
+positions. Software developers therefore count as zero, even though at least 50,670
+unemployed developers (the lower bound) set against 77,096 new positions could fill 65.7% of
+them. Measure 2 counts positions instead: in each occupation it takes the smaller of new
+H-1B positions and the supply lower bound, then sums those across occupations.
+
+| Tier | New H-1B positions the unemployed alone could fill | Share |
+|------|---------------------------------------------------:|------:|
+| National | 177,810 of 283,541 | **62.7%** |
+| Recent (last worked in the past 12 months) | 130,216 of 283,541 | 45.9% |
+| Same state | 77,057 of 283,541 | 27.2% |
+
+This is computed by the `labor_pool_fillable` view over `labor_pool`. Neither measure counts
+the underemployed.
 
 ## Top 20 occupation groups (79.8% of filings)
 

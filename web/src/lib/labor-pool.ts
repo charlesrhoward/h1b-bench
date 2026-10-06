@@ -79,3 +79,26 @@ export async function getLcaYearProfile(fy = LABOR_POOL_FY) {
     .maybeSingle();
   return data as LcaYearProfile | null;
 }
+
+export type LaborPoolFillable = {
+  tier: LaborPoolTier;
+  positions_total: number;
+  positions_fillable: number;
+};
+
+/** Measure 2: new H-1B positions the unemployed alone could fill, per tier (labor_pool_fillable view). */
+export async function getLaborPoolFillable(fy = LABOR_POOL_FY) {
+  const { data } = await supabase
+    .from("labor_pool_fillable")
+    .select("tier, positions_total, positions_fillable")
+    .eq("lca_fiscal_year", fy);
+  const order: LaborPoolTier[] = ["national", "recent", "same_state"];
+  return ((data ?? []) as LaborPoolFillable[]).sort(
+    (a, b) => order.indexOf(a.tier) - order.indexOf(b.tier),
+  );
+}
+
+/** Positions in one occupation the unemployed alone could fill: the supply lower bound, capped at demand. */
+export function fillablePositions(row: LaborPoolOccupation): number {
+  return Math.min(Math.max(row.supply_est - row.supply_moe, 0), row.new_positions);
+}

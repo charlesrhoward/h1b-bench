@@ -1,7 +1,7 @@
 -- H1B Bench schema: DOL OFLC LCA disclosure data (H-1B / H-1B1 / E-3)
 -- Live DB history: initial_h1b_bench_schema -> drop_bulk_insert_policies -> fy_overview_view
 -- -> search_functions -> search_employers_popularity_ranking -> employer_headcounts
--- -> drop_headcount_insert_policy -> labor_pool -> drop_labor_pool_insert_policies.
+-- -> drop_headcount_insert_policy -> labor_pool -> drop_labor_pool_insert_policies -> labor_pool_fillable_view.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -214,3 +214,24 @@ group by c.fiscal_year;
 
 create unique index lca_year_profile_fy on lca_year_profile (fiscal_year);
 grant select on lca_year_profile to anon, authenticated;
+
+-- Measure 2 (defined after Measure 1 results were seen; see docs/labor-pool-results.md):
+-- new H-1B positions the unemployed alone could fill = sum over occupations of
+-- least(supply lower bound, new positions).
+create view labor_pool_fillable with (security_invoker = true) as
+select lca_fiscal_year, 'national'::text as tier,
+       sum(new_positions)::int as positions_total,
+       sum(least(greatest(supply_est - supply_moe, 0), new_positions))::int as positions_fillable
+from labor_pool where state = 'US' group by lca_fiscal_year
+union all
+select lca_fiscal_year, 'recent',
+       sum(new_positions)::int,
+       sum(least(greatest(supply_recent_est - supply_recent_moe, 0), new_positions))::int
+from labor_pool where state = 'US' group by lca_fiscal_year
+union all
+select lca_fiscal_year, 'same_state',
+       sum(new_positions)::int,
+       sum(least(greatest(supply_est - supply_moe, 0), new_positions))::int
+from labor_pool where state <> 'US' group by lca_fiscal_year;
+
+grant select on labor_pool_fillable to anon, authenticated;
