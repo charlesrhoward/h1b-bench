@@ -143,3 +143,71 @@ export async function getPwSurveyPublishers(fy = CHEAP_LABOR_FY, limit = 8) {
     .limit(limit);
   return (data ?? []) as PwSurveyPublisher[];
 }
+
+export type WhdYear = {
+  fiscal_year: number;
+  cases: number;
+  back_wages: number;
+  employees: number;
+  penalties: number;
+};
+
+export type WhdTopEmployer = {
+  name_key: string;
+  name: string;
+  state: string | null;
+  employer_id: number | null;
+  cases: number;
+  back_wages: number;
+  employees: number;
+};
+
+export type EmployerWhd = {
+  cases: number;
+  back_wages: number;
+  employees: number;
+  penalties: number;
+  latest_fiscal_year: number | null;
+};
+
+/** H-1B enforcement by fiscal year of findings (whd_h1b_years), oldest first. */
+export async function getWhdYears() {
+  const { data } = await supabase
+    .from("whd_h1b_years")
+    .select("fiscal_year, cases, back_wages, employees, penalties")
+    .order("fiscal_year");
+  return (data ?? []) as WhdYear[];
+}
+
+/** Employers with the most H-1B back wages, as named in the WHD record. */
+export async function getWhdTopEmployers(limit = 10) {
+  const { data } = await supabase
+    .from("whd_h1b_top_employers")
+    .select("name_key, name, state, employer_id, cases, back_wages, employees")
+    .order("back_wages", { ascending: false })
+    .limit(limit);
+  return (data ?? []) as WhdTopEmployer[];
+}
+
+/** One employer's linked WHD H-1B cases, or null when none link to it. */
+export async function getEmployerWhd(employerId: number) {
+  const { data } = await supabase
+    .from("employer_whd_h1b")
+    .select("cases, back_wages, employees, penalties, latest_fiscal_year")
+    .eq("employer_id", employerId)
+    .maybeSingle();
+  return data as EmployerWhd | null;
+}
+
+/** Sum the yearly enforcement rows into all-time totals. */
+export function totalWhd(years: WhdYear[]) {
+  return years.reduce(
+    (t, y) => ({
+      cases: t.cases + y.cases,
+      back_wages: t.back_wages + Number(y.back_wages),
+      employees: t.employees + y.employees,
+      penalties: t.penalties + Number(y.penalties),
+    }),
+    { cases: 0, back_wages: 0, employees: 0, penalties: 0 },
+  );
+}

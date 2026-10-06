@@ -3,7 +3,8 @@
 -- -> search_functions -> search_employers_popularity_ranking -> employer_headcounts
 -- -> drop_headcount_insert_policy -> labor_pool -> drop_labor_pool_insert_policies -> labor_pool_fillable_view
 -- -> lca_dependency_profile -> lca_dependency_profile_yearly_floor -> lca_dependency_profile_exact_floor
--- -> market_gap -> drop_market_gap_insert_policies -> pw_source -> drop_pw_source_insert_policies.
+-- -> market_gap -> drop_market_gap_insert_policies -> pw_source -> drop_pw_source_insert_policies
+-- -> whd_h1b -> drop_whd_h1b_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -190,6 +191,36 @@ create table pw_survey_publishers (
   primary key (lca_fiscal_year, publisher)
 );
 
+-- H-1B back wages from DOL WHD enforcement (docs/back-wages-method.md), loaded by
+-- etl/back_wages.py --load. Amounts are back wages employers agreed to pay.
+create table whd_h1b_years (
+  fiscal_year smallint primary key,      -- federal FY of FINDINGS_END_DATE
+  cases integer not null,
+  back_wages bigint not null,
+  employees integer not null,
+  penalties bigint not null
+);
+
+create table whd_h1b_top_employers (
+  name_key text primary key,             -- normalized WHD legal (or trade) name
+  name text not null,                    -- as in the WHD record
+  state text,
+  employer_id bigint references employers(id),  -- exact normalized-name link, if any
+  cases integer not null,
+  back_wages bigint not null,
+  employees integer not null,
+  penalties bigint not null
+);
+
+create table employer_whd_h1b (
+  employer_id bigint primary key references employers(id),
+  cases integer not null,
+  back_wages bigint not null,
+  employees integer not null,
+  penalties bigint not null,
+  latest_fiscal_year smallint
+);
+
 -- RLS: read-only public data
 alter table employers enable row level security;
 alter table lca_cases enable row level security;
@@ -202,6 +233,9 @@ alter table market_gap_summary enable row level security;
 alter table employer_market_gap enable row level security;
 alter table pw_source_summary enable row level security;
 alter table pw_survey_publishers enable row level security;
+alter table whd_h1b_years enable row level security;
+alter table whd_h1b_top_employers enable row level security;
+alter table employer_whd_h1b enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
@@ -214,6 +248,9 @@ create policy "public read market_gap_summary" on market_gap_summary for select 
 create policy "public read employer_market_gap" on employer_market_gap for select using (true);
 create policy "public read pw_source_summary" on pw_source_summary for select using (true);
 create policy "public read pw_survey_publishers" on pw_survey_publishers for select using (true);
+create policy "public read whd_h1b_years" on whd_h1b_years for select using (true);
+create policy "public read whd_h1b_top_employers" on whd_h1b_top_employers for select using (true);
+create policy "public read employer_whd_h1b" on employer_whd_h1b for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
@@ -229,6 +266,9 @@ create policy "public read pw_survey_publishers" on pw_survey_publishers for sel
 --   create policy "bulk insert employer_market_gap" on employer_market_gap for insert with check (true);
 --   create policy "bulk insert pw_source_summary" on pw_source_summary for insert with check (true);
 --   create policy "bulk insert pw_survey_publishers" on pw_survey_publishers for insert with check (true);
+--   create policy "bulk insert whd_h1b_years" on whd_h1b_years for insert with check (true);
+--   create policy "bulk insert whd_h1b_top_employers" on whd_h1b_top_employers for insert with check (true);
+--   create policy "bulk insert employer_whd_h1b" on employer_whd_h1b for insert with check (true);
 
 -- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
 create view fy_overview with (security_invoker = true) as
