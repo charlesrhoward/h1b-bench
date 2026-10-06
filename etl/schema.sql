@@ -1,7 +1,7 @@
 -- H1B Bench schema: DOL OFLC LCA disclosure data (H-1B / H-1B1 / E-3)
 -- Live DB history: initial_h1b_bench_schema -> drop_bulk_insert_policies -> fy_overview_view
 -- -> search_functions -> search_employers_popularity_ranking -> employer_headcounts
--- -> drop_headcount_insert_policy.
+-- -> drop_headcount_insert_policy -> labor_pool -> drop_labor_pool_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -114,18 +114,50 @@ create table employer_headcounts (
   match_method text not null check (match_method in ('fein', 'name'))
 );
 
+-- Domestic labor pool vs. H-1B new-employment demand (docs/labor-pool-method.md),
+-- loaded by etl/labor_pool.py --load.
+create table labor_pool (
+  lca_fiscal_year smallint not null,
+  acs_year smallint not null,
+  occ_code text not null,                -- 2018 Census occupation code as used in ACS PUMS (OCCP)
+  state text not null,                   -- 2-letter state, or 'US' for national
+  occ_title text,
+  filings integer not null,              -- certified H-1B LCA filings
+  new_positions integer not null,        -- certified H-1B new-employment positions (demand)
+  supply_est integer not null,           -- unemployed, bachelor's+, last job in this occupation
+  supply_moe integer not null,           -- 90% margin of error (replicate weights)
+  supply_recent_est integer not null,    -- same, last worked within 12 months
+  supply_recent_moe integer not null,
+  covered boolean not null,              -- supply_est - supply_moe >= new_positions
+  covered_recent boolean not null,
+  primary key (lca_fiscal_year, occ_code, state)
+);
+
+create table labor_pool_summary (
+  lca_fiscal_year smallint not null,
+  acs_year smallint not null,
+  tier text not null check (tier in ('national', 'recent', 'same_state')),
+  filings_covered integer not null,
+  filings_total integer not null,
+  primary key (lca_fiscal_year, tier)
+);
+
 -- RLS: read-only public data
 alter table employers enable row level security;
 alter table lca_cases enable row level security;
 alter table employer_year_stats enable row level security;
 alter table job_title_year_stats enable row level security;
 alter table employer_headcounts enable row level security;
+alter table labor_pool enable row level security;
+alter table labor_pool_summary enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
 create policy "public read employer_year_stats" on employer_year_stats for select using (true);
 create policy "public read job_title_year_stats" on job_title_year_stats for select using (true);
 create policy "public read employer_headcounts" on employer_headcounts for select using (true);
+create policy "public read labor_pool" on labor_pool for select using (true);
+create policy "public read labor_pool_summary" on labor_pool_summary for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
@@ -135,6 +167,8 @@ create policy "public read employer_headcounts" on employer_headcounts for selec
 --   create policy "bulk insert employer_year_stats" on employer_year_stats for insert with check (true);
 --   create policy "bulk insert job_title_year_stats" on job_title_year_stats for insert with check (true);
 --   create policy "bulk insert employer_headcounts" on employer_headcounts for insert with check (true);
+--   create policy "bulk insert labor_pool" on labor_pool for insert with check (true);
+--   create policy "bulk insert labor_pool_summary" on labor_pool_summary for insert with check (true);
 
 -- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
 create view fy_overview with (security_invoker = true) as
@@ -147,3 +181,36 @@ select
 from employer_year_stats
 group by fiscal_year
 order by fiscal_year;
+
+-- Per-year profile of certified H-1B LCAs: skill level, new hires, occupation concentration.
+-- Refresh after each LCA load: refresh materialized view concurrently lca_year_profile;
+create materialized view lca_year_profile as
+with c as (
+  select fiscal_year, left(soc_code, 7) as soc, pw_wage_level,
+         coalesce(new_employment, 0) as ne, coalesce(total_worker_positions, 0) as pos
+  from lca_cases
+  where visa_class = 'H-1B' and case_status = 'Certified'
+),
+soc_rank as (
+  select fiscal_year, count(*) as n,
+         row_number() over (partition by fiscal_year order by count(*) desc) as rk
+  from c group by fiscal_year, soc
+),
+top20 as (
+  select fiscal_year, sum(n)::int as top20_occupation_filings
+  from soc_rank where rk <= 20 group by fiscal_year
+)
+select c.fiscal_year,
+       count(*)::int as certified_filings,
+       count(*) filter (where pw_wage_level is not null)::int as wage_level_known,
+       count(*) filter (where pw_wage_level in ('I', 'II'))::int as wage_level_1_2,
+       count(*) filter (where pw_wage_level = 'I')::int as wage_level_1,
+       count(*) filter (where ne > 0)::int as new_employment_filings,
+       sum(ne)::int as new_employment_positions,
+       sum(pos)::int as worker_positions,
+       max(t.top20_occupation_filings) as top20_occupation_filings
+from c join top20 t using (fiscal_year)
+group by c.fiscal_year;
+
+create unique index lca_year_profile_fy on lca_year_profile (fiscal_year);
+grant select on lca_year_profile to anon, authenticated;

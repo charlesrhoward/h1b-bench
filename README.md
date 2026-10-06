@@ -81,7 +81,14 @@ SUPABASE_URL=https://<ref>.supabase.co SUPABASE_KEY=<publishable-key> \
 #    to data/raw/, parse them, then derive and load one headcount per employer
 ./venv/bin/python -u etl/parse_perm.py
 (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u load_headcounts.py)
+
+# 6. Labor pool (/labor-pool): put the ACS 2024 1-year PUMS person file (csv_pus.zip) and
+#    the Census 2018 occupation crosswalk in data/raw/ (URLs in etl/labor_pool.py), then
+(cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u labor_pool.py --load)
 ```
+
+The labor pool test follows [docs/labor-pool-method.md](docs/labor-pool-method.md), which
+was committed before the first run. Results: [docs/labor-pool-results.md](docs/labor-pool-results.md).
 
 **% of workforce** divides an employer's certified H-1B LCAs for the fiscal year by the
 total headcount it reported on its PERM green card filings (`EMP_NUM_PAYROLL`). Each
