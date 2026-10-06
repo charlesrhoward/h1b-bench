@@ -84,7 +84,10 @@ export default async function EmployerDetail({
       </section>
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold">Top certified roles</h2>
+        <h2 className="mb-1 text-lg font-semibold">Top certified roles</h2>
+        <p className="mb-3 text-xs text-zinc-500">
+          Based on the most recent 1,000 certified filings
+        </p>
         <table className="w-full">
           <thead>
             <tr>

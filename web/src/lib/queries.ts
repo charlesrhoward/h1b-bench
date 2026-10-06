@@ -41,18 +41,15 @@ export type JobYearStat = {
 };
 
 export async function getOverviewStats() {
-  const { data: yearStats } = await supabase
-    .from("employer_year_stats")
-    .select("fiscal_year, filings, certified, denied, withdrawn, certified_withdrawn");
+  const { data: yearRows } = await supabase
+    .from("fy_overview")
+    .select("fiscal_year, filings, certified")
+    .order("fiscal_year");
 
-  const byYear = new Map<number, { filings: number; certified: number }>();
-  for (const r of yearStats ?? []) {
-    const cur = byYear.get(r.fiscal_year) ?? { filings: 0, certified: 0 };
-    cur.filings += r.filings;
-    cur.certified += r.certified;
-    byYear.set(r.fiscal_year, cur);
-  }
-  const years = [...byYear.entries()].sort((a, b) => a[0] - b[0]);
+  const years = (yearRows ?? []).map((r) => [
+    r.fiscal_year,
+    { filings: Number(r.filings), certified: Number(r.certified) },
+  ]) as [number, { filings: number; certified: number }][];
   const totalFilings = years.reduce((s, [, v]) => s + v.filings, 0);
   const totalCertified = years.reduce((s, [, v]) => s + v.certified, 0);
 
@@ -109,7 +106,7 @@ export async function getEmployerTopJobs(id: number, limit = 15) {
     .eq("case_status", "Certified")
     .not("wage_from_annual", "is", null)
     .order("decision_date", { ascending: false })
-    .limit(5000);
+    .limit(1000);
   if (!data) return [];
   const byTitle = new Map<string, { count: number; wages: number[]; soc: string | null }>();
   for (const r of data) {

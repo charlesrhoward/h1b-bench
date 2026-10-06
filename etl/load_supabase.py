@@ -44,30 +44,38 @@ def load_all_cases():
     return df
 
 
-def post_batch(table, rows, prefer="return=minimal", retries=4):
+def post_batch(table, rows, prefer="return=minimal", retries=10):
     url = f"{REST}/{table}"
     h = {**HEADERS, "Prefer": prefer}
     for attempt in range(retries):
-        r = requests.post(url, headers=h, json=rows, timeout=120)
-        if r.status_code in (200, 201):
-            return r
-        if r.status_code == 409:
-            return r  # duplicates, skip
-        time.sleep(2 ** attempt)
+        try:
+            r = requests.post(url, headers=h, json=rows, timeout=180)
+            if r.status_code in (200, 201):
+                return r
+            if r.status_code == 409:
+                return r  # duplicates, skip
+        except requests.RequestException:
+            pass
+        time.sleep(min(60, 2 ** attempt))
     raise RuntimeError(f"POST {table} failed: {r.status_code} {r.text[:500]}")
 
 
 def records(df, cols):
-    sub = df[cols].copy()
-    sub = sub.where(pd.notna(sub), None)
-    for c in sub.columns:
-        if str(sub[c].dtype).startswith("datetime") or str(sub[c].dtype) == "object":
-            sub[c] = sub[c].map(lambda v: v.isoformat() if hasattr(v, "isoformat") else v)
-        if str(sub[c].dtype) == "Int64":
-            sub[c] = sub[c].map(lambda v: int(v) if v is not None else None)
-        if str(sub[c].dtype) == "boolean":
-            sub[c] = sub[c].map(lambda v: bool(v) if v is not None else None)
-    return sub.to_dict("records")
+    import numpy as np
+
+    def clean(v):
+        try:
+            if pd.isna(v):
+                return None
+        except (TypeError, ValueError):
+            pass
+        if hasattr(v, "isoformat") and not isinstance(v, str):
+            return v.isoformat()
+        if isinstance(v, np.generic):
+            return v.item()
+        return v
+
+    return [{c: clean(v) for c, v in row.items()} for row in df[cols].to_dict("records")]
 
 
 def batched(seq, n):
@@ -109,9 +117,9 @@ def load_employers(df):
 
 
 def fetch_employer_id_map():
-    """name_normalized -> id, paged through PostgREST."""
+    """name_normalized -> id, paged through PostgREST (server caps at 1000 rows/response)."""
     out = {}
-    page_size = 5000
+    page_size = 1000
     offset = 0
     while True:
         r = requests.get(
@@ -127,6 +135,8 @@ def fetch_employer_id_map():
         if len(rows) < page_size:
             break
         offset += page_size
+        if offset % 50000 == 0:
+            print(f"  ...{len(out):,} employer ids", flush=True)
     print(f"fetched {len(out):,} employer ids", flush=True)
     return out
 
@@ -157,13 +167,81 @@ def load_cases(df):
     batches = list(batched(recs, BATCH))
     print(f"cases: {len(recs):,} rows in {len(batches)} batches", flush=True)
     t0 = time.time()
+    prefer = "resolution=ignore-duplicates,return=minimal"
     with ThreadPoolExecutor(4) as ex:
-        for i, _ in enumerate(ex.map(lambda b: post_batch("lca_cases", b), batches)):
+        for i, _ in enumerate(ex.map(lambda b: post_batch("lca_cases", b, prefer), batches)):
             if (i + 1) % 25 == 0:
                 rate = (i + 1) * BATCH / (time.time() - t0)
                 eta = (len(batches) - i - 1) * BATCH / max(rate, 1) / 60
                 print(f"  cases {i+1}/{len(batches)} ({rate:.0f} rows/s, ETA {eta:.0f}m)", flush=True)
     print(f"cases loaded in {(time.time()-t0)/60:.1f}m", flush=True)
+
+
+def load_stats(df):
+    id_map = fetch_employer_id_map()
+    df = df.copy()
+    df["name_normalized"] = df["employer_name"].map(norm_name)
+    df["employer_id"] = df["name_normalized"].map(id_map)
+    df = df.dropna(subset=["employer_id"])
+    df["employer_id"] = df["employer_id"].astype(int)
+
+    wage = df["wage_from_annual"].where(df["wage_from_annual"].between(10000, 10000000))
+    pw = df["prevailing_wage"].where(df["prevailing_wage"].between(10000, 10000000))
+    df["_w"] = wage
+    df["_pw"] = pw
+    certified = df["case_status"] == "Certified"
+
+    g = df.groupby(["employer_id", "fiscal_year", "visa_class"])
+    stats = g.size().rename("filings").to_frame()
+    stats["certified"] = g.apply(lambda x: (x["case_status"] == "Certified").sum(), include_groups=False)
+    stats["denied"] = g.apply(lambda x: (x["case_status"] == "Denied").sum(), include_groups=False)
+    stats["withdrawn"] = g.apply(lambda x: (x["case_status"] == "Withdrawn").sum(), include_groups=False)
+    stats["certified_withdrawn"] = g.apply(lambda x: (x["case_status"] == "Certified - Withdrawn").sum(), include_groups=False)
+    stats["worker_positions"] = g["total_worker_positions"].sum()
+    stats["certified_worker_positions"] = g.apply(
+        lambda x: x.loc[x["case_status"] == "Certified", "total_worker_positions"].sum(), include_groups=False)
+    stats["median_wage_annual"] = g["_w"].median()
+    stats["avg_wage_annual"] = g["_w"].mean()
+    stats["median_prevailing_wage"] = g["_pw"].median()
+
+    def top(col):
+        return g[col].agg(lambda s: s.mode().iloc[0] if len(s.dropna()) else None)
+
+    stats["top_job_title"] = top("job_title")
+    stats["top_soc_code"] = top("soc_code")
+    stats["top_worksite_state"] = top("worksite_state")
+    stats = stats.reset_index()
+    print(f"employer_year_stats: {len(stats):,} rows", flush=True)
+
+    recs = records(stats, ["employer_id", "fiscal_year", "visa_class", "filings", "certified",
+                           "denied", "withdrawn", "certified_withdrawn", "worker_positions",
+                           "certified_worker_positions", "median_wage_annual", "avg_wage_annual",
+                           "median_prevailing_wage", "top_job_title", "top_soc_code", "top_worksite_state"])
+    batches = list(batched(recs, BATCH))
+    t0 = time.time()
+    prefer = "resolution=ignore-duplicates,return=minimal"
+    with ThreadPoolExecutor(4) as ex:
+        for i, _ in enumerate(ex.map(lambda b: post_batch("employer_year_stats", b, prefer), batches)):
+            if (i + 1) % 50 == 0:
+                print(f"  stats {i+1}/{len(batches)} ({time.time()-t0:.0f}s)", flush=True)
+    print(f"employer_year_stats loaded in {time.time()-t0:.0f}s", flush=True)
+
+    # job_title_year_stats
+    gj = df.dropna(subset=["soc_code"]).groupby(["soc_code", "fiscal_year"])
+    js = gj.size().rename("filings").to_frame()
+    js["soc_title"] = gj["soc_title"].agg(lambda s: s.dropna().mode().iloc[0] if len(s.dropna()) else None)
+    js["certified"] = gj.apply(lambda x: (x["case_status"] == "Certified").sum(), include_groups=False)
+    js["median_wage_annual"] = gj["_w"].median()
+    js["avg_wage_annual"] = gj["_w"].mean()
+    js["distinct_employers"] = gj["employer_id"].nunique()
+    js = js.reset_index()
+    print(f"job_title_year_stats: {len(js):,} rows", flush=True)
+    recs = records(js, ["soc_code", "soc_title", "fiscal_year", "filings", "certified",
+                        "median_wage_annual", "avg_wage_annual", "distinct_employers"])
+    batches = list(batched(recs, BATCH))
+    with ThreadPoolExecutor(4) as ex:
+        list(ex.map(lambda b: post_batch("job_title_year_stats", b, prefer), batches))
+    print("job_title_year_stats loaded", flush=True)
 
 
 def main():
@@ -174,6 +252,8 @@ def main():
         load_employers(df)
     if stage in ("cases", "all"):
         load_cases(df)
+    if stage in ("stats", "all"):
+        load_stats(df)
 
 
 if __name__ == "__main__":
