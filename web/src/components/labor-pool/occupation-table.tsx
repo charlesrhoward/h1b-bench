@@ -1,5 +1,5 @@
 import { fmtInt, fmtPct } from "@/lib/format";
-import type { LaborPoolOccupation } from "@/lib/labor-pool";
+import { fillablePositions, type LaborPoolOccupation } from "@/lib/labor-pool";
 
 /** Top occupation groups by filings, with supply, demand, and the pass/fail result. */
 export default function OccupationTable({
@@ -11,7 +11,7 @@ export default function OccupationTable({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[46rem]">
+      <table className="w-full min-w-[52rem]">
         <thead>
           <tr>
             <th>Occupation</th>
@@ -21,7 +21,12 @@ export default function OccupationTable({
             <th className="text-right" title="Unemployed, bachelor's degree or higher, last job in this occupation. ± is the 90% margin of error.">
               Unemployed, bachelor&apos;s+
             </th>
-            <th className="text-right">Passes</th>
+            <th className="text-right" title="Share of new H-1B positions the unemployed alone could fill (Measure 2)">
+              Could fill
+            </th>
+            <th className="text-right" title="Measure 1: the unemployed can fill all new H-1B positions">
+              Passes
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -35,6 +40,7 @@ export default function OccupationTable({
                 {fmtInt(r.supply_est)}
                 <span className="ml-1 text-xs text-zinc-500">±{fmtInt(r.supply_moe)}</span>
               </td>
+              <td className="text-right font-mono">{fmtPct(fillablePositions(r), r.new_positions)}</td>
               <td className={`text-right font-mono ${r.covered ? "text-emerald-400" : "text-zinc-500"}`}>
                 {r.covered ? "Yes" : "No"}
               </td>
