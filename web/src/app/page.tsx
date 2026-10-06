@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getOverviewStats, getTopEmployers } from "@/lib/queries";
 import { fmtInt, fmtPct } from "@/lib/format";
 
@@ -12,14 +13,29 @@ export default async function Home() {
 
   return (
     <div className="space-y-12">
-      <section className="space-y-4">
+      <section className="relative space-y-5 py-8 sm:py-14">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_55%_60%_at_78%_30%,rgba(16,185,129,0.14),transparent_70%)]"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-4 top-1/2 hidden w-64 -translate-y-1/2 sm:block md:w-80 lg:right-0 lg:w-96"
+        >
+          <Image
+            src="/capitol.webp"
+            alt=""
+            width={385}
+            height={385}
+            priority
+            className="opacity-90 [mask-image:radial-gradient(closest-side,black_35%,transparent_98%)]"
+          />
+        </div>
         <p className="font-mono text-sm text-emerald-400">DOL OFLC disclosure data · FY2020–FY2026 Q3</p>
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          Who sponsors H-1B workers,
-          <br />
-          what they pay, and how often they&apos;re certified.
+        <h1 className="max-w-3xl text-5xl font-bold tracking-tight sm:text-6xl">
+          Who sponsors H-1B workers, what they pay, and how often they&apos;re certified.
         </h1>
-        <p className="max-w-2xl text-zinc-400">
+        <p className="max-w-2xl text-zinc-400 sm:text-lg">
           Every Labor Condition Application filed with the Department of Labor — benchmarked by
           employer, occupation, wage, and year.
         </p>
