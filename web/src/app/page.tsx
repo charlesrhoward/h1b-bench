@@ -20,15 +20,15 @@ export default async function Home() {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-16 right-0 -z-10 hidden w-[26rem] max-w-none sm:-top-20 sm:block sm:w-[34rem] lg:-right-6 lg:w-[44rem]"
+          className="pointer-events-none absolute -top-16 right-0 -z-10 hidden w-[17rem] max-w-none sm:-top-20 sm:block sm:w-[22rem] lg:right-24 lg:w-[26rem]"
         >
           <Image
             src="/capitol-wide.webp"
             alt=""
-            width={780}
-            height={480}
+            width={496}
+            height={550}
             priority
-            className="h-auto w-full [mask-image:radial-gradient(ellipse_75%_70%_at_55%_45%,black_40%,transparent_78%)]"
+            className="h-auto w-full [mask-image:radial-gradient(closest-side_at_50%_50%,black_55%,transparent)]"
           />
         </div>
         <div
