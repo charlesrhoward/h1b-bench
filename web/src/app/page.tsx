@@ -17,7 +17,7 @@ export default async function Home() {
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
           Who sponsors H-1B workers,
           <br />
-          what they pay, and how often they win.
+          what they pay, and how often they&apos;re certified.
         </h1>
         <p className="max-w-2xl text-zinc-400">
           Every Labor Condition Application filed with the Department of Labor — benchmarked by
