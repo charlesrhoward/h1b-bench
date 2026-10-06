@@ -1,7 +1,8 @@
 -- H1B Bench schema: DOL OFLC LCA disclosure data (H-1B / H-1B1 / E-3)
 -- Live DB history: initial_h1b_bench_schema -> drop_bulk_insert_policies -> fy_overview_view
 -- -> search_functions -> search_employers_popularity_ranking -> employer_headcounts
--- -> drop_headcount_insert_policy -> labor_pool -> drop_labor_pool_insert_policies -> labor_pool_fillable_view.
+-- -> drop_headcount_insert_policy -> labor_pool -> drop_labor_pool_insert_policies -> labor_pool_fillable_view
+-- -> lca_dependency_profile -> lca_dependency_profile_yearly_floor -> lca_dependency_profile_exact_floor.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -235,3 +236,27 @@ select lca_fiscal_year, 'same_state',
 from labor_pool where state <> 'US' group by lca_fiscal_year;
 
 grant select on labor_pool_fillable to anon, authenticated;
+
+-- Certified H-1B LCAs per fiscal year, split by DOL "H-1B dependent" status: wage level mix,
+-- offers exactly at the prevailing-wage floor, and offered pay. lca_cases has no prevailing-wage unit, so
+-- only yearly-scale floors (>= $15,000) are compared against yearly offered pay.
+-- Refresh after each LCA load: refresh materialized view concurrently lca_dependency_profile;
+create materialized view lca_dependency_profile as
+select fiscal_year,
+       coalesce(h1b_dependent::text, 'unknown') as dependency,
+       count(*)::int as filings,
+       count(*) filter (where pw_wage_level is not null)::int as wage_level_known,
+       count(*) filter (where pw_wage_level = 'I')::int as wage_level_1,
+       count(*) filter (where pw_wage_level = 'II')::int as wage_level_2,
+       count(*) filter (where pw_wage_level = 'III')::int as wage_level_3,
+       count(*) filter (where pw_wage_level = 'IV')::int as wage_level_4,
+       count(*) filter (where wage_unit_of_pay ilike 'year%' and prevailing_wage >= 15000)::int as yearly_with_floor,
+       count(*) filter (where wage_unit_of_pay ilike 'year%' and prevailing_wage >= 15000
+                          and wage_rate_of_pay_from = prevailing_wage)::int as paid_at_floor,
+       percentile_cont(0.5) within group (order by wage_from_annual)::int as median_wage
+from lca_cases
+where visa_class = 'H-1B' and case_status = 'Certified'
+group by fiscal_year, coalesce(h1b_dependent::text, 'unknown');
+
+create unique index lca_dependency_profile_key on lca_dependency_profile (fiscal_year, dependency);
+grant select on lca_dependency_profile to anon, authenticated;
