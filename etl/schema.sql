@@ -2,7 +2,8 @@
 -- Live DB history: initial_h1b_bench_schema -> drop_bulk_insert_policies -> fy_overview_view
 -- -> search_functions -> search_employers_popularity_ranking -> employer_headcounts
 -- -> drop_headcount_insert_policy -> labor_pool -> drop_labor_pool_insert_policies -> labor_pool_fillable_view
--- -> lca_dependency_profile -> lca_dependency_profile_yearly_floor -> lca_dependency_profile_exact_floor.
+-- -> lca_dependency_profile -> lca_dependency_profile_yearly_floor -> lca_dependency_profile_exact_floor
+-- -> market_gap -> drop_market_gap_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -143,6 +144,29 @@ create table labor_pool_summary (
   primary key (lca_fiscal_year, tier)
 );
 
+-- H-1B offered pay vs. local median pay (docs/market-gap-method.md), loaded by
+-- etl/market_gap.py --load. Local median = OFLC wage library Level III (50th percentile).
+create table market_gap_summary (
+  lca_fiscal_year smallint not null,
+  dependency text not null check (dependency in ('all', 'true', 'false', 'unknown')),
+  filings_certified integer not null,
+  filings_eligible integer not null,     -- yearly-unit, full-time, offered pay > 0
+  filings_matched integer not null,      -- also matched to an area and a Level III wage
+  below_median integer not null,
+  median_gap integer not null,           -- median of offered pay - local median, dollars
+  median_gap_below integer,              -- same, among filings below the median
+  primary key (lca_fiscal_year, dependency)
+);
+
+create table employer_market_gap (
+  lca_fiscal_year smallint not null,
+  employer_id bigint not null references employers(id),
+  filings_matched integer not null,
+  below_median integer not null,
+  median_gap integer not null,
+  primary key (lca_fiscal_year, employer_id)
+);
+
 -- RLS: read-only public data
 alter table employers enable row level security;
 alter table lca_cases enable row level security;
@@ -151,6 +175,8 @@ alter table job_title_year_stats enable row level security;
 alter table employer_headcounts enable row level security;
 alter table labor_pool enable row level security;
 alter table labor_pool_summary enable row level security;
+alter table market_gap_summary enable row level security;
+alter table employer_market_gap enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
@@ -159,6 +185,8 @@ create policy "public read job_title_year_stats" on job_title_year_stats for sel
 create policy "public read employer_headcounts" on employer_headcounts for select using (true);
 create policy "public read labor_pool" on labor_pool for select using (true);
 create policy "public read labor_pool_summary" on labor_pool_summary for select using (true);
+create policy "public read market_gap_summary" on market_gap_summary for select using (true);
+create policy "public read employer_market_gap" on employer_market_gap for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
@@ -170,6 +198,8 @@ create policy "public read labor_pool_summary" on labor_pool_summary for select 
 --   create policy "bulk insert employer_headcounts" on employer_headcounts for insert with check (true);
 --   create policy "bulk insert labor_pool" on labor_pool for insert with check (true);
 --   create policy "bulk insert labor_pool_summary" on labor_pool_summary for insert with check (true);
+--   create policy "bulk insert market_gap_summary" on market_gap_summary for insert with check (true);
+--   create policy "bulk insert employer_market_gap" on employer_market_gap for insert with check (true);
 
 -- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
 create view fy_overview with (security_invoker = true) as

@@ -15,6 +15,8 @@ import {
   type Headcount,
 } from "@/lib/workforce";
 import WorkforceShareCell from "@/components/workforce-share-cell";
+import EmployerMarketGapNote from "@/components/cheap-labor/employer-market-gap-note";
+import { getEmployerMarketGap } from "@/lib/cheap-labor";
 
 export const dynamic = "force-dynamic";
 
@@ -27,11 +29,12 @@ export default async function EmployerDetail({
   const employerId = Number(id);
   if (!Number.isFinite(employerId)) notFound();
 
-  const [employer, stats, topJobs, headcount] = await Promise.all([
+  const [employer, stats, topJobs, headcount, marketGap] = await Promise.all([
     getEmployer(employerId),
     getEmployerStats(employerId),
     getEmployerTopJobs(employerId),
     getEmployerHeadcount(employerId),
+    getEmployerMarketGap(employerId),
   ]);
   if (!employer) notFound();
 
@@ -80,6 +83,7 @@ export default async function EmployerDetail({
         <p className="text-xs text-zinc-500" title={WORKFORCE_SHARE_METHOD}>
           {headcountNote(headcount)}
         </p>
+        <EmployerMarketGapNote gap={marketGap} />
       </section>
 
       <section>

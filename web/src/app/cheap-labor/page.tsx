@@ -2,15 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import DependencyTable from "@/components/cheap-labor/dependency-table";
 import EvidenceSection from "@/components/cheap-labor/evidence-section";
+import { BelowMedianLeaders, MarketGapTable, fmtGap } from "@/components/cheap-labor/market-gap-tables";
 import WageLevelBar from "@/components/cheap-labor/wage-level-bar";
 import {
   CHEAP_LABOR_FY,
+  MIN_RANKED_FILINGS,
   WAGE_LEVEL_SOURCE_URL,
+  getBelowMedianLeaders,
   getDependencyProfile,
+  getMarketGapSummary,
   totalWageLevels,
   type DependencyProfile,
+  type EmployerMarketGap,
+  type MarketGapSummary,
 } from "@/lib/cheap-labor";
-import { fmtPct } from "@/lib/format";
+import { fmtInt, fmtPct } from "@/lib/format";
+import { REPO_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +30,11 @@ export const metadata: Metadata = {
 const DOL_SOURCE = `DOL OFLC LCA disclosure data, certified H-1B filings, FY${CHEAP_LABOR_FY}.`;
 
 export default async function CheapLaborPage() {
-  const profile = await getDependencyProfile();
+  const [profile, marketGap, leaders] = await Promise.all([
+    getDependencyProfile(),
+    getMarketGapSummary(),
+    getBelowMedianLeaders(),
+  ]);
   if (profile.length === 0) {
     return <p className="text-zinc-400">Results for FY{CHEAP_LABOR_FY} are not loaded yet.</p>;
   }
@@ -45,6 +56,7 @@ export default async function CheapLaborPage() {
 
       <WageLevelSection profile={profile} />
       <DependencySection profile={profile} />
+      <MarketGapSection rows={marketGap} leaders={leaders} />
     </div>
   );
 }
@@ -108,6 +120,47 @@ function DependencySection({ profile }: { profile: DependencyProfile[] }) {
           of filings. Other employers did this on {fmtPct(other.paid_at_floor, other.yearly_with_floor)}{" "}
           of filings.
         </p>
+      ) : null}
+    </EvidenceSection>
+  );
+}
+
+function MarketGapSection({ rows, leaders }: { rows: MarketGapSummary[]; leaders: EmployerMarketGap[] }) {
+  const all = rows.find((r) => r.dependency === "all");
+  if (!all) return null;
+  return (
+    <EvidenceSection
+      index={3}
+      title="Most H-1B filings offer less than the local median pay."
+      limits={`Offered pay is the bottom of the offered range. The local median covers all workers in the occupation and area, at all experience levels. ${fmtInt(all.filings_matched)} of ${fmtInt(all.filings_eligible)} yearly, full-time filings matched an area and a wage. DOL left the worksite county blank on most filings in its FY${CHEAP_LABOR_FY} Q4 file, so most of those filings are not in the count.`}
+      source={
+        <>
+          {DOL_SOURCE} DOL OFLC Online Wage Library, Level III wage, wage years 2024-25 and 2025-26.{" "}
+          <a href={`${REPO_URL}/blob/main/docs/market-gap-method.md`} className="text-emerald-400 hover:underline">
+            Method
+          </a>
+          , committed before the results.
+        </>
+      }
+    >
+      <p>
+        We compare the pay on each filing with the local median pay for the same occupation in the
+        same area. The local median comes from DOL&apos;s own wage library.
+      </p>
+      <p>
+        <span className="font-semibold text-zinc-100">{fmtPct(all.below_median, all.filings_matched)}</span>{" "}
+        of matched filings offer less than the local median. When a filing is below the median, the
+        median gap is {fmtGap(all.median_gap_below)} a year.
+      </p>
+      <MarketGapTable rows={rows} />
+      {leaders.length > 0 ? (
+        <>
+          <p>
+            These large sponsors offer less than the local median most often. Each has{" "}
+            {fmtInt(MIN_RANKED_FILINGS)} or more matched filings.
+          </p>
+          <BelowMedianLeaders rows={leaders} />
+        </>
       ) : null}
     </EvidenceSection>
   );
