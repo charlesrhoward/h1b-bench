@@ -3,6 +3,7 @@ import Link from "next/link";
 import DependencyTable from "@/components/cheap-labor/dependency-table";
 import EvidenceSection from "@/components/cheap-labor/evidence-section";
 import { BelowMedianLeaders, MarketGapTable, fmtGap } from "@/components/cheap-labor/market-gap-tables";
+import { PwPublisherTable, PwSourceTable } from "@/components/cheap-labor/pw-source-tables";
 import WageLevelBar from "@/components/cheap-labor/wage-level-bar";
 import {
   CHEAP_LABOR_FY,
@@ -11,10 +12,14 @@ import {
   getBelowMedianLeaders,
   getDependencyProfile,
   getMarketGapSummary,
+  getPwSourceSummary,
+  getPwSurveyPublishers,
   totalWageLevels,
   type DependencyProfile,
   type EmployerMarketGap,
   type MarketGapSummary,
+  type PwSourceSummary,
+  type PwSurveyPublisher,
 } from "@/lib/cheap-labor";
 import { fmtInt, fmtPct } from "@/lib/format";
 import { REPO_URL } from "@/lib/site";
@@ -30,10 +35,12 @@ export const metadata: Metadata = {
 const DOL_SOURCE = `DOL OFLC LCA disclosure data, certified H-1B filings, FY${CHEAP_LABOR_FY}.`;
 
 export default async function CheapLaborPage() {
-  const [profile, marketGap, leaders] = await Promise.all([
+  const [profile, marketGap, leaders, pwSources, publishers] = await Promise.all([
     getDependencyProfile(),
     getMarketGapSummary(),
     getBelowMedianLeaders(),
+    getPwSourceSummary(),
+    getPwSurveyPublishers(),
   ]);
   if (profile.length === 0) {
     return <p className="text-zinc-400">Results for FY{CHEAP_LABOR_FY} are not loaded yet.</p>;
@@ -57,6 +64,7 @@ export default async function CheapLaborPage() {
       <WageLevelSection profile={profile} />
       <DependencySection profile={profile} />
       <MarketGapSection rows={marketGap} leaders={leaders} />
+      <PwSourceSection rows={pwSources} publishers={publishers} />
     </div>
   );
 }
@@ -160,6 +168,46 @@ function MarketGapSection({ rows, leaders }: { rows: MarketGapSummary[]; leaders
             {fmtInt(MIN_RANKED_FILINGS)} or more matched filings.
           </p>
           <BelowMedianLeaders rows={leaders} />
+        </>
+      ) : null}
+    </EvidenceSection>
+  );
+}
+
+function PwSourceSection({ rows, publishers }: { rows: PwSourceSummary[]; publishers: PwSurveyPublisher[] }) {
+  const survey = rows.find((r) => r.source === "survey");
+  const oews = rows.find((r) => r.source === "oews");
+  if (!survey || !oews) return null;
+  return (
+    <EvidenceSection
+      index={4}
+      title="Filings with an employer-chosen survey offer less."
+      limits="The source is the employer's own entry on the filing. A private survey can be lawful and accurate. This result compares outcomes; it does not judge any single survey. The local-median comparison uses only filings that matched in section 03."
+      source={
+        <>
+          {DOL_SOURCE}{" "}
+          <a href={`${REPO_URL}/blob/main/docs/pw-source-method.md`} className="text-emerald-400 hover:underline">
+            Method
+          </a>
+          , committed before the results.
+        </>
+      }
+    >
+      <p>
+        Each filing states where its wage floor came from. Most filings use government data. Some
+        employers choose a private salary survey instead.
+      </p>
+      <p>
+        Filings with a private survey offer less than the local median{" "}
+        <span className="font-semibold text-zinc-100">{fmtPct(survey.below_median, survey.gap_matched)}</span> of
+        the time. Filings with government data do this {fmtPct(oews.below_median, oews.gap_matched)} of the
+        time.
+      </p>
+      <PwSourceTable rows={rows} />
+      {publishers.length > 0 ? (
+        <>
+          <p>The survey publishers on the most filings:</p>
+          <PwPublisherTable rows={publishers} />
         </>
       ) : null}
     </EvidenceSection>
