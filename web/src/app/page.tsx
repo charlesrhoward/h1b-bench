@@ -1,0 +1,97 @@
+import Link from "next/link";
+import { getOverviewStats, getTopEmployers } from "@/lib/queries";
+import { fmtInt, fmtPct } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const { years, totalFilings, totalCertified, employerCount } = await getOverviewStats();
+  const top = await getTopEmployers(2025, 10);
+  const maxFilings = Math.max(...years.map(([, v]) => v.filings), 1);
+
+  return (
+    <div className="space-y-12">
+      <section className="space-y-4">
+        <p className="font-mono text-sm text-emerald-400">DOL OFLC disclosure data · FY2020–FY2026 Q3</p>
+        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          Who sponsors H-1B workers,
+          <br />
+          what they pay, and how often they win.
+        </h1>
+        <p className="max-w-2xl text-zinc-400">
+          Every Labor Condition Application filed with the Department of Labor — benchmarked by
+          employer, occupation, wage, and year.
+        </p>
+      </section>
+
+      <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Stat label="LCA filings" value={fmtInt(totalFilings)} />
+        <Stat label="Certified" value={fmtPct(totalCertified, totalFilings)} />
+        <Stat label="Employers" value={fmtInt(employerCount)} />
+        <Stat label="Fiscal years" value={String(years.length)} />
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-lg font-semibold">Filings by fiscal year</h2>
+        <div className="flex items-end gap-3">
+          {years.map(([year, v]) => (
+            <div key={year} className="flex flex-1 flex-col items-center gap-2">
+              <span className="font-mono text-xs text-zinc-400">{fmtInt(v.filings)}</span>
+              <div
+                className="w-full rounded-t bg-emerald-500/80"
+                style={{ height: `${Math.max(4, (v.filings / maxFilings) * 160)}px` }}
+              />
+              <span className="font-mono text-xs text-zinc-500">FY{String(year).slice(2)}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Top H-1B sponsors · FY2025</h2>
+          <Link href="/employers" className="text-sm text-emerald-400 hover:underline">
+            Full leaderboard →
+          </Link>
+        </div>
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Employer</th>
+              <th className="text-right">Filings</th>
+              <th className="text-right">Certified</th>
+              <th className="text-right">Median wage</th>
+            </tr>
+          </thead>
+          <tbody>
+            {top.map((r, i) => (
+              <tr key={r.employer_id}>
+                <td className="font-mono text-zinc-500">{i + 1}</td>
+                <td>
+                  <Link href={`/employers/${r.employer_id}`} className="hover:text-emerald-400">
+                    {r.employers?.name}
+                  </Link>
+                </td>
+                <td className="text-right font-mono">{fmtInt(r.filings)}</td>
+                <td className="text-right font-mono">{fmtPct(r.certified, r.filings)}</td>
+                <td className="text-right font-mono">
+                  {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-zinc-800 p-4">
+      <div className="font-mono text-2xl font-bold">{value}</div>
+      <div className="mt-1 text-xs text-zinc-500">{label}</div>
+    </div>
+  );
+}

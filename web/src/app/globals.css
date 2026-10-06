@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+body {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+th {
+  @apply text-left text-xs font-medium uppercase tracking-wider text-zinc-500 pb-2;
+}
+
+td {
+  @apply py-2.5 pr-4 text-sm;
+}
+
+tr {
+  @apply border-b border-zinc-800/60;
+}
