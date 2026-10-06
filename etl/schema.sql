@@ -3,7 +3,7 @@
 -- -> search_functions -> search_employers_popularity_ranking -> employer_headcounts
 -- -> drop_headcount_insert_policy -> labor_pool -> drop_labor_pool_insert_policies -> labor_pool_fillable_view
 -- -> lca_dependency_profile -> lca_dependency_profile_yearly_floor -> lca_dependency_profile_exact_floor
--- -> market_gap -> drop_market_gap_insert_policies.
+-- -> market_gap -> drop_market_gap_insert_policies -> pw_source -> drop_pw_source_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -167,6 +167,29 @@ create table employer_market_gap (
   primary key (lca_fiscal_year, employer_id)
 );
 
+-- Who set the H-1B wage floor (docs/pw-source-method.md), loaded by etl/pw_source.py --load.
+create table pw_source_summary (
+  lca_fiscal_year smallint not null,
+  source text not null check (source in ('dol_determination', 'oews', 'survey', 'union', 'federal_contract', 'other')),
+  dependency text not null check (dependency in ('all', 'true', 'false', 'unknown')),
+  filings integer not null,
+  wage_level_known integer not null,
+  level_1_2 integer not null,
+  gap_matched integer not null,          -- filings matched in the market-gap method
+  below_median integer not null,         -- of those, offered pay < local median
+  primary key (lca_fiscal_year, source, dependency)
+);
+
+create table pw_survey_publishers (
+  lca_fiscal_year smallint not null,
+  publisher text not null,               -- grouped by firm name (etl/pw_source.py)
+  filings integer not null,
+  dependent_filings integer not null,
+  gap_matched integer not null,
+  below_median integer not null,
+  primary key (lca_fiscal_year, publisher)
+);
+
 -- RLS: read-only public data
 alter table employers enable row level security;
 alter table lca_cases enable row level security;
@@ -177,6 +200,8 @@ alter table labor_pool enable row level security;
 alter table labor_pool_summary enable row level security;
 alter table market_gap_summary enable row level security;
 alter table employer_market_gap enable row level security;
+alter table pw_source_summary enable row level security;
+alter table pw_survey_publishers enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
@@ -187,6 +212,8 @@ create policy "public read labor_pool" on labor_pool for select using (true);
 create policy "public read labor_pool_summary" on labor_pool_summary for select using (true);
 create policy "public read market_gap_summary" on market_gap_summary for select using (true);
 create policy "public read employer_market_gap" on employer_market_gap for select using (true);
+create policy "public read pw_source_summary" on pw_source_summary for select using (true);
+create policy "public read pw_survey_publishers" on pw_survey_publishers for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
@@ -200,6 +227,8 @@ create policy "public read employer_market_gap" on employer_market_gap for selec
 --   create policy "bulk insert labor_pool_summary" on labor_pool_summary for insert with check (true);
 --   create policy "bulk insert market_gap_summary" on market_gap_summary for insert with check (true);
 --   create policy "bulk insert employer_market_gap" on employer_market_gap for insert with check (true);
+--   create policy "bulk insert pw_source_summary" on pw_source_summary for insert with check (true);
+--   create policy "bulk insert pw_survey_publishers" on pw_survey_publishers for insert with check (true);
 
 -- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
 create view fy_overview with (security_invoker = true) as

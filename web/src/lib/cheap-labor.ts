@@ -105,3 +105,41 @@ export async function getEmployerMarketGap(employerId: number, fy = CHEAP_LABOR_
     .maybeSingle();
   return data as EmployerMarketGap | null;
 }
+
+export type PwSource = "dol_determination" | "oews" | "survey" | "union" | "federal_contract" | "other";
+
+export type PwSourceSummary = {
+  source: PwSource;
+  filings: number;
+  gap_matched: number;
+  below_median: number;
+};
+
+export type PwSurveyPublisher = {
+  publisher: string;
+  filings: number;
+  gap_matched: number;
+  below_median: number;
+};
+
+/** Wage-floor source totals across all employers (pw_source_summary, dependency = 'all'). */
+export async function getPwSourceSummary(fy = CHEAP_LABOR_FY) {
+  const { data } = await supabase
+    .from("pw_source_summary")
+    .select("source, filings, gap_matched, below_median")
+    .eq("lca_fiscal_year", fy)
+    .eq("dependency", "all")
+    .order("filings", { ascending: false });
+  return (data ?? []) as PwSourceSummary[];
+}
+
+/** Private survey publishers with the most filings. */
+export async function getPwSurveyPublishers(fy = CHEAP_LABOR_FY, limit = 8) {
+  const { data } = await supabase
+    .from("pw_survey_publishers")
+    .select("publisher, filings, gap_matched, below_median")
+    .eq("lca_fiscal_year", fy)
+    .order("filings", { ascending: false })
+    .limit(limit);
+  return (data ?? []) as PwSurveyPublisher[];
+}

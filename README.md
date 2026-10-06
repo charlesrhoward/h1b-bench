@@ -89,6 +89,9 @@ SUPABASE_URL=https://<ref>.supabase.co SUPABASE_KEY=<publishable-key> \
 # 7. Pay vs. local median (/cheap-labor): put OFLC_Wages_2024-25.zip and
 #    OFLC_Wages_2025-26.zip from flag.dol.gov/wage-data/wage-data-downloads in data/raw/
 (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u market_gap.py --load)
+
+# 8. Wage-floor source (/cheap-labor): reads the FY2025 LCA xlsx files again (3-4 min)
+(cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u pw_source.py --load)
 ```
 
 The labor pool test follows [docs/labor-pool-method.md](docs/labor-pool-method.md), which
