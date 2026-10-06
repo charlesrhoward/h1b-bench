@@ -2,6 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { getOverviewStats, getTopEmployers } from "@/lib/queries";
 import { fmtInt, fmtPct } from "@/lib/format";
+import { WORKFORCE_SHARE_METHOD } from "@/lib/workforce";
+import WorkforceShareCell from "@/components/workforce-share-cell";
 
 export const dynamic = "force-dynamic";
 
@@ -88,13 +90,16 @@ export default async function Home() {
           </Link>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[34rem]">
+          <table className="w-full min-w-[40rem]">
             <thead>
               <tr>
                 <th>#</th>
                 <th>Employer</th>
                 <th className="text-right">Filings</th>
                 <th className="text-right">Certified</th>
+                <th className="text-right" title={WORKFORCE_SHARE_METHOD}>
+                  % of workforce
+                </th>
                 <th className="text-right">Median wage</th>
               </tr>
             </thead>
@@ -109,6 +114,10 @@ export default async function Home() {
                   </td>
                   <td className="text-right font-mono">{fmtInt(r.filings)}</td>
                   <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
+                  <WorkforceShareCell
+                    certified={r.certified}
+                    headcount={r.employers?.employer_headcounts}
+                  />
                   <td className="text-right font-mono">
                     {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
                   </td>

@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import type { Headcount } from "./workforce";
 
 export type EmployerYearStat = {
   employer_id: number;
@@ -17,7 +18,11 @@ export type EmployerYearStat = {
   top_job_title: string | null;
   top_soc_code: string | null;
   top_worksite_state: string | null;
-  employers?: { name: string; state: string | null } | null;
+  employers?: {
+    name: string;
+    state: string | null;
+    employer_headcounts?: Headcount | null;
+  } | null;
 };
 
 export type Employer = {
@@ -39,6 +44,8 @@ export type JobYearStat = {
   avg_wage_annual: number | null;
   distinct_employers: number | null;
 };
+
+const HEADCOUNT_COLUMNS = "employee_count, agreeing_filings, perm_filings, latest_received, match_method";
 
 export async function getOverviewStats() {
   const { data: yearRows } = await supabase
@@ -63,7 +70,7 @@ export async function getOverviewStats() {
 export async function getTopEmployers(year?: number, limit = 50) {
   let q = supabase
     .from("employer_year_stats")
-    .select("*, employers(name, state)")
+    .select(`*, employers(name, state, employer_headcounts(${HEADCOUNT_COLUMNS}))`)
     .eq("visa_class", "H-1B")
     .order("filings", { ascending: false })
     .limit(limit);
@@ -99,6 +106,15 @@ export async function searchEmployerHits(term: string, limit = 100) {
 export async function getEmployer(id: number) {
   const { data } = await supabase.from("employers").select("*").eq("id", id).single();
   return data as Employer | null;
+}
+
+export async function getEmployerHeadcount(id: number) {
+  const { data } = await supabase
+    .from("employer_headcounts")
+    .select(HEADCOUNT_COLUMNS)
+    .eq("employer_id", id)
+    .maybeSingle();
+  return data as Headcount | null;
 }
 
 export async function getEmployerStats(id: number) {
