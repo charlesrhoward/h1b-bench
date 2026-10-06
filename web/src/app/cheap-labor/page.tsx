@@ -5,6 +5,7 @@ import EvidenceSection from "@/components/cheap-labor/evidence-section";
 import { BelowMedianLeaders, MarketGapTable, fmtGap } from "@/components/cheap-labor/market-gap-tables";
 import { PwPublisherTable, PwSourceTable } from "@/components/cheap-labor/pw-source-tables";
 import BackWagesSection from "@/components/cheap-labor/sections/back-wages-section";
+import WarnSection from "@/components/cheap-labor/sections/warn-section";
 import WageLevelBar from "@/components/cheap-labor/wage-level-bar";
 import {
   CHEAP_LABOR_FY,
@@ -15,6 +16,8 @@ import {
   getMarketGapSummary,
   getPwSourceSummary,
   getPwSurveyPublishers,
+  getWarnCompanies,
+  getWarnSummary,
   getWhdTopEmployers,
   getWhdYears,
   totalWageLevels,
@@ -38,7 +41,8 @@ export const metadata: Metadata = {
 const DOL_SOURCE = `DOL OFLC LCA disclosure data, certified H-1B filings, FY${CHEAP_LABOR_FY}.`;
 
 export default async function CheapLaborPage() {
-  const [profile, marketGap, leaders, pwSources, publishers, whdYears, whdTop] = await Promise.all([
+  const [profile, marketGap, leaders, pwSources, publishers, whdYears, whdTop, warnSummary, warnCompanies] =
+    await Promise.all([
     getDependencyProfile(),
     getMarketGapSummary(),
     getBelowMedianLeaders(),
@@ -46,6 +50,8 @@ export default async function CheapLaborPage() {
     getPwSurveyPublishers(),
     getWhdYears(),
     getWhdTopEmployers(),
+    getWarnSummary(),
+    getWarnCompanies(),
   ]);
   if (profile.length === 0) {
     return <p className="text-zinc-400">Results for FY{CHEAP_LABOR_FY} are not loaded yet.</p>;
@@ -71,6 +77,7 @@ export default async function CheapLaborPage() {
       <MarketGapSection rows={marketGap} leaders={leaders} />
       <PwSourceSection rows={pwSources} publishers={publishers} />
       <BackWagesSection index={5} years={whdYears} top={whdTop} />
+      <WarnSection index={6} summary={warnSummary} companies={warnCompanies} />
     </div>
   );
 }

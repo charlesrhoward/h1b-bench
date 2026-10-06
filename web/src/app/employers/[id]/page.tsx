@@ -17,7 +17,8 @@ import {
 import WorkforceShareCell from "@/components/workforce-share-cell";
 import EmployerMarketGapNote from "@/components/cheap-labor/employer-market-gap-note";
 import { EmployerBackWagesNote } from "@/components/cheap-labor/back-wages";
-import { getEmployerMarketGap, getEmployerWhd } from "@/lib/cheap-labor";
+import { EmployerWarnNote } from "@/components/cheap-labor/warn-tables";
+import { getEmployerMarketGap, getEmployerWarn, getEmployerWhd } from "@/lib/cheap-labor";
 
 export const dynamic = "force-dynamic";
 
@@ -30,13 +31,14 @@ export default async function EmployerDetail({
   const employerId = Number(id);
   if (!Number.isFinite(employerId)) notFound();
 
-  const [employer, stats, topJobs, headcount, marketGap, whd] = await Promise.all([
+  const [employer, stats, topJobs, headcount, marketGap, whd, warn] = await Promise.all([
     getEmployer(employerId),
     getEmployerStats(employerId),
     getEmployerTopJobs(employerId),
     getEmployerHeadcount(employerId),
     getEmployerMarketGap(employerId),
     getEmployerWhd(employerId),
+    getEmployerWarn(employerId),
   ]);
   if (!employer) notFound();
 
@@ -87,6 +89,7 @@ export default async function EmployerDetail({
         </p>
         <EmployerMarketGapNote gap={marketGap} />
         <EmployerBackWagesNote whd={whd} />
+        <EmployerWarnNote warn={warn} />
       </section>
 
       <section>
