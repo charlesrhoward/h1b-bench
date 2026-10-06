@@ -96,6 +96,11 @@ SUPABASE_URL=https://<ref>.supabase.co SUPABASE_KEY=<publishable-key> \
 # 9. H-1B back wages (/cheap-labor, employer pages): put WHD_enforcement.zip from
 #    data.dol.gov/data-catalog/WHD/enforcement/ in data/raw/
 (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u back_wages.py --load)
+
+# 10. WARN layoff notices (/cheap-labor, employer pages): put tx_warn.json
+#     (data.texas.gov/resource/8w53-c4f6.json?$limit=50000) and ca_warn_2024-25.pdf (EDD WARN
+#     report, 7/1/2024 to 6/30/2025) in data/raw/
+(cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u warn.py --load)
 ```
 
 The labor pool test follows [docs/labor-pool-method.md](docs/labor-pool-method.md), which

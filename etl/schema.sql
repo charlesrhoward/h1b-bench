@@ -4,7 +4,7 @@
 -- -> drop_headcount_insert_policy -> labor_pool -> drop_labor_pool_insert_policies -> labor_pool_fillable_view
 -- -> lca_dependency_profile -> lca_dependency_profile_yearly_floor -> lca_dependency_profile_exact_floor
 -- -> market_gap -> drop_market_gap_insert_policies -> pw_source -> drop_pw_source_insert_policies
--- -> whd_h1b -> drop_whd_h1b_insert_policies.
+-- -> whd_h1b -> drop_whd_h1b_insert_policies -> warn_h1b -> drop_warn_h1b_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -221,6 +221,38 @@ create table employer_whd_h1b (
   latest_fiscal_year smallint
 );
 
+-- WARN layoff notices from employers with certified H-1B filings (docs/warn-method.md),
+-- loaded by etl/warn.py --load. Texas: full FY window; California: Oct 2024 to Jun 2025.
+create table warn_h1b_summary (
+  lca_fiscal_year smallint primary key,
+  notices_in_window integer not null,
+  companies_matched integer not null,
+  notices_matched integer not null,
+  workers_laid_off integer not null,
+  h1b_filings integer not null           -- matched companies' certified H-1B filings
+);
+
+create table warn_h1b_companies (
+  lca_fiscal_year smallint not null,
+  key text not null,                     -- company key (etl/warn.py company_key)
+  company text not null,                 -- as named in the WARN notice
+  states text not null,
+  notices integer not null,
+  workers_laid_off integer not null,
+  h1b_filings integer not null,
+  employer_id bigint references employers(id),  -- name variant with the most filings
+  primary key (lca_fiscal_year, key)
+);
+
+create table employer_warn (
+  lca_fiscal_year smallint not null,
+  employer_id bigint not null references employers(id),
+  notices integer not null,              -- totals for the employer's whole company key
+  workers_laid_off integer not null,
+  states text not null,
+  primary key (lca_fiscal_year, employer_id)
+);
+
 -- RLS: read-only public data
 alter table employers enable row level security;
 alter table lca_cases enable row level security;
@@ -236,6 +268,9 @@ alter table pw_survey_publishers enable row level security;
 alter table whd_h1b_years enable row level security;
 alter table whd_h1b_top_employers enable row level security;
 alter table employer_whd_h1b enable row level security;
+alter table warn_h1b_summary enable row level security;
+alter table warn_h1b_companies enable row level security;
+alter table employer_warn enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
@@ -251,6 +286,9 @@ create policy "public read pw_survey_publishers" on pw_survey_publishers for sel
 create policy "public read whd_h1b_years" on whd_h1b_years for select using (true);
 create policy "public read whd_h1b_top_employers" on whd_h1b_top_employers for select using (true);
 create policy "public read employer_whd_h1b" on employer_whd_h1b for select using (true);
+create policy "public read warn_h1b_summary" on warn_h1b_summary for select using (true);
+create policy "public read warn_h1b_companies" on warn_h1b_companies for select using (true);
+create policy "public read employer_warn" on employer_warn for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
@@ -269,6 +307,9 @@ create policy "public read employer_whd_h1b" on employer_whd_h1b for select usin
 --   create policy "bulk insert whd_h1b_years" on whd_h1b_years for insert with check (true);
 --   create policy "bulk insert whd_h1b_top_employers" on whd_h1b_top_employers for insert with check (true);
 --   create policy "bulk insert employer_whd_h1b" on employer_whd_h1b for insert with check (true);
+--   create policy "bulk insert warn_h1b_summary" on warn_h1b_summary for insert with check (true);
+--   create policy "bulk insert warn_h1b_companies" on warn_h1b_companies for insert with check (true);
+--   create policy "bulk insert employer_warn" on employer_warn for insert with check (true);
 
 -- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
 create view fy_overview with (security_invoker = true) as

@@ -211,3 +211,58 @@ export function totalWhd(years: WhdYear[]) {
     { cases: 0, back_wages: 0, employees: 0, penalties: 0 },
   );
 }
+
+export type WarnSummary = {
+  notices_in_window: number;
+  companies_matched: number;
+  notices_matched: number;
+  workers_laid_off: number;
+  h1b_filings: number;
+};
+
+export type WarnCompany = {
+  key: string;
+  company: string;
+  states: string;
+  notices: number;
+  workers_laid_off: number;
+  h1b_filings: number;
+  employer_id: number | null;
+};
+
+export type EmployerWarn = {
+  notices: number;
+  workers_laid_off: number;
+  states: string;
+};
+
+/** WARN notices matched to H-1B employers for the fiscal year, or null when not loaded. */
+export async function getWarnSummary() {
+  const { data } = await supabase
+    .from("warn_h1b_summary")
+    .select("notices_in_window, companies_matched, notices_matched, workers_laid_off, h1b_filings")
+    .eq("lca_fiscal_year", CHEAP_LABOR_FY)
+    .maybeSingle();
+  return data as WarnSummary | null;
+}
+
+/** The matched companies with the most workers in WARN notices. */
+export async function getWarnCompanies() {
+  const { data } = await supabase
+    .from("warn_h1b_companies")
+    .select("key, company, states, notices, workers_laid_off, h1b_filings, employer_id")
+    .eq("lca_fiscal_year", CHEAP_LABOR_FY)
+    .order("workers_laid_off", { ascending: false });
+  return (data ?? []) as WarnCompany[];
+}
+
+/** One employer's company-level WARN totals for the fiscal year, or null when none matched. */
+export async function getEmployerWarn(employerId: number) {
+  const { data } = await supabase
+    .from("employer_warn")
+    .select("notices, workers_laid_off, states")
+    .eq("lca_fiscal_year", CHEAP_LABOR_FY)
+    .eq("employer_id", employerId)
+    .maybeSingle();
+  return data as EmployerWarn | null;
+}
