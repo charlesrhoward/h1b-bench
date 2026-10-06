@@ -15,3 +15,31 @@ td {
 tr {
   @apply border-b border-zinc-800/60;
 }
+
+/* Dark-themed scrollbars (dropdown + table scroll containers) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent; /* zinc-700 */
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3f3f46; /* zinc-700 */
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b; /* zinc-600 */
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
