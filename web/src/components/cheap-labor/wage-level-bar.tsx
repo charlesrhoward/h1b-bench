@@ -23,7 +23,7 @@ export default function WageLevelBar({
           <div
             key={l.level}
             className={SEGMENT_TONE[l.level]}
-            style={{ width: `${(l.count / known) * 100}%` }}
+            style={{ width: known > 0 ? `${(l.count / known) * 100}%` : "0%" }}
             title={`Level ${l.level}: ${fmtPct(l.count, known)}`}
           />
         ))}
