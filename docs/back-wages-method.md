@@ -43,3 +43,6 @@ Unlinked cases still count in the totals.
 - Back wages are amounts the employer agreed to pay. The data does not show if the
   employer paid.
 - Exact-name linking misses employers whose names differ between the WHD and LCA records.
+- Yearly rows and the all-years totals count only cases with a findings date
+  (`FINDINGS_END_DATE`). Added after code review: the first run had 1 undated H-1B case,
+  with $208,052 in back wages.

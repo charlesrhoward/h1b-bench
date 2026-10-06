@@ -60,7 +60,7 @@ def year_table(df):
 def top_employers(df):
     df = df.assign(name_key=df["display_name"].map(norm_name))
     grouped = df.groupby("name_key").agg(
-        name=("display_name", lambda s: s.mode().iloc[0]), state=("ST_CD", lambda s: s.mode().iloc[0] if s.notna().any() else None),
+        name=("display_name", lambda s: s.mode().iloc[0] if s.notna().any() else None), state=("ST_CD", lambda s: s.mode().iloc[0] if s.notna().any() else None),
         cases=("CASE_ID", "size"), back_wages=("H1B_BW_ATP_AMT", "sum"), employees=("H1B_EE_ATP_CNT", "sum"),
         penalties=("H1B_CMP_ASSD_AMT", "sum"),
     ).reset_index()
@@ -68,11 +68,22 @@ def top_employers(df):
     return grouped.astype({"cases": int, "back_wages": int, "employees": int, "penalties": int})
 
 
+def linked_ids(df, id_map):
+    """Per case: the employer whose normalized name equals the legal name, else the trade name."""
+    legal = df["LEGAL_NAME"].map(norm_name).map(id_map)
+    return legal.fillna(df["TRADE_NM"].map(norm_name).map(id_map))
+
+
+def top_employer_ids(df, top, id_map):
+    """Per top-employer row: the employer most of its cases link to, by the same rule as employer_links."""
+    linked = df.assign(name_key=df["display_name"].map(norm_name), employer_id=linked_ids(df, id_map))
+    best = linked.dropna(subset=["employer_id"]).groupby("name_key")["employer_id"].agg(lambda s: s.mode().iloc[0])
+    return top["name_key"].map(best).astype("Int64")
+
+
 def employer_links(df, id_map):
     """Per H1B Bench employer: cases whose legal or trade name exactly matches its normalized name."""
-    legal = df["LEGAL_NAME"].map(norm_name).map(id_map)
-    trade = df["TRADE_NM"].map(norm_name).map(id_map)
-    linked = df.assign(employer_id=legal.fillna(trade)).dropna(subset=["employer_id"])
+    linked = df.assign(employer_id=linked_ids(df, id_map)).dropna(subset=["employer_id"])
     out = linked.groupby("employer_id").agg(
         cases=("CASE_ID", "size"), back_wages=("H1B_BW_ATP_AMT", "sum"), employees=("H1B_EE_ATP_CNT", "sum"),
         penalties=("H1B_CMP_ASSD_AMT", "sum"), latest_fiscal_year=("fiscal_year", "max"),
@@ -91,7 +102,7 @@ def main():
         return
     from load_supabase import batched, fetch_employer_id_map, post_batch, records
     id_map = fetch_employer_id_map()
-    top["employer_id"] = top["name_key"].map(id_map).astype("Int64")
+    top["employer_id"] = top_employer_ids(df, top, id_map)
     links = employer_links(df, id_map)
     post_batch("whd_h1b_years", records(years, ["fiscal_year", "cases", "back_wages", "employees", "penalties"]))
     post_batch("whd_h1b_top_employers", records(top, ["name_key", "name", "state", "employer_id", "cases",
