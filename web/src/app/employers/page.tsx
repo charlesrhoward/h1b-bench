@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getTopEmployers, searchEmployerHits } from "@/lib/queries";
 import { fmtInt, fmtPct } from "@/lib/format";
+import { WORKFORCE_SHARE_METHOD } from "@/lib/workforce";
+import WorkforceShareCell from "@/components/workforce-share-cell";
 
 export const dynamic = "force-dynamic";
 
@@ -93,7 +95,7 @@ export default async function EmployersPage({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[52rem]">
+        <table className="w-full min-w-[58rem]">
           <thead>
             <tr>
               <th>#</th>
@@ -103,6 +105,9 @@ export default async function EmployersPage({
               <th className="text-right">Certified</th>
               <th className="text-right">Denied</th>
               <th className="text-right">Workers</th>
+              <th className="text-right" title={WORKFORCE_SHARE_METHOD}>
+                % of workforce
+              </th>
               <th className="text-right">Median wage</th>
               <th>Top role</th>
             </tr>
@@ -121,6 +126,10 @@ export default async function EmployersPage({
                 <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
                 <td className="text-right font-mono text-zinc-500">{fmtInt(r.denied)}</td>
                 <td className="text-right font-mono">{fmtInt(r.worker_positions)}</td>
+                <WorkforceShareCell
+                  certified={r.certified}
+                  headcount={r.employers?.employer_headcounts}
+                />
                 <td className="text-right font-mono">
                   {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
                 </td>
@@ -130,6 +139,12 @@ export default async function EmployersPage({
           </tbody>
         </table>
       </div>
+      <p className="max-w-3xl text-xs text-zinc-500">
+        <span className="text-zinc-400">% of workforce</span> — {WORKFORCE_SHARE_METHOD} Grey
+        values are less reliable: the headcount appears on only one filing, the employer&apos;s
+        filings disagree on it, or the employer filed more LCAs than the employees it reported.
+        Hover a value for its source.
+      </p>
     </div>
   );
 }

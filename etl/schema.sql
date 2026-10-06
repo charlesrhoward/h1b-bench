@@ -1,5 +1,7 @@
 -- H1B Bench schema: DOL OFLC LCA disclosure data (H-1B / H-1B1 / E-3)
--- Live DB history: initial_h1b_bench_schema -> drop_bulk_insert_policies -> fy_overview_view.
+-- Live DB history: initial_h1b_bench_schema -> drop_bulk_insert_policies -> fy_overview_view
+-- -> search_functions -> search_employers_popularity_ranking -> employer_headcounts
+-- -> drop_headcount_insert_policy.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -101,16 +103,29 @@ create table job_title_year_stats (
   primary key (soc_code, fiscal_year)
 );
 
+-- PERM-reported total headcount per employer (Form ETA-9089 EMP_NUM_PAYROLL), loaded by
+-- etl/load_headcounts.py. Powers the "% of workforce" column.
+create table employer_headcounts (
+  employer_id bigint primary key references employers(id),
+  employee_count integer not null check (employee_count > 0), -- most frequently reported value
+  agreeing_filings integer not null,     -- PERM filings that reported exactly employee_count
+  perm_filings integer not null,         -- PERM filings with a headcount for this employer
+  latest_received date,                  -- newest PERM filing used
+  match_method text not null check (match_method in ('fein', 'name'))
+);
+
 -- RLS: read-only public data
 alter table employers enable row level security;
 alter table lca_cases enable row level security;
 alter table employer_year_stats enable row level security;
 alter table job_title_year_stats enable row level security;
+alter table employer_headcounts enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
 create policy "public read employer_year_stats" on employer_year_stats for select using (true);
 create policy "public read job_title_year_stats" on job_title_year_stats for select using (true);
+create policy "public read employer_headcounts" on employer_headcounts for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
@@ -119,6 +134,7 @@ create policy "public read job_title_year_stats" on job_title_year_stats for sel
 --   create policy "bulk insert lca_cases" on lca_cases for insert with check (true);
 --   create policy "bulk insert employer_year_stats" on employer_year_stats for insert with check (true);
 --   create policy "bulk insert job_title_year_stats" on job_title_year_stats for insert with check (true);
+--   create policy "bulk insert employer_headcounts" on employer_headcounts for insert with check (true);
 
 -- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
 create view fy_overview with (security_invoker = true) as

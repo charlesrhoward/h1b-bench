@@ -76,7 +76,20 @@ python3 -m venv venv && ./venv/bin/pip install pandas openpyxl pyarrow requests
 # 4. Load cases, employers, and aggregate stats
 SUPABASE_URL=https://<ref>.supabase.co SUPABASE_KEY=<publishable-key> \
   ./venv/bin/python -u etl/load_supabase.py all
+
+# 5. Workforce headcounts: download PERM_Disclosure_Data_*.xlsx (same Akamai caveat)
+#    to data/raw/, parse them, then derive and load one headcount per employer
+./venv/bin/python -u etl/parse_perm.py
+(cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u load_headcounts.py)
 ```
+
+**% of workforce** divides an employer's certified H-1B LCAs for the fiscal year by the
+total headcount it reported on its PERM green card filings (`EMP_NUM_PAYROLL`). Each
+filing reports its own number, so the loader keeps the most frequently reported value and
+how many filings agree with it. The UI greys out values reported on only one filing,
+values fewer than 25% of filings agree on, and shares above 100%. Treat the column as an
+approximation: an LCA is not a visa, and some employers report the payroll of a single
+legal entity rather than the whole company.
 
 Quarterly refresh: download the newest quarter's file, re-run steps 2–4
 (re-add the anon insert policies from `etl/schema.sql` first; `load_supabase.py` is
@@ -95,7 +108,7 @@ data/                # raw xlsx + processed parquet (gitignored)
 
 ## Roadmap
 
-- [ ] PERM (green card) disclosure data
+- [ ] PERM (green card) disclosure data — employer headcounts are in; full case data is not
 - [ ] FEIN-based employer entity resolution
 - [ ] Employer compare pages
 - [ ] Wage distribution charts (beyond medians)

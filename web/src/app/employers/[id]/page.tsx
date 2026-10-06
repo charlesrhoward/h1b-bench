@@ -1,7 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getEmployer, getEmployerStats, getEmployerTopJobs } from "@/lib/queries";
+import {
+  getEmployer,
+  getEmployerHeadcount,
+  getEmployerStats,
+  getEmployerTopJobs,
+  type EmployerYearStat,
+} from "@/lib/queries";
 import { fmtInt, fmtPct } from "@/lib/format";
+import {
+  WORKFORCE_SHARE_METHOD,
+  describeHeadcount,
+  workforceShare,
+  type Headcount,
+} from "@/lib/workforce";
+import WorkforceShareCell from "@/components/workforce-share-cell";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +27,11 @@ export default async function EmployerDetail({
   const employerId = Number(id);
   if (!Number.isFinite(employerId)) notFound();
 
-  const [employer, stats, topJobs] = await Promise.all([
+  const [employer, stats, topJobs, headcount] = await Promise.all([
     getEmployer(employerId),
     getEmployerStats(employerId),
     getEmployerTopJobs(employerId),
+    getEmployerHeadcount(employerId),
   ]);
   if (!employer) notFound();
 
@@ -52,20 +66,26 @@ export default async function EmployerDetail({
         </a>
       </div>
 
-      <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat label="H-1B filings (all years)" value={fmtInt(totalFilings)} />
-        <Stat label="Certification rate" value={fmtPct(totalCertified, totalFilings)} />
-        <Stat label="Denied" value={fmtInt(totalDenied)} />
-        <Stat
-          label="Median wage (latest FY)"
-          value={latestYear?.median_wage_annual ? `$${fmtInt(latestYear.median_wage_annual)}` : "—"}
-        />
+      <section className="space-y-3">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <Stat label="H-1B filings (all years)" value={fmtInt(totalFilings)} />
+          <Stat label="Certification rate" value={fmtPct(totalCertified, totalFilings)} />
+          <Stat label="Denied" value={fmtInt(totalDenied)} />
+          <Stat
+            label="Median wage (latest FY)"
+            value={latestYear?.median_wage_annual ? `$${fmtInt(latestYear.median_wage_annual)}` : "—"}
+          />
+          <WorkforceStat latestYear={latestYear} headcount={headcount} />
+        </div>
+        <p className="text-xs text-zinc-500" title={WORKFORCE_SHARE_METHOD}>
+          {headcountNote(headcount)}
+        </p>
       </section>
 
       <section>
         <h2 className="mb-4 text-lg font-semibold">By fiscal year · H-1B</h2>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[44rem]">
+          <table className="w-full min-w-[50rem]">
             <thead>
               <tr>
                 <th>FY</th>
@@ -74,6 +94,9 @@ export default async function EmployerDetail({
                 <th className="text-right">Denied</th>
                 <th className="text-right">Withdrawn</th>
                 <th className="text-right">Workers</th>
+                <th className="text-right" title={WORKFORCE_SHARE_METHOD}>
+                  % of workforce
+                </th>
                 <th className="text-right">Median wage</th>
                 <th>Top worksite state</th>
               </tr>
@@ -87,6 +110,7 @@ export default async function EmployerDetail({
                   <td className="text-right font-mono">{fmtInt(r.denied)}</td>
                   <td className="text-right font-mono">{fmtInt(r.withdrawn + r.certified_withdrawn)}</td>
                   <td className="text-right font-mono">{fmtInt(r.worker_positions)}</td>
+                  <WorkforceShareCell certified={r.certified} headcount={headcount} />
                   <td className="text-right font-mono">
                     {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
                   </td>
@@ -132,10 +156,45 @@ export default async function EmployerDetail({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function WorkforceStat({
+  latestYear,
+  headcount,
+}: {
+  latestYear: EmployerYearStat | null;
+  headcount: Headcount | null;
+}) {
+  if (!latestYear) return <Stat label="% of workforce" value="—" muted />;
+  const share = workforceShare(latestYear.certified, headcount);
   return (
-    <div className="rounded-lg border border-zinc-800 p-4">
-      <div className="font-mono text-2xl font-bold">{value}</div>
+    <Stat
+      label={`% of workforce (FY${latestYear.fiscal_year})`}
+      value={share.label}
+      muted={!share.reliable}
+      title={share.title}
+    />
+  );
+}
+
+function headcountNote(headcount: Headcount | null): string {
+  if (!headcount) return "Workforce: no PERM headcount on file, so % of workforce is unavailable.";
+  const matchedByName = headcount.match_method === "name" ? " (matched by name)" : "";
+  return `Workforce: ${describeHeadcount(headcount)}${matchedByName}.`;
+}
+
+function Stat({
+  label,
+  value,
+  muted = false,
+  title,
+}: {
+  label: string;
+  value: string;
+  muted?: boolean;
+  title?: string;
+}) {
+  return (
+    <div className="rounded-lg border border-zinc-800 p-4" title={title}>
+      <div className={`font-mono text-2xl font-bold ${muted ? "text-zinc-500" : ""}`}>{value}</div>
       <div className="mt-1 text-xs text-zinc-500">{label}</div>
     </div>
   );
