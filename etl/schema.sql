@@ -1,6 +1,9 @@
 -- H1B Bench schema: DOL OFLC LCA disclosure data (H-1B / H-1B1 / E-3)
+-- Live DB history: initial_h1b_bench_schema -> drop_bulk_insert_policies -> fy_overview_view.
+-- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
-create extension if not exists pg_trgm;
+create schema if not exists extensions;
+create extension if not exists pg_trgm schema extensions;
 
 create table employers (
   id bigint generated always as identity primary key,
@@ -109,8 +112,22 @@ create policy "public read lca_cases" on lca_cases for select using (true);
 create policy "public read employer_year_stats" on employer_year_stats for select using (true);
 create policy "public read job_title_year_stats" on job_title_year_stats for select using (true);
 
--- Loader role policies: allow anon insert during bulk load (removed after load)
-create policy "bulk insert employers" on employers for insert with check (true);
-create policy "bulk insert lca_cases" on lca_cases for insert with check (true);
-create policy "bulk insert employer_year_stats" on employer_year_stats for insert with check (true);
-create policy "bulk insert job_title_year_stats" on job_title_year_stats for insert with check (true);
+-- Loader role policies: allow anon insert during bulk load. Dropped after the initial
+-- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
+--
+--   create policy "bulk insert employers" on employers for insert with check (true);
+--   create policy "bulk insert lca_cases" on lca_cases for insert with check (true);
+--   create policy "bulk insert employer_year_stats" on employer_year_stats for insert with check (true);
+--   create policy "bulk insert job_title_year_stats" on job_title_year_stats for insert with check (true);
+
+-- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
+create view fy_overview with (security_invoker = true) as
+select
+  fiscal_year,
+  sum(filings)::bigint as filings,
+  sum(certified)::bigint as certified,
+  sum(denied)::bigint as denied,
+  sum(worker_positions)::bigint as worker_positions
+from employer_year_stats
+group by fiscal_year
+order by fiscal_year;
