@@ -6,7 +6,8 @@ Demand: FY2025 certified H-1B LCA new-employment positions, mapped SOC -> OCCP.
 
 Inputs (data/raw/):
   acs_pums_2024_1yr_csv_pus.zip            www2.census.gov/programs-surveys/acs/data/pums/2024/1-Year/csv_pus.zip
-  census_2018_occupation_crosswalk.xlsx    www2.census.gov/programs-surveys/demo/guidance/industry-occupation/2018-occupation-code-list-and-crosswalk.xlsx
+  census_2018_occupation_crosswalk.xlsx
+    www2.census.gov/programs-surveys/demo/guidance/industry-occupation/2018-occupation-code-list-and-crosswalk.xlsx
   + data/processed/lca_FY2025_*.parquet (parse_lca.py)
 
 Output: data/processed/labor_pool.parquet (one row per occupation group x state, plus
@@ -19,6 +20,7 @@ state "US" for national), labor_pool_summary.parquet (headline per tier).
 on a refresh.
 """
 import glob
+import logging
 import os
 import re
 import sys
@@ -26,6 +28,9 @@ import zipfile
 
 import numpy as np
 import pandas as pd
+from cli_log import configure_logging
+
+log = logging.getLogger(__name__)
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "data")
 PUMS_ZIP = os.path.join(ROOT, "raw", "acs_pums_2024_1yr_csv_pus.zip")
@@ -112,7 +117,7 @@ def build_soc_mapper(crosswalk, pums_socp_to_occp):
     For those, the SOC code is re-matched against PUMS's own SOCP groups and translated to
     the OCCP code that PUMS pairs with that SOCP.
     """
-    census = make_matcher(list(zip(crosswalk["soc_pattern"], crosswalk["occ_code"])))
+    census = make_matcher(list(zip(crosswalk["soc_pattern"], crosswalk["occ_code"], strict=True)))
     pums = make_matcher([(socp, socp) for socp in pums_socp_to_occp])
     pums_occ_codes = set(pums_socp_to_occp.values())
     remapped = {}
@@ -131,28 +136,37 @@ def build_soc_mapper(crosswalk, pums_socp_to_occp):
 
 # --- Supply: ACS PUMS ------------------------------------------------------------------
 
+def scan_pums_member(zf, name, cols):
+    """One PUMS CSV: SOCP/OCCP pair counts and the unemployed bachelor's+ rows."""
+    frames, pairs = [], []
+    with zf.open(name) as fh:
+        for chunk in pd.read_csv(fh, usecols=cols, dtype={"STATE": str, "OCCP": str, "SOCP": str},
+                                 chunksize=500_000, low_memory=False):
+            pairs.append(chunk[["SOCP", "OCCP"]].dropna().value_counts())
+            keep = (chunk["ESR"] == 3) & (chunk["SCHL"] >= 21) & chunk["OCCP"].notna()
+            frames.append(chunk[keep])
+    return frames, pairs
+
+
 def read_unemployed_degreed():
     """Unemployed bachelor's+ persons, plus the SOCP -> OCCP pairing PUMS uses for everyone."""
     cols = ["STATE", "PWGTP", "ESR", "SCHL", "WKL", "OCCP", "SOCP", *REPLICATES]
     frames, pairs = [], []
     with zipfile.ZipFile(PUMS_ZIP) as zf:
         for name in sorted(n for n in zf.namelist() if n.endswith(".csv")):
-            with zf.open(name) as fh:
-                for chunk in pd.read_csv(fh, usecols=cols, dtype={"STATE": str, "OCCP": str, "SOCP": str},
-                                         chunksize=500_000, low_memory=False):
-                    pairs.append(chunk[["SOCP", "OCCP"]].dropna().value_counts())
-                    keep = (chunk["ESR"] == 3) & (chunk["SCHL"] >= 21) & chunk["OCCP"].notna()
-                    frames.append(chunk[keep])
-            print(f"  read {name}", flush=True)
+            member_frames, member_pairs = scan_pums_member(zf, name, cols)
+            frames.extend(member_frames)
+            pairs.extend(member_pairs)
+            log.info(f"  read {name}")
     df = pd.concat(frames, ignore_index=True)
     df["state"] = df["STATE"].str.zfill(2).map(STATE_FIPS)
     df["occ_code"] = df["OCCP"].str.zfill(4)
     df["recent"] = df["WKL"] == 1
-    print(f"ACS unemployed with bachelor's+: {len(df):,} sample persons, "
-          f"{df['PWGTP'].sum():,.0f} weighted", flush=True)
+    log.info(f"ACS unemployed with bachelor's+: {len(df):,} sample persons, "
+             f"{df['PWGTP'].sum():,.0f} weighted")
     counts = pd.concat(pairs).groupby(level=[0, 1]).sum().reset_index(name="n")
     counts = counts.sort_values("n", ascending=False).drop_duplicates("SOCP")
-    socp_to_occp = {s.strip(): o.zfill(4) for s, o in zip(counts["SOCP"], counts["OCCP"])}
+    socp_to_occp = {s.strip(): o.zfill(4) for s, o in zip(counts["SOCP"], counts["OCCP"], strict=True)}
     return df, socp_to_occp
 
 
@@ -183,7 +197,7 @@ def demand_table(to_occ):
     lca = lca[(lca["visa_class"] == "H-1B") & (lca["case_status"] == "Certified")].copy()
     lca["occ_code"] = lca["soc_code"].map(to_occ)
     unmapped = lca["occ_code"].isna().mean()
-    print(f"LCA FY{LCA_YEAR} certified H-1B: {len(lca):,} filings, {unmapped:.2%} unmapped SOC", flush=True)
+    log.info(f"LCA FY{LCA_YEAR} certified H-1B: {len(lca):,} filings, {unmapped:.2%} unmapped SOC")
     lca["state"] = lca["worksite_state"].fillna("??")
     lca["new_positions"] = lca["new_employment"].fillna(0).astype(int)
     lca = lca.dropna(subset=["occ_code"])
@@ -232,7 +246,7 @@ def load_to_supabase(table, summary):
     tiers = summary.assign(lca_fiscal_year=LCA_YEAR, acs_year=ACS_YEAR)
     post_batch("labor_pool_summary", records(
         tiers, ["lca_fiscal_year", "acs_year", "tier", "filings_covered", "filings_total"]))
-    print(f"loaded {len(rows):,} labor_pool rows and {len(tiers)} summary rows", flush=True)
+    log.info(f"loaded {len(rows):,} labor_pool rows and {len(tiers)} summary rows")
 
 
 def main():
@@ -241,9 +255,9 @@ def main():
     to_occ, remapped = build_soc_mapper(crosswalk, socp_to_occp)
     demand = demand_table(to_occ)
     supply = supply_table(acs)
-    print("SOC codes re-matched to PUMS groups:", flush=True)
+    log.info("SOC codes re-matched to PUMS groups:")
     for (soc, census_code), target in sorted(remapped.items()):
-        print(f"  {soc} (census {census_code}) -> PUMS {target}", flush=True)
+        log.info(f"  {soc} (census {census_code}) -> PUMS {target}")
 
     table = demand.join(supply, how="left").fillna(0).reset_index()
     titles = crosswalk.drop_duplicates("occ_code").set_index("occ_code")["occ_title"]
@@ -253,17 +267,18 @@ def main():
 
     table.to_parquet(os.path.join(OUT_DIR, "labor_pool.parquet"), index=False)
     summary.to_parquet(os.path.join(OUT_DIR, "labor_pool_summary.parquet"), index=False)
-    print(summary.to_string(index=False))
+    log.info(summary.to_string(index=False))
 
     top = table[table["state"] == "US"].sort_values("filings", ascending=False).head(25)
     cols = ["occ_code", "occ_title", "filings", "new_positions", "supply_est", "supply_moe",
             "supply_recent_est", "covered", "covered_recent"]
     with pd.option_context("display.width", 220, "display.max_colwidth", 42):
-        print(top[cols].round(0).to_string(index=False))
+        log.info(top[cols].round(0).to_string(index=False))
 
     if "--load" in sys.argv:
         load_to_supabase(table, summary)
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()

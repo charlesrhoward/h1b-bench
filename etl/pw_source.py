@@ -11,10 +11,14 @@ by parse_lca.py), classifies each certified H-1B filing, and joins the market-ga
 on a refresh.
 """
 import glob
+import logging
 import os
 import sys
 
 import pandas as pd
+from cli_log import configure_logging
+
+log = logging.getLogger(__name__)
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "data")
 OUT_DIR = os.path.join(ROOT, "processed")
@@ -26,7 +30,8 @@ OTHER_SOURCE_CLASS = {"SURVEY": "survey", "CBA": "union", "DBA": "federal_contra
 PUBLISHER_GROUPS = [
     ("RADFORD", "Radford (Aon)"), ("MCLAGAN", "McLagan (Aon)"), ("AON", "Aon"),
     ("WILLIS", "Willis Towers Watson"), ("TOWERS", "Willis Towers Watson"), ("WTW", "Willis Towers Watson"),
-    ("MERCER", "Mercer"), ("ERI ", "ERI Economic Research Institute"), ("ECONOMIC RESEARCH", "ERI Economic Research Institute"),
+    ("MERCER", "Mercer"), ("ERI ", "ERI Economic Research Institute"),
+    ("ECONOMIC RESEARCH", "ERI Economic Research Institute"),
     ("SALARY.COM", "Salary.com"), ("PAYSCALE", "PayScale"), ("KORN", "Korn Ferry"), ("CULPEPPER", "Culpepper"),
     ("PEARL MEYER", "Pearl Meyer"), ("AAMC", "AAMC"), ("ASSOCIATION OF AMERICAN MEDICAL", "AAMC"),
     ("CUPA", "CUPA-HR"), ("COLLEGE AND UNIVERSITY PROFESSIONAL", "CUPA-HR"),
@@ -60,7 +65,7 @@ def load_filings():
     frames = []
     for f in files:
         frames.append(pd.read_excel(f, usecols=lambda c: str(c).strip().upper() in COLS, dtype=str))
-        print(f"  read {os.path.basename(f)}", flush=True)
+        log.info(f"  read {os.path.basename(f)}")
     df = pd.concat(frames, ignore_index=True)
     df.columns = [c.strip().upper() for c in df.columns]
     df = df.drop_duplicates("CASE_NUMBER")
@@ -108,8 +113,8 @@ def main():
     df = attach_market_gap(load_filings())
     sources, publishers = source_table(df), publisher_table(df)
     with pd.option_context("display.width", 200):
-        print(sources.to_string(index=False))
-        print(publishers.to_string(index=False))
+        log.info(sources.to_string(index=False))
+        log.info(publishers.to_string(index=False))
     if "--load" in sys.argv:
         from load_supabase import post_batch, records
         post_batch("pw_source_summary", records(sources.assign(lca_fiscal_year=LCA_YEAR), [
@@ -117,8 +122,9 @@ def main():
             "gap_matched", "below_median"]))
         post_batch("pw_survey_publishers", records(publishers.assign(lca_fiscal_year=LCA_YEAR), [
             "lca_fiscal_year", "publisher", "filings", "dependent_filings", "gap_matched", "below_median"]))
-        print(f"loaded {len(sources)} source rows and {len(publishers)} publisher rows", flush=True)
+        log.info(f"loaded {len(sources)} source rows and {len(publishers)} publisher rows")
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()

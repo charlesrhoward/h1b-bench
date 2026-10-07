@@ -4,11 +4,15 @@ Input:  data/raw/LCA_Disclosure_Data_*.xlsx
 Output: data/processed/lca_FY<year>.parquet  (one row per case_number)
 """
 import glob
+import logging
 import os
 import re
 import sys
 
 import pandas as pd
+from cli_log import configure_logging
+
+log = logging.getLogger(__name__)
 
 RAW_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "raw")
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "processed")
@@ -86,6 +90,29 @@ def clean_text(s):
     return s if s else None
 
 
+def select_columns(df):
+    """Map each canonical column to the first source column present in this year's file."""
+    out = pd.DataFrame()
+    for canon, sources in COLUMN_MAP.items():
+        source = next((s for s in sources if s in df.columns), None)
+        out[canon] = df[source] if source else None
+    return out
+
+
+def coerce_types(out):
+    """Clean text columns; parse dates, wages, and counts."""
+    for c in out.columns:
+        if c not in DATE_COLS and c not in WAGE_COLS and c not in NUM_COLS:
+            out[c] = out[c].map(clean_text)
+    for c in DATE_COLS:
+        out[c] = pd.to_datetime(out[c], errors="coerce").dt.date
+    for c in WAGE_COLS:
+        out[c] = pd.to_numeric(out[c].str.replace(r"[$,]", "", regex=True), errors="coerce")
+    for c in NUM_COLS:
+        out[c] = pd.to_numeric(out[c], errors="coerce").astype("Int64")
+    return out
+
+
 def parse_file(path):
     fname = os.path.basename(path)
     m = re.search(r"FY(\d{4})(?:_Q(\d))?", fname)
@@ -93,26 +120,7 @@ def parse_file(path):
 
     df = pd.read_excel(path, engine="openpyxl", dtype=str)
     df.columns = [c.strip().upper() for c in df.columns]
-
-    out = pd.DataFrame()
-    for canon, sources in COLUMN_MAP.items():
-        for s in sources:
-            if s in df.columns:
-                out[canon] = df[s]
-                break
-        else:
-            out[canon] = None
-
-    for c in out.columns:
-        if c not in DATE_COLS and c not in WAGE_COLS and c not in NUM_COLS:
-            out[c] = out[c].map(clean_text)
-
-    for c in DATE_COLS:
-        out[c] = pd.to_datetime(out[c], errors="coerce").dt.date
-    for c in WAGE_COLS:
-        out[c] = pd.to_numeric(out[c].str.replace(r"[$,]", "", regex=True), errors="coerce")
-    for c in NUM_COLS:
-        out[c] = pd.to_numeric(out[c], errors="coerce").astype("Int64")
+    out = coerce_types(select_columns(df))
 
     out["wage_unit_norm"] = out["wage_unit_of_pay"].map(normalize_unit)
     mult = out["wage_unit_norm"].map(UNIT_TO_ANNUAL)
@@ -124,8 +132,7 @@ def parse_file(path):
 
     out["fiscal_year"] = fy
     out["file_quarter"] = qtr
-    out = out.drop_duplicates(subset="case_number", keep="first")
-    return out
+    return out.drop_duplicates(subset="case_number", keep="first")
 
 
 def main():
@@ -139,8 +146,9 @@ def main():
         m = re.search(r"FY\d{4}(?:_Q\d)?", os.path.basename(f))
         out_path = os.path.join(OUT_DIR, f"lca_{m.group(0)}.parquet")
         df.to_parquet(out_path, index=False)
-        print(f"{os.path.basename(f)}: {len(df):,} rows -> {out_path}", flush=True)
+        log.info(f"{os.path.basename(f)}: {len(df):,} rows -> {out_path}")
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()

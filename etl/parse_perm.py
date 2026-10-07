@@ -12,12 +12,16 @@ Input:  data/raw/PERM_Disclosure_Data_*.xlsx
 Output: data/processed/perm_FY<year>.parquet  (one row per case_number)
 """
 import glob
+import logging
 import os
 import re
 import sys
 
 import pandas as pd
+from cli_log import configure_logging
 from openpyxl import load_workbook
+
+log = logging.getLogger(__name__)
 
 RAW_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "raw")
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "processed")
@@ -96,9 +100,9 @@ def main():
         out_path = os.path.join(OUT_DIR, f"perm_{tag}.parquet")
         df.to_parquet(out_path, index=False)
         with_count = df["num_employees"].notna().sum()
-        print(f"{os.path.basename(f)}: {len(df):,} cases, {with_count:,} with headcount -> {out_path}",
-              flush=True)
+        log.info(f"{os.path.basename(f)}: {len(df):,} cases, {with_count:,} with headcount -> {out_path}")
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()

@@ -15,6 +15,7 @@ Inputs (data/raw/):
 on a refresh.
 """
 import glob
+import logging
 import os
 import re
 import sys
@@ -22,6 +23,9 @@ import zipfile
 from datetime import date
 
 import pandas as pd
+from cli_log import configure_logging
+
+log = logging.getLogger(__name__)
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "data")
 OUT_DIR = os.path.join(ROOT, "processed")
@@ -64,7 +68,7 @@ def load_wage_year(label, zip_name):
 
     alc["local_median"] = pd.to_numeric(alc["Level3"], errors="coerce") * HOURS_PER_YEAR
     medians = alc.dropna(subset=["local_median"]).set_index(["Area", "SocCode"])["local_median"]
-    print(f"wage year {label}: {len(area_by_county):,} counties, {len(medians):,} area x SOC wages", flush=True)
+    log.info(f"wage year {label}: {len(area_by_county):,} counties, {len(medians):,} area x SOC wages")
     return area_by_county, medians
 
 
@@ -90,7 +94,7 @@ def load_filings():
     df["soc6"] = df["soc_code"].str.extract(r"^(\d{2}-\d{4})", expand=False)
     df["county_key"] = df["worksite_state"].str.strip() + "|" + df["worksite_county"].map(normalize_county)
     df["wage_year"] = df["received_date"].map(wage_year_for)
-    print(f"FY{LCA_YEAR} certified H-1B: {certified:,}; yearly full-time with pay: {len(df):,}", flush=True)
+    log.info(f"FY{LCA_YEAR} certified H-1B: {certified:,}; yearly full-time with pay: {len(df):,}")
     return df, certified
 
 
@@ -104,8 +108,7 @@ def attach_local_median(df):
         part["local_median"] = medians.reindex(keys).to_numpy()
         out.append(part)
     df = pd.concat(out, ignore_index=True)
-    print(f"  matched area: {df['area'].notna().mean():.1%}; matched wage: {df['local_median'].notna().mean():.1%}",
-          flush=True)
+    log.info(f"  matched area: {df['area'].notna().mean():.1%}; matched wage: {df['local_median'].notna().mean():.1%}")
     return df
 
 
@@ -115,8 +118,8 @@ def summarize(group):
     return pd.Series({
         "filings_matched": len(group),
         "below_median": int(below.sum()),
-        "median_gap": int(round(gap.median())),
-        "median_gap_below": int(round(gap[below].median())) if below.any() else None,
+        "median_gap": round(gap.median()),
+        "median_gap_below": round(gap[below].median()) if below.any() else None,
     })
 
 
@@ -136,7 +139,7 @@ def main():
     summary = summary_table(matched, len(filings))
     summary["filings_certified"] = certified
     with pd.option_context("display.width", 200):
-        print(summary.to_string(index=False))
+        log.info(summary.to_string(index=False))
     matched.to_parquet(os.path.join(OUT_DIR, "market_gap_filings.parquet"), index=False)
     if "--load" in sys.argv:
         from market_gap_load import load_to_supabase
@@ -144,4 +147,5 @@ def main():
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()

@@ -7,7 +7,7 @@ Usage:
 Requires schema.sql applied (anon insert policies enabled during load).
 """
 import glob
-import math
+import logging
 import os
 import re
 import sys
@@ -16,6 +16,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 import requests
+from cli_log import configure_logging
+
+log = logging.getLogger(__name__)
 
 SUPABASE_URL = os.environ["SUPABASE_URL"].rstrip("/")
 SUPABASE_KEY = os.environ["SUPABASE_KEY"]
@@ -40,8 +43,7 @@ def norm_name(name):
 def load_all_cases():
     files = sorted(glob.glob(os.path.join(OUT_DIR, "lca_FY*.parquet")))
     df = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
-    df = df.drop_duplicates(subset="case_number", keep="first")
-    return df
+    return df.drop_duplicates(subset="case_number", keep="first")
 
 
 def post_batch(table, rows, prefer="return=minimal", retries=10):
@@ -102,7 +104,7 @@ def load_employers(df):
         naics_code=("naics_code", mode),
     ).reset_index()
     emp["naics_code"] = emp["naics_code"].astype("Int64")
-    print(f"distinct employers: {len(emp):,}", flush=True)
+    log.info(f"distinct employers: {len(emp):,}")
 
     recs = records(emp, ["name_normalized", "name", "fein", "city", "state",
                          "postal_code", "country", "naics_code"])
@@ -111,8 +113,8 @@ def load_employers(df):
     with ThreadPoolExecutor(4) as ex:
         for i, _ in enumerate(ex.map(lambda b: post_batch("employers", b), batches)):
             if (i + 1) % 10 == 0:
-                print(f"  employers {i+1}/{len(batches)} batches ({time.time()-t0:.0f}s)", flush=True)
-    print(f"employers loaded in {time.time()-t0:.0f}s", flush=True)
+                log.info(f"  employers {i+1}/{len(batches)} batches ({time.time()-t0:.0f}s)")
+    log.info(f"employers loaded in {time.time()-t0:.0f}s")
     return df
 
 
@@ -136,8 +138,8 @@ def fetch_employer_id_map():
             break
         offset += page_size
         if offset % 50000 == 0:
-            print(f"  ...{len(out):,} employer ids", flush=True)
-    print(f"fetched {len(out):,} employer ids", flush=True)
+            log.info(f"  ...{len(out):,} employer ids")
+    log.info(f"fetched {len(out):,} employer ids")
     return out
 
 
@@ -148,7 +150,7 @@ def load_cases(df):
     df["employer_id"] = df["name_normalized"].map(id_map)
     missing = df["employer_id"].isna().sum()
     if missing:
-        print(f"WARNING: {missing:,} cases without employer match", flush=True)
+        log.info(f"WARNING: {missing:,} cases without employer match")
     df = df.dropna(subset=["employer_id"])
     df["employer_id"] = df["employer_id"].astype(int)
     df["employer_name_raw"] = df["employer_name"]
@@ -165,7 +167,7 @@ def load_cases(df):
             "willful_violator", "lawfirm_name", "fiscal_year", "file_quarter"]
     recs = records(df, cols)
     batches = list(batched(recs, BATCH))
-    print(f"cases: {len(recs):,} rows in {len(batches)} batches", flush=True)
+    log.info(f"cases: {len(recs):,} rows in {len(batches)} batches")
     t0 = time.time()
     prefer = "resolution=ignore-duplicates,return=minimal"
     with ThreadPoolExecutor(4) as ex:
@@ -173,8 +175,8 @@ def load_cases(df):
             if (i + 1) % 25 == 0:
                 rate = (i + 1) * BATCH / (time.time() - t0)
                 eta = (len(batches) - i - 1) * BATCH / max(rate, 1) / 60
-                print(f"  cases {i+1}/{len(batches)} ({rate:.0f} rows/s, ETA {eta:.0f}m)", flush=True)
-    print(f"cases loaded in {(time.time()-t0)/60:.1f}m", flush=True)
+                log.info(f"  cases {i+1}/{len(batches)} ({rate:.0f} rows/s, ETA {eta:.0f}m)")
+    log.info(f"cases loaded in {(time.time()-t0)/60:.1f}m")
 
 
 def load_stats(df):
@@ -189,14 +191,14 @@ def load_stats(df):
     pw = df["prevailing_wage"].where(df["prevailing_wage"].between(10000, 10000000))
     df["_w"] = wage
     df["_pw"] = pw
-    certified = df["case_status"] == "Certified"
 
     g = df.groupby(["employer_id", "fiscal_year", "visa_class"])
     stats = g.size().rename("filings").to_frame()
     stats["certified"] = g.apply(lambda x: (x["case_status"] == "Certified").sum(), include_groups=False)
     stats["denied"] = g.apply(lambda x: (x["case_status"] == "Denied").sum(), include_groups=False)
     stats["withdrawn"] = g.apply(lambda x: (x["case_status"] == "Withdrawn").sum(), include_groups=False)
-    stats["certified_withdrawn"] = g.apply(lambda x: (x["case_status"] == "Certified - Withdrawn").sum(), include_groups=False)
+    stats["certified_withdrawn"] = g.apply(
+        lambda x: (x["case_status"] == "Certified - Withdrawn").sum(), include_groups=False)
     stats["worker_positions"] = g["total_worker_positions"].sum()
     stats["certified_worker_positions"] = g.apply(
         lambda x: x.loc[x["case_status"] == "Certified", "total_worker_positions"].sum(), include_groups=False)
@@ -211,7 +213,7 @@ def load_stats(df):
     stats["top_soc_code"] = top("soc_code")
     stats["top_worksite_state"] = top("worksite_state")
     stats = stats.reset_index()
-    print(f"employer_year_stats: {len(stats):,} rows", flush=True)
+    log.info(f"employer_year_stats: {len(stats):,} rows")
 
     recs = records(stats, ["employer_id", "fiscal_year", "visa_class", "filings", "certified",
                            "denied", "withdrawn", "certified_withdrawn", "worker_positions",
@@ -223,8 +225,8 @@ def load_stats(df):
     with ThreadPoolExecutor(4) as ex:
         for i, _ in enumerate(ex.map(lambda b: post_batch("employer_year_stats", b, prefer), batches)):
             if (i + 1) % 50 == 0:
-                print(f"  stats {i+1}/{len(batches)} ({time.time()-t0:.0f}s)", flush=True)
-    print(f"employer_year_stats loaded in {time.time()-t0:.0f}s", flush=True)
+                log.info(f"  stats {i+1}/{len(batches)} ({time.time()-t0:.0f}s)")
+    log.info(f"employer_year_stats loaded in {time.time()-t0:.0f}s")
 
     # job_title_year_stats
     gj = df.dropna(subset=["soc_code"]).groupby(["soc_code", "fiscal_year"])
@@ -235,19 +237,19 @@ def load_stats(df):
     js["avg_wage_annual"] = gj["_w"].mean()
     js["distinct_employers"] = gj["employer_id"].nunique()
     js = js.reset_index()
-    print(f"job_title_year_stats: {len(js):,} rows", flush=True)
+    log.info(f"job_title_year_stats: {len(js):,} rows")
     recs = records(js, ["soc_code", "soc_title", "fiscal_year", "filings", "certified",
                         "median_wage_annual", "avg_wage_annual", "distinct_employers"])
     batches = list(batched(recs, BATCH))
     with ThreadPoolExecutor(4) as ex:
         list(ex.map(lambda b: post_batch("job_title_year_stats", b, prefer), batches))
-    print("job_title_year_stats loaded", flush=True)
+    log.info("job_title_year_stats loaded")
 
 
 def main():
     stage = sys.argv[1] if len(sys.argv) > 1 else "all"
     df = load_all_cases()
-    print(f"total cases: {len(df):,}", flush=True)
+    log.info(f"total cases: {len(df):,}")
     if stage in ("employers", "all"):
         load_employers(df)
     if stage in ("cases", "all"):
@@ -257,4 +259,5 @@ def main():
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()

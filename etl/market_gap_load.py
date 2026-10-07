@@ -3,7 +3,11 @@
 Imported lazily by market_gap.py --load, because load_supabase reads SUPABASE_URL and
 SUPABASE_KEY at import time.
 """
+import logging
+
 from load_supabase import batched, fetch_employer_id_map, norm_name, post_batch, records
+
+log = logging.getLogger(__name__)
 
 SUMMARY_COLS = ["lca_fiscal_year", "dependency", "filings_certified", "filings_eligible",
                 "filings_matched", "below_median", "median_gap", "median_gap_below"]
@@ -19,7 +23,7 @@ def employer_rows(matched, fiscal_year):
     grouped = df.groupby("employer_id").agg(
         filings_matched=("gap", "size"),
         below_median=("gap", lambda g: int((g < 0).sum())),
-        median_gap=("gap", lambda g: int(round(g.median()))),
+        median_gap=("gap", lambda g: round(g.median())),
     ).reset_index()
     grouped["employer_id"] = grouped["employer_id"].astype(int)
     grouped["lca_fiscal_year"] = fiscal_year
@@ -31,7 +35,7 @@ def load_to_supabase(matched, summary, fiscal_year):
     employers = employer_rows(matched, fiscal_year)
     for batch in batched(records(employers, EMPLOYER_COLS), 2000):
         post_batch("employer_market_gap", batch)
-    print(f"loaded {len(summary)} summary rows and {len(employers):,} employer rows", flush=True)
+    log.info(f"loaded {len(summary)} summary rows and {len(employers):,} employer rows")
 
 
 if __name__ == "__main__":

@@ -15,14 +15,17 @@ Usage (after parse_perm.py, with the anon insert policy from schema.sql enabled)
 Refresh: truncate employer_headcounts first; rows are insert-only.
 """
 import glob
+import logging
 import os
 import re
 import sys
 
 import pandas as pd
 import requests
-
+from cli_log import configure_logging
 from load_supabase import HEADERS, OUT_DIR, REST, batched, norm_name, post_batch, records
+
+log = logging.getLogger(__name__)
 
 COLUMNS = ["employer_id", "employee_count", "agreeing_filings", "perm_filings",
            "latest_received", "match_method"]
@@ -72,7 +75,7 @@ def fetch_employers():
         if len(page) < page_size:
             break
         offset += page_size
-    print(f"fetched {len(rows):,} employers", flush=True)
+    log.info(f"fetched {len(rows):,} employers")
     emp = pd.DataFrame(rows)
     emp["fein"] = emp["fein"].map(lambda v: re.sub(r"\D", "", v) if isinstance(v, str) else None)
     return emp
@@ -97,18 +100,19 @@ def main():
     dry_run = "--dry-run" in sys.argv
     perm = load_perm_filings()
     stats = headcounts_by_fein(perm)
-    print(f"PERM: {len(perm):,} filings with headcount across {len(stats):,} FEINs", flush=True)
+    log.info(f"PERM: {len(perm):,} filings with headcount across {len(stats):,} FEINs")
 
     matched = match_employers(fetch_employers(), stats, unambiguous_name_to_fein(perm))
-    print(matched["match_method"].value_counts().to_string(), flush=True)
+    log.info(matched["match_method"].value_counts().to_string())
     if dry_run:
         return
 
     recs = records(matched, COLUMNS)
     for batch in batched(recs, 2000):
         post_batch("employer_headcounts", batch)
-    print(f"employer_headcounts loaded: {len(recs):,} rows", flush=True)
+    log.info(f"employer_headcounts loaded: {len(recs):,} rows")
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()

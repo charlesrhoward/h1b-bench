@@ -3,10 +3,13 @@
 Imported lazily by warn.py --load, because load_supabase reads SUPABASE_URL and
 SUPABASE_KEY at import time.
 """
-import pandas as pd
+import logging
 
+import pandas as pd
 from load_supabase import batched, fetch_employer_id_map, post_batch, records
 from warn import company_key
+
+log = logging.getLogger(__name__)
 
 
 def top_filer_ids(lca, id_map):
@@ -37,4 +40,4 @@ def load_to_supabase(summary, companies, lca, top_n):
     for batch in batched(records(employers, ["lca_fiscal_year", "employer_id", "notices", "workers_laid_off",
                                              "states"]), 2000):
         post_batch("employer_warn", batch)
-    print(f"loaded summary, {len(top)} companies, {len(employers):,} employer rows", flush=True)
+    log.info(f"loaded summary, {len(top)} companies, {len(employers):,} employer rows")
