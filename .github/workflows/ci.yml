@@ -47,24 +47,8 @@ jobs:
       RUFF_VERSION: 0.16.10
     steps:
       - uses: actions/checkout@v4
-      # Rules: ruff.toml. --ignore-noqa makes `# noqa` comments inert.
-      - run: pipx run "ruff==$RUFF_VERSION" check --ignore-noqa --output-format github
-      # Ruff has no file-length rule and cannot reject noqa comments, so check both here.
-      - name: No suppressions, 500-line cap
-        run: |
-          failed=0
-          if grep -rnE '#\s*(noqa|ruff:\s*noqa|type:\s*ignore|pyright:\s*ignore)' --include='*.py' etl; then
-            echo "::error::Suppression comments are not allowed. Fix the code."
-            failed=1
-          fi
-          for f in $(git ls-files 'etl/*.py'); do
-            lines=$(wc -l < "$f")
-            if [ "$lines" -gt 500 ]; then
-              echo "::error file=$f::$lines lines (max 500)"
-              failed=1
-            fi
-          done
-          exit $failed
+      # Same script as local `pnpm preflight`: ruff, no suppressions, 500-line cap.
+      - run: scripts/check-etl.sh
 
   build:
     name: build
