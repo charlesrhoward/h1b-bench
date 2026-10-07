@@ -1,4 +1,5 @@
 import EvidenceSection from "@/components/cheap-labor/evidence-section";
+import EvidenceDetails from "@/components/cheap-labor/evidence-details";
 import { BackWagesByYear, BackWagesTable, fmtMillions } from "@/components/cheap-labor/back-wages";
 import { totalWhd, type WhdTopEmployer, type WhdYear } from "@/lib/cheap-labor";
 import { fmtInt } from "@/lib/format";
@@ -22,7 +23,8 @@ export default function BackWagesSection({
   return (
     <EvidenceSection
       index={index}
-      title={`After DOL investigations, employers agreed to pay ${fmtMillions(totals.back_wages)} in H-1B back wages.`}
+      title={`${fmtMillions(totals.back_wages)} in back wages. Documented violations.`}
+      takeaway="These cases establish that violations occurred. They cannot tell us how common violations are across all H-1B employers."
       limits="DOL investigates a small share of employers, so these cases measure enforcement, not the full rate of violations. The data holds concluded cases only, so recent years are incomplete. Back wages are amounts the employer agreed to pay. The data does not show if the employer paid. The totals count only cases that have a findings date."
       source={
         <>
@@ -43,12 +45,14 @@ export default function BackWagesSection({
         {fmtInt(totals.employees)} workers. DOL also assessed {fmtMillions(totals.penalties)} in
         penalties.
       </p>
+      <p className="chart-period">Concluded cases · FY{first}–FY{years.at(-1)?.fiscal_year}</p>
       <BackWagesByYear years={years} />
       <p className="text-sm text-zinc-400">
         Back wages by fiscal year of the findings. Each bar shows the number of cases on hover.
       </p>
-      <p>The employers with the most H-1B back wages:</p>
-      <BackWagesTable rows={top} />
+      <EvidenceDetails title="View the employers with the most back wages">
+        <BackWagesTable rows={top} />
+      </EvidenceDetails>
     </EvidenceSection>
   );
 }

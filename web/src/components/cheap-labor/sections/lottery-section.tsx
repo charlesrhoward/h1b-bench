@@ -1,4 +1,5 @@
 import EvidenceSection from "@/components/cheap-labor/evidence-section";
+import EvidenceDetails from "@/components/cheap-labor/evidence-details";
 import { LotteryBars, LotteryTable } from "@/components/cheap-labor/lottery-table";
 import { BENEFICIARY_CENTRIC_FROM, type UscisRegistrationYear } from "@/lib/cheap-labor";
 import { fmtInt, fmtPct } from "@/lib/format";
@@ -17,8 +18,9 @@ export default function LotterySection({ index, years }: { index: number; years:
   return (
     <EvidenceSection
       index={index}
-      title={`In the FY${before.cap_fiscal_year} lottery, ${fmtPct(before.eligible_multiple, before.eligible_registrations)} of registrations were for people with more than one registration.`}
-      limits="A person can have offers from more than one employer for lawful reasons. The data does not show which employers worked together on registrations. The share is the upper limit of this abuse, not a count of fraud. USCIS does not publish the employers behind these registrations."
+      title="The lottery changed. Multiple registrations fell."
+      takeaway="A person once gained more chances through multiple employer registrations. Since FY2025, selection is by person."
+      limits="A person can have offers from more than one employer for lawful reasons. Multiple registrations are not a count of fraud. The data does not name employers that coordinated registrations, or measure their pay practices."
       source={
         <>
           <a href={USCIS_URL} className="text-emerald-400 hover:underline">
@@ -45,7 +47,7 @@ export default function LotterySection({ index, years }: { index: number; years:
         In FY{before.cap_fiscal_year},{" "}
         <span className="font-semibold text-zinc-100">{fmtInt(before.eligible_multiple)}</span> of{" "}
         {fmtInt(before.eligible_registrations)} eligible registrations were for people with more than
-        one registration. USCIS cites evidence from the FY2023 and FY2024 lotteries. It opened fraud
+        one registration ({fmtPct(before.eligible_multiple, before.eligible_registrations)}). USCIS cites evidence from the FY2023 and FY2024 lotteries. It opened fraud
         investigations and changed the rule.
       </p>
       <LotteryBars years={years} />
@@ -54,7 +56,7 @@ export default function LotterySection({ index, years }: { index: number; years:
         more chances. In FY{latest.cap_fiscal_year}, the share fell to{" "}
         {fmtPct(latest.eligible_multiple, latest.eligible_registrations)}.
       </p>
-      <LotteryTable years={years} />
+      <EvidenceDetails title="View lottery registration data by year"><LotteryTable years={years} /></EvidenceDetails>
     </EvidenceSection>
   );
 }

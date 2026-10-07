@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+html {
+  background: #09090b;
+}
+
+@media (pointer: fine) {
+  html, body {
+    overscroll-behavior: none;
+  }
+}
+
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }

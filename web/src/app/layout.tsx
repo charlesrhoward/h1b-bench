@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100">
-        <header className="relative z-40 border-b border-zinc-800">
+        <header className="site-header relative z-40 border-b border-zinc-800">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-4 sm:px-6">
             <Link href="/" className="font-mono text-lg font-bold tracking-tight">
               H1B<span className="text-emerald-400">_</span>Bench
@@ -61,8 +61,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <MobileMenu links={NAV_LINKS} />
           </div>
         </header>
-        <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">{children}</main>
-        <footer className="space-y-3 border-t border-zinc-800 px-4 py-6 sm:px-6 text-center text-xs text-zinc-500">
+        <main className="site-main flex-1 mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+        <footer className="site-footer space-y-3 border-t border-zinc-800 px-4 py-6 sm:px-6 text-center text-xs text-zinc-500">
           <p>
             Data: U.S. Department of Labor, Office of Foreign Labor Certification — LCA disclosure
             files FY2020–FY2026 Q3. LCA certification is a filing step, not a visa grant.
