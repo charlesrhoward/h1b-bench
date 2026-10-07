@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTopEmployers, searchEmployerHits } from "@/lib/queries";
 import { fmtInt, fmtPct } from "@/lib/format";
 import { WORKFORCE_SHARE_METHOD } from "@/lib/workforce";
+import { FiscalYearTag } from "@/components/title-tags";
 import WorkforceShareCell from "@/components/workforce-share-cell";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export default async function EmployersPage({
           </p>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full sm:min-w-[30rem]" data-hide="3">
+          <table className="w-full" data-hide="3">
             <thead>
               <tr>
                 <th>#</th>
@@ -71,10 +72,8 @@ export default async function EmployersPage({
       <div>
         <h1 className="text-3xl font-bold">Employer leaderboard</h1>
         <p className="mt-1 text-zinc-400">
-          H-1B Labor Condition Applications by employer · FY{fy}
-          {fy === YEARS[0] && (
-            <span className="ml-2 font-mono text-xs text-zinc-500">year to date</span>
-          )}
+          H-1B Labor Condition Applications by employer ·{" "}
+          <FiscalYearTag fy={fy} ytd={fy === YEARS[0]} />
         </p>
       </div>
 
@@ -95,7 +94,7 @@ export default async function EmployersPage({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full sm:min-w-[58rem]" data-hide="3 5 6 7 9 10">
+        <table className="w-full" data-hide="3 5 6 7 9 10" data-hide-md="6 10">
           <thead>
             <tr>
               <th>#</th>

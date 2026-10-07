@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getJobStats } from "@/lib/queries";
+import { FiscalYearTag } from "@/components/title-tags";
 import { fmtInt, fmtPct } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +46,7 @@ export default async function JobsPage({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full sm:min-w-[36rem]" data-hide="1 4 6">
+        <table className="w-full" data-hide="1 4 6">
           <thead>
             <tr>
               <th>SOC</th>
@@ -87,11 +88,9 @@ function Header({ fy, term, count }: { fy: number; term: string; count: number }
       <h1 className="text-3xl font-bold">Occupation benchmarks</h1>
       <p className="mt-1 text-zinc-400">
         {term
-          ? `${count} ${count === 1 ? "occupation" : "occupations"} matching “${term}” · FY${fy}`
-          : `LCA filings by SOC occupation code · FY${fy}`}
-        {fy === YEARS[0] && (
-          <span className="ml-2 font-mono text-xs text-zinc-500">year to date</span>
-        )}
+          ? `${count} ${count === 1 ? "occupation" : "occupations"} matching “${term}” · `
+          : "LCA filings by SOC occupation code · "}
+        <FiscalYearTag fy={fy} ytd={fy === YEARS[0]} />
       </p>
     </div>
   );

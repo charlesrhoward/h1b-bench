@@ -3,6 +3,7 @@ import Image from "next/image";
 import { getOverviewStats, getTopEmployers } from "@/lib/queries";
 import { fmtCompact, fmtInt, fmtPct } from "@/lib/format";
 import { WORKFORCE_SHARE_METHOD } from "@/lib/workforce";
+import { Eyebrow, FiscalYearTag } from "@/components/title-tags";
 import WorkforceShareCell from "@/components/workforce-share-cell";
 
 export const dynamic = "force-dynamic";
@@ -44,8 +45,8 @@ export default async function Home() {
             <div className="h-0.5 w-7 bg-emerald-400" />
           </div>
         </div>
-        <p className="font-mono text-sm text-emerald-400">DOL OFLC disclosure data · FY2020–FY2026 Q3</p>
-        <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
+        <Eyebrow parts={["DOL OFLC disclosure data", "FY2020–FY2026 Q3"]} />
+        <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-balance sm:text-6xl">
           Who sponsors H-1B workers, what they pay, and how often they&apos;re certified.
         </h1>
         <p className="max-w-2xl text-zinc-400 sm:text-lg">
@@ -83,17 +84,14 @@ export default async function Home() {
       <section>
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <h2 className="text-lg font-semibold">
-            Top H-1B sponsors · FY{latestYear}
-            <span className="ml-2 align-middle font-mono text-xs font-normal text-zinc-500">
-              year to date
-            </span>
+            Top H-1B sponsors · <FiscalYearTag fy={latestYear} ytd />
           </h2>
           <Link href={`/employers?year=${latestYear}`} className="text-sm text-emerald-400 hover:underline">
             Full leaderboard →
           </Link>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full sm:min-w-[40rem]" data-hide="4 6">
+          <table className="w-full" data-hide="4 6">
             <thead>
               <tr>
                 <th>#</th>

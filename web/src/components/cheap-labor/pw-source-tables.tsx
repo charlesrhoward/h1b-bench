@@ -15,7 +15,7 @@ export function PwSourceTable({ rows }: { rows: PwSourceSummary[] }) {
   const total = rows.reduce((sum, r) => sum + r.filings, 0);
   return (
     <div className="overflow-x-auto">
-      <table className="w-full sm:min-w-[38rem]" data-hide="3">
+      <table className="w-full" data-hide="3">
         <thead>
           <tr>
             <th>Where the wage floor came from</th>
@@ -43,7 +43,7 @@ export function PwSourceTable({ rows }: { rows: PwSourceSummary[] }) {
 export function PwPublisherTable({ rows }: { rows: PwSurveyPublisher[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full sm:min-w-[32rem]">
+      <table className="w-full">
         <thead>
           <tr>
             <th>Survey publisher</th>

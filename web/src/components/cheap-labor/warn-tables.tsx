@@ -6,7 +6,7 @@ import { CHEAP_LABOR_FY, type EmployerWarn, type WarnCompany } from "@/lib/cheap
 export function WarnCompanyTable({ rows }: { rows: WarnCompany[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full sm:min-w-[40rem]" data-hide="2 3">
+      <table className="w-full" data-hide="2 3">
         <thead>
           <tr>
             <th>Company (as named in the notice)</th>

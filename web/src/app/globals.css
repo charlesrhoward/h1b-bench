@@ -5,11 +5,11 @@ body {
 }
 
 th {
-  @apply text-left text-xs font-medium uppercase tracking-wider text-zinc-500 pb-2 pr-3 align-bottom sm:pr-4 sm:whitespace-nowrap;
+  @apply text-left text-[10px] font-medium uppercase tracking-wide text-zinc-500 pb-2 pr-2 align-bottom sm:text-xs sm:tracking-wider sm:pr-4 lg:whitespace-nowrap;
 }
 
 td {
-  @apply py-2.5 pr-3 text-sm sm:pr-4;
+  @apply py-2.5 pr-2 text-[13px] sm:pr-4 sm:text-sm;
 }
 
 /* Long names break on phones instead of widening the table; number cells never break. */
@@ -26,7 +26,8 @@ td:last-child {
   @apply pr-0;
 }
 
-/* Phones: <table data-hide="2 5"> hides those columns (1-based) so the key numbers fit. */
+/* Narrow screens: <table data-hide="2 5"> hides those columns (1-based) on phones, and
+   data-hide-md hides more on tablets, so each table keeps its key numbers without scrolling. */
 @media (max-width: 39.99rem) {
   table[data-hide~="1"] :is(th, td):nth-child(1) {
     display: none;
@@ -56,6 +57,39 @@ td:last-child {
     display: none;
   }
   table[data-hide~="10"] :is(th, td):nth-child(10) {
+    display: none;
+  }
+}
+
+@media (max-width: 63.99rem) {
+  table[data-hide-md~="1"] :is(th, td):nth-child(1) {
+    display: none;
+  }
+  table[data-hide-md~="2"] :is(th, td):nth-child(2) {
+    display: none;
+  }
+  table[data-hide-md~="3"] :is(th, td):nth-child(3) {
+    display: none;
+  }
+  table[data-hide-md~="4"] :is(th, td):nth-child(4) {
+    display: none;
+  }
+  table[data-hide-md~="5"] :is(th, td):nth-child(5) {
+    display: none;
+  }
+  table[data-hide-md~="6"] :is(th, td):nth-child(6) {
+    display: none;
+  }
+  table[data-hide-md~="7"] :is(th, td):nth-child(7) {
+    display: none;
+  }
+  table[data-hide-md~="8"] :is(th, td):nth-child(8) {
+    display: none;
+  }
+  table[data-hide-md~="9"] :is(th, td):nth-child(9) {
+    display: none;
+  }
+  table[data-hide-md~="10"] :is(th, td):nth-child(10) {
     display: none;
   }
 }
