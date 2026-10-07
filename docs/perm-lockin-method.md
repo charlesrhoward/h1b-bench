@@ -56,3 +56,9 @@ Columns, as named in the file:
   workers. The data does not show that step or its result.
 - The wait is the DOL step only. The full green card wait also includes USCIS steps and,
   for some countries, years in the visa queue.
+
+## Corrections
+
+- After code review: Question 2 above says "the same occupation and area". The form asks
+  about the occupation or a related occupation (see the Source table). The page copy uses
+  the form's wording.

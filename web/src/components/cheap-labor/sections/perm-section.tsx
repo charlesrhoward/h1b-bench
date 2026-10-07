@@ -50,8 +50,8 @@ export default function PermSection({
       </p>
       <p>
         <span className="font-semibold text-zinc-100">{fmtInt(summary.layoff_certified)}</span> certified
-        filings came from {fmtInt(summary.layoff_employers)} employers that reported a layoff in the same
-        occupation and area in the 6 months before the filing.
+        filings came from {fmtInt(summary.layoff_employers)} employers that reported a layoff in the area,
+        in the occupation or a related occupation, in the 6 months before the filing.
       </p>
       {employers.length > 0 ? <PermLayoffTable rows={employers} /> : null}
       <p>

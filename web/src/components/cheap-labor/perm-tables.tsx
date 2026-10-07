@@ -46,7 +46,7 @@ export function EmployerPermNote({ perm }: { perm: EmployerPerm | null }) {
       Green card (PERM) filings certified in FY{PERM_FY}: {fmtInt(perm.certified)}. On{" "}
       {fmtInt(perm.fw_working)}, the worker already worked for this employer.
       {perm.layoff_certified > 0
-        ? ` On ${fmtInt(perm.layoff_certified)}, the employer reported a layoff in the same occupation and area in the 6 months before.`
+        ? ` On ${fmtInt(perm.layoff_certified)}, the employer reported a layoff in the area, in the occupation or a related occupation, in the 6 months before.`
         : ""}{" "}
       <Link href="/cheap-labor" className="text-emerald-400 hover:underline">
         Source
