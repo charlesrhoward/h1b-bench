@@ -11,7 +11,7 @@ export function fmtMillions(n: number): string {
 export function BackWagesByYear({ years }: { years: WhdYear[] }) {
   const max = Math.max(...years.map((y) => Number(y.back_wages)), 1);
   return (
-    <div className="flex items-end gap-px sm:gap-1.5" role="list" aria-label="H-1B back wages by fiscal year">
+    <div className="flex items-end gap-px font-ui sm:gap-1.5" role="list" aria-label="H-1B back wages by fiscal year">
       {years.map((y) => (
         <div
           key={y.fiscal_year}
@@ -20,11 +20,11 @@ export function BackWagesByYear({ years }: { years: WhdYear[] }) {
           title={`FY${y.fiscal_year}: ${fmtMillions(Number(y.back_wages))}, ${fmtInt(y.cases)} cases`}
         >
           <div
-            className="w-full rounded-t bg-emerald-400/80"
+            className="w-full rounded-t-sm bg-chart-accent-primary"
             style={{ height: `${Math.max(2, (Number(y.back_wages) / max) * 120)}px` }}
           />
           <span
-            className={`font-mono text-[10px] text-zinc-500 ${y.fiscal_year % 5 === 0 ? "" : "invisible sm:visible"}`}
+            className={`tabular-nums text-[10px] text-neutral-secondary ${y.fiscal_year % 5 === 0 ? "" : "invisible sm:visible"}`}
           >
             {String(y.fiscal_year).slice(2)}
           </span>
@@ -53,17 +53,17 @@ export function BackWagesTable({ rows }: { rows: WhdTopEmployer[] }) {
             <tr key={r.name_key}>
               <td>
                 {r.employer_id ? (
-                  <Link href={`/employers/${r.employer_id}`} className="hover:text-emerald-400">
+                  <Link href={`/employers/${r.employer_id}`} className="hover:text-accent-primary">
                     {r.name}
                   </Link>
                 ) : (
                   r.name
                 )}
               </td>
-              <td className="text-zinc-400">{r.state ?? "—"}</td>
-              <td className="text-right font-mono">{fmtInt(r.cases)}</td>
-              <td className="text-right font-mono">${fmtInt(Number(r.back_wages))}</td>
-              <td className="text-right font-mono">{fmtInt(r.employees)}</td>
+              <td className="text-neutral-secondary">{r.state ?? "—"}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.cases)}</td>
+              <td className="text-right tabular-nums">${fmtInt(Number(r.back_wages))}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.employees)}</td>
             </tr>
           ))}
         </tbody>
@@ -77,11 +77,11 @@ export function EmployerBackWagesNote({ whd }: { whd: EmployerWhd | null }) {
   if (!whd) return null;
   const workers = whd.employees === 1 ? "1 worker" : `${fmtInt(whd.employees)} workers`;
   return (
-    <p className="text-xs text-zinc-300">
+    <p className="type-meta">
       DOL H-1B enforcement: {fmtInt(whd.cases)} {whd.cases === 1 ? "case" : "cases"}. The employer
       agreed to pay ${fmtInt(Number(whd.back_wages))} in H-1B back wages to {workers}
       {whd.latest_fiscal_year ? ` (latest findings FY${whd.latest_fiscal_year})` : ""}.{" "}
-      <Link href="/cheap-labor" className="text-emerald-400 hover:underline">
+      <Link href="/pay-vs-market" className="link">
         Source
       </Link>
     </p>

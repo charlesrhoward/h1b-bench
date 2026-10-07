@@ -26,11 +26,11 @@ export default function PermSection({
       limits="The green card file does not show the worker's visa status, so it does not show how many are H-1B workers. Both answers are the employer's own entries on the form. A layoff is lawful if the employer told the laid-off workers about the job and considered them. The data does not show that step. The wait is the DOL step only. The full green card wait is longer."
       source={
         <>
-          <a href={PERM_DATA_URL} className="text-emerald-400 hover:underline">
+          <a href={PERM_DATA_URL} className="link">
             DOL OFLC PERM disclosure data
           </a>
           , certified filings, FY{PERM_FY}.{" "}
-          <a href={`${REPO_URL}/blob/main/docs/perm-lockin-method.md`} className="text-emerald-400 hover:underline">
+          <a href={`${REPO_URL}/blob/main/docs/perm-lockin-method.md`} className="link">
             Method
           </a>
           , committed before the results.
@@ -43,7 +43,7 @@ export default function PermSection({
       </p>
       <p>
         In FY{PERM_FY}, the worker already worked for the employer on{" "}
-        <span className="font-semibold text-zinc-100">
+        <span className="font-semibold text-neutral-primary">
           {fmtPct(summary.professional_fw_working, summary.professional_certified)}
         </span>{" "}
         of certified filings for professional jobs. For all jobs, the share was{" "}
@@ -51,7 +51,7 @@ export default function PermSection({
         while its sponsored worker already works for it.
       </p>
       <p>
-        <span className="font-semibold text-zinc-100">{fmtInt(summary.layoff_certified)}</span> certified
+        <span className="font-semibold text-neutral-primary">{fmtInt(summary.layoff_certified)}</span> certified
         filings came from {fmtInt(summary.layoff_employers)} employers that reported a layoff in the area,
         in the occupation or a related occupation, in the 6 months before the filing.
       </p>

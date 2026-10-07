@@ -21,17 +21,17 @@ export function WarnCompanyTable({ rows }: { rows: WarnCompany[] }) {
             <tr key={r.key}>
               <td>
                 {r.employer_id ? (
-                  <Link href={`/employers/${r.employer_id}`} className="hover:text-emerald-400">
+                  <Link href={`/employers/${r.employer_id}`} className="hover:text-accent-primary">
                     {r.company}
                   </Link>
                 ) : (
                   r.company
                 )}
               </td>
-              <td className="text-zinc-400">{r.states}</td>
-              <td className="text-right font-mono">{fmtInt(r.notices)}</td>
-              <td className="text-right font-mono">{fmtInt(r.workers_laid_off)}</td>
-              <td className="text-right font-mono">{fmtInt(r.h1b_filings)}</td>
+              <td className="text-neutral-secondary">{r.states}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.notices)}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.workers_laid_off)}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.h1b_filings)}</td>
             </tr>
           ))}
         </tbody>
@@ -45,10 +45,10 @@ export function EmployerWarnNote({ warn }: { warn: EmployerWarn | null }) {
   if (!warn) return null;
   const notices = warn.notices === 1 ? "1 notice" : `${fmtInt(warn.notices)} notices`;
   return (
-    <p className="text-xs text-zinc-300">
+    <p className="type-meta">
       WARN layoff notices, FY{CHEAP_LABOR_FY} ({warn.states}): {notices} to lay off{" "}
       {fmtInt(warn.workers_laid_off)} workers, counted across all names of this company.{" "}
-      <Link href="/cheap-labor" className="text-emerald-400 hover:underline">
+      <Link href="/pay-vs-market" className="link">
         Source
       </Link>
     </p>

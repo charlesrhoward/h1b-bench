@@ -1,0 +1,17 @@
+/* Full tables remain available inside disclosures, including on phones. */
+.investigation .evidence-details table :is(th, td):nth-child(n) {
+  display: table-cell;
+}
+
+.investigation .evidence-details-body > .overflow-x-auto {
+  overflow: visible;
+}
+
+/* Stacked disclosures share one rule instead of leaving a gap between two borders. */
+.investigation .evidence-details:has(+ .evidence-details) {
+  margin-block-end: 0;
+}
+
+.investigation .evidence-details + .evidence-details {
+  border-top-width: 0;
+}

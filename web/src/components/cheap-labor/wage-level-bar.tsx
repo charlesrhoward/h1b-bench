@@ -2,10 +2,10 @@ import { fmtPct } from "@/lib/format";
 import { WAGE_LEVEL_PERCENTILES } from "@/lib/cheap-labor";
 
 const SEGMENT_TONE: Record<keyof typeof WAGE_LEVEL_PERCENTILES, string> = {
-  I: "bg-emerald-400",
-  II: "bg-emerald-300/70",
-  III: "bg-zinc-500",
-  IV: "bg-zinc-600",
+  I: "bg-chart-accent-primary",
+  II: "bg-chart-accent-secondary",
+  III: "bg-chart-neutral-primary",
+  IV: "bg-chart-neutral-tertiary",
 };
 
 /** Stacked bar of filings by DOL wage level, each labeled with its local-wage percentile. */
@@ -17,9 +17,9 @@ export default function WageLevelBar({
   known: number;
 }) {
   return (
-    <figure className="space-y-3">
-      <figcaption className="text-sm font-medium text-zinc-100">Share of filings at each wage level</figcaption>
-      <div className="flex h-4 overflow-hidden rounded" aria-hidden="true">
+    <figure className="space-y-3 py-2 font-ui">
+      <figcaption className="text-sm font-medium text-neutral-primary">Share of filings at each wage level</figcaption>
+      <div className="flex h-4 overflow-hidden rounded-sm" aria-hidden="true">
         {levels.map((l) => (
           <div
             key={l.level}
@@ -34,9 +34,9 @@ export default function WageLevelBar({
           <div key={l.level} className="text-sm">
             <div className="flex items-center gap-2">
               <span className={`size-2.5 rounded-sm ${SEGMENT_TONE[l.level]}`} />
-              <span className="font-mono text-zinc-100">{fmtPct(l.count, known)}</span>
+              <span className="font-semibold tabular-nums">{fmtPct(l.count, known)}</span>
             </div>
-            <div className="mt-0.5 text-xs text-zinc-500">
+            <div className="mt-0.5 text-xs text-neutral-secondary">
               Level {l.level} · {WAGE_LEVEL_PERCENTILES[l.level]}th percentile
             </div>
           </div>

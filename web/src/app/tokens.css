@@ -1,0 +1,169 @@
+/*
+ * Unbound color tokens, copied verbatim from /DESIGN.md §3 ("Full token set").
+ * Components never use raw hex values. They bind to these semantic slots through the
+ * Tailwind bindings in globals.css. To change a color, change DESIGN.md first, then here.
+ */
+:root {
+  color-scheme: light dark;
+  --invert-in-dark-mode: 0;
+  --blend-in-dark-mode: normal;
+
+  /* background — neutral */
+  --color-bg-neutral-primary: #ffffff;
+  --color-bg-neutral-primary: light-dark(#ffffff, #171717);
+  --color-bg-neutral-secondary: #f2f2f2;
+  --color-bg-neutral-secondary: light-dark(#f2f2f2, #242424);
+  --color-bg-neutral-tertiary: #f9f9f9;
+  --color-bg-neutral-tertiary: light-dark(#f9f9f9, #1f1f1f);
+  --color-bg-neutral-quaternary: #242424;
+  --color-bg-neutral-quaternary: light-dark(#242424, #d2d2d2);
+  --color-bg-neutral-elevated: #ffffff;
+  --color-bg-neutral-elevated: light-dark(#ffffff, #1c1c1c);
+  --color-bg-neutral-elevated-stacked: #ffffff;
+  --color-bg-neutral-elevated-stacked: light-dark(#ffffff, #2b2b2b);
+  --color-bg-neutral-elevated-inverted: #242424;
+  --color-bg-neutral-elevated-inverted: light-dark(#242424, #1c1c1c);
+
+  /* background — brand & accent */
+  --color-bg-brand-primary: #191919;
+  --color-bg-brand-primary: light-dark(#191919, #ffffff);
+  --color-bg-brand-primary-hover: #080808;
+  --color-bg-brand-primary-hover: light-dark(#080808, #f2f2f2);
+  --color-bg-accent-secondary: #bbdbba;
+  --color-bg-accent-secondary: light-dark(#bbdbba, #156d12);
+  --color-bg-accent-secondary-hover: #9fcc9e;
+  --color-bg-accent-secondary-hover: light-dark(#9fcc9e, #10530e);
+  --color-bg-accent-tertiary: #d2e7d1;
+  --color-bg-accent-tertiary: light-dark(#d2e7d1, #10530e);
+  --color-bg-accent-quaternary: #e8f3e8;
+  --color-bg-accent-quaternary: light-dark(#e8f3e8, #0c3d0a);
+
+  /* background — error & utility */
+  --color-bg-error-primary: #c94a4a;
+  --color-bg-error-primary: light-dark(#c94a4a, #762323);
+  --color-bg-error-primary-hover: #b63636;
+  --color-bg-error-primary-hover: light-dark(#b63636, #451717);
+  --color-bg-utility-yellow-primary: #fffae1;
+  --color-bg-utility-yellow-primary: light-dark(#fffae1, #461f01);
+  --color-bg-utility-blue-primary: #e5f2ff;
+  --color-bg-utility-blue-primary: light-dark(#e5f2ff, #22214f);
+
+  /* verified creator intro */
+  --color-bg-verified-creator-intro: #e5f2ff;
+  --color-bg-verified-creator-intro: light-dark(#e5f2ff, #171717);
+  --color-border-verified-creator-intro: transparent;
+  --color-border-verified-creator-intro: light-dark(transparent, #2b2b2b);
+  --verified-creator-intro-illustration-scale: 1;
+
+  /* foreground — neutral */
+  --color-fg-neutral-primary: #242424;
+  --color-fg-neutral-primary: light-dark(#242424, #e5e5e5);
+  --color-fg-neutral-primary-hover: #000000;
+  --color-fg-neutral-primary-hover: light-dark(#000000, #ffffff);
+  --color-fg-neutral-secondary: #6b6b6b;
+  --color-fg-neutral-secondary: light-dark(#6b6b6b, #b3b3b3);
+  --color-fg-neutral-secondary-hover: #3f3f3f;
+  --color-fg-neutral-secondary-hover: light-dark(#3f3f3f, #d2d2d2);
+  --color-fg-neutral-tertiary: #ffffff;
+  --color-fg-neutral-tertiary: light-dark(#ffffff, #121212);
+
+  /* foreground — accent, error, utility, social */
+  --color-fg-accent-primary: #1a8917;
+  --color-fg-accent-primary: light-dark(#1a8917, #6ab668);
+  --color-fg-accent-primary-hover: #156d12;
+  --color-fg-accent-primary-hover: light-dark(#156d12, #40993d);
+  --color-fg-error-primary: #c94a4a;
+  --color-fg-error-primary: light-dark(#c94a4a, #ce5a5a);
+  --color-fg-error-primary-hover: #b63636;
+  --color-fg-error-primary-hover: light-dark(#b63636, #c94a4a);
+  --color-fg-utility-blue-primary: #437aff;
+  --color-fg-utility-blue-primary: light-dark(#437aff, #3c9fff);
+  --color-fg-social-linkedin: #0a66c2;
+  --color-fg-social-linkedin: light-dark(#0a66c2, #e5e5e5);
+
+  /* border — neutral & brand */
+  --color-border-neutral-primary: #f2f2f2;
+  --color-border-neutral-primary: light-dark(#f2f2f2, #3f3f3f);
+  --color-border-neutral-primary-hover: #e5e5e5;
+  --color-border-neutral-primary-hover: light-dark(#e5e5e5, #2b2b2b);
+  --color-border-neutral-secondary: #242424;
+  --color-border-neutral-secondary: light-dark(#242424, #d2d2d2);
+  --color-border-neutral-secondary-hover: #000000;
+  --color-border-neutral-secondary-hover: light-dark(#000000, #f9f9f9);
+  --color-border-neutral-tertiary: #e5e5e5;
+  --color-border-neutral-tertiary: light-dark(#e5e5e5, #3f3f3f);
+  --color-border-neutral-tertiary-hover: #d2d2d2;
+  --color-border-neutral-tertiary-hover: light-dark(#d2d2d2, #3f3f3f);
+  --color-border-brand-primary: #191919;
+  --color-border-brand-primary: light-dark(#191919, #ffffff);
+
+  /* border — accent & error */
+  --color-border-accent-primary: #1a8917;
+  --color-border-accent-primary: light-dark(#1a8917, #6ab668);
+  --color-border-accent-primary-hover: #156d12;
+  --color-border-accent-primary-hover: light-dark(#156d12, #40993d);
+  --color-border-error-primary: #c94a4a;
+  --color-border-error-primary: light-dark(#c94a4a, #762323);
+  --color-border-error-primary-hover: #b63636;
+  --color-border-error-primary-hover: light-dark(#b63636, #451717);
+
+  /* chart */
+  --color-chart-accent-primary: #1a8917;
+  --color-chart-accent-primary: light-dark(#1a8917, #84c082);
+  --color-chart-accent-secondary: #9fcc9e;
+  --color-chart-accent-secondary: light-dark(#9fcc9e, #1a8917);
+  --color-chart-accent-tertiary: #bbdbba;
+  --color-chart-accent-tertiary: light-dark(#bbdbba, #156d12);
+  --color-chart-accent-quaternary: #e8f3e8;
+  --color-chart-accent-quaternary: light-dark(#e8f3e8, #10530e);
+  --color-chart-utility-yellow-primary: #fea010;
+  --color-chart-utility-yellow-primary: light-dark(#fea010, #fea010);
+  --color-chart-utility-yellow-secondary: #ffc017;
+  --color-chart-utility-yellow-secondary: light-dark(#ffc017, #be5b04);
+  --color-chart-utility-yellow-tertiary: #fffae1;
+  --color-chart-utility-yellow-tertiary: light-dark(#fffae1, #be5b04);
+  --color-chart-neutral-primary: #b3b3b3;
+  --color-chart-neutral-primary: light-dark(#b3b3b3, #d2d2d2);
+  --color-chart-neutral-secondary: #b3b3b3;
+  --color-chart-neutral-secondary: light-dark(#b3b3b3, #d2d2d2);
+  --color-chart-neutral-tertiary: #e5e5e5;
+  --color-chart-neutral-tertiary: light-dark(#e5e5e5, #6b6b6b);
+
+  /* elevation & scrim */
+  --color-shadow-elevated: #242424;
+  --color-shadow-elevated: light-dark(#242424, transparent);
+  --color-bg-scrim: #484848;
+  --color-bg-scrim: light-dark(#484848, #000000);
+
+  /* status */
+  --color-status-in-review-background: #e5f2ff;
+  --color-status-in-review-background: light-dark(#e5f2ff, #22214f);
+  --color-status-in-review-text: #437aff;
+  --color-status-in-review-text: light-dark(#437aff, #6ab7ff);
+  --color-status-edits-requested-background: #fffae1;
+  --color-status-edits-requested-background: light-dark(#fffae1, #461f01);
+  --color-status-edits-requested-text: #be5b04;
+  --color-status-edits-requested-text: light-dark(#be5b04, #fea010);
+
+  /* article footer */
+  --color-article-footer-bg-subtle: #f7f4ed;
+  --color-article-footer-bg-subtle: light-dark(#f7f4ed, #242424);
+  --color-article-footer-bg-contrast: #242424;
+  --color-article-footer-bg-contrast: light-dark(#242424, #dacfbe);
+  --color-article-footer-fg-subtle: #242424;
+  --color-article-footer-fg-subtle: light-dark(#242424, #d2d2d2);
+  --color-article-footer-fg-contrast: #ffffff;
+  --color-article-footer-fg-contrast: light-dark(#ffffff, #121212);
+  --color-article-footer-placeholder-light-grey: #d2d2d2;
+  --color-article-footer-placeholder-light-grey: light-dark(#d2d2d2, #242424);
+  --color-article-footer-placeholder-dark-grey: #6b6b6b;
+  /* dark variant for placeholder-dark-grey pending */
+}
+
+/* Behavior hooks (DESIGN.md §3): line art flips to light ink on dark surfaces. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --invert-in-dark-mode: 1;
+    --blend-in-dark-mode: screen;
+  }
+}

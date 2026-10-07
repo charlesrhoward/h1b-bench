@@ -4,6 +4,7 @@ import { getOverviewStats, getTopEmployers } from "@/lib/queries";
 import { fmtCompact, fmtInt, fmtPct } from "@/lib/format";
 import { WORKFORCE_SHARE_METHOD } from "@/lib/workforce";
 import { Eyebrow, FiscalYearTag } from "@/components/title-tags";
+import StatCard from "@/components/stat-card";
 import WorkforceShareCell from "@/components/workforce-share-cell";
 
 export const dynamic = "force-dynamic";
@@ -15,78 +16,82 @@ export default async function Home() {
   const maxFilings = Math.max(...years.map(([, v]) => v.filings), 1);
 
   return (
-    <div className="space-y-12">
-      <section className="relative space-y-5 pb-4 sm:py-20">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(to_right,#34d399_1px,transparent_1px),linear-gradient(to_bottom,#34d399_1px,transparent_1px)] [background-size:140px_140px] [mask-image:radial-gradient(ellipse_80%_80%_at_60%_30%,black,transparent_80%)]"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-16 right-0 -z-10 hidden w-[22rem] max-w-none sm:-top-20 sm:block sm:w-[28rem] lg:-right-6 lg:w-[38rem]"
-        >
-          <Image
-            src="/capitol-wide.webp"
-            alt=""
-            width={635}
-            height={550}
-            priority
-            className="h-auto w-full mask-t-from-85% mask-r-from-70% mask-b-from-60% mask-l-from-65%"
-          />
-        </div>
-        <div
-          aria-hidden
-          className="absolute right-2 top-24 hidden space-y-2.5 font-mono text-xs tracking-[0.2em] text-zinc-500 lg:block"
-        >
-          <p>DATA</p>
-          <p>PEOPLE</p>
-          <p>OPPORTUNITY</p>
-          <div className="pt-2">
-            <div className="h-0.5 w-7 bg-emerald-400" />
+    <div className="space-y-16 sm:space-y-20">
+      <section className="grid items-center gap-10 md:grid-cols-[minmax(0,1fr)_16rem] md:gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_26rem]">
+        <div className="space-y-6">
+          <Eyebrow parts={["DOL OFLC disclosure data", "FY2020–FY2026 Q3"]} />
+          <h1 className="type-hero max-w-3xl text-balance">
+            Who sponsors <span className="whitespace-nowrap">H-1B</span> workers, what they pay, and how
+            often they&apos;re certified.
+          </h1>
+          <p className="type-body max-w-2xl text-neutral-secondary">
+            Every Labor Condition Application filed with the Department of Labor — benchmarked by
+            employer, occupation, wage, and year.
+          </p>
+          <div className="flex flex-wrap gap-3 pt-1 text-sm">
+            <Link
+              href="/employers"
+              className="rounded-full bg-brand-primary px-5 py-2.5 font-medium text-neutral-tertiary hover:bg-brand-primary-hover"
+            >
+              Browse employers
+            </Link>
+            <Link
+              href="/pay-vs-market"
+              className="rounded-full border border-neutral-secondary px-5 py-2.5 font-medium text-neutral-primary hover:border-brand-primary"
+            >
+              Read the pay evidence
+            </Link>
           </div>
         </div>
-        <Eyebrow parts={["DOL OFLC disclosure data", "FY2020–FY2026 Q3"]} />
-        <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-balance sm:text-6xl">
-          Who sponsors H-1B workers, what they pay, and how often they&apos;re certified.
-        </h1>
-        <p className="max-w-2xl text-zinc-400 sm:text-lg">
-          Every Labor Condition Application filed with the Department of Labor — benchmarked by
-          employer, occupation, wage, and year.
-        </p>
+        <Image
+          src="/capitol-engraving.webp"
+          alt=""
+          width={870}
+          height={980}
+          priority
+          sizes="(min-width: 1280px) 26rem, (min-width: 1024px) 22rem, (min-width: 768px) 16rem, 18rem"
+          className="ink-art mx-auto h-auto w-full max-w-72 md:max-w-none"
+        />
       </section>
 
-      <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat label="LCA filings" value={fmtInt(totalFilings)} />
-        <Stat label="Certified" value={fmtPct(totalCertified, totalFilings)} />
-        <Stat label="Employers" value={fmtInt(employerCount)} />
-        <Stat label="Fiscal years" value={String(years.length)} />
+      <section aria-label="Totals" className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
+        <StatCard label="LCA filings" value={fmtInt(totalFilings)} />
+        <StatCard label="Certified" value={fmtPct(totalCertified, totalFilings)} />
+        <StatCard label="Employers" value={fmtInt(employerCount)} />
+        <StatCard label="Fiscal years" value={String(years.length)} />
       </section>
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold">Filings by fiscal year</h2>
-        <div className="flex items-end gap-1.5 sm:gap-3">
+        <h2 className="type-heading mb-6">Filings by fiscal year</h2>
+        <div className="flex items-end gap-1.5 border-b border-neutral-tertiary sm:gap-3">
           {years.map(([year, v]) => (
             <div key={year} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-              <span className="font-mono text-xs text-zinc-400">
+              <span className="text-xs tabular-nums text-neutral-secondary">
                 <span className="sm:hidden">{fmtCompact(v.filings)}</span>
                 <span className="hidden sm:inline">{fmtInt(v.filings)}</span>
               </span>
               <div
-                className="w-full rounded-t bg-emerald-500/80"
+                className="w-full max-w-16 rounded-t-sm bg-chart-accent-primary"
                 style={{ height: `${Math.max(4, (v.filings / maxFilings) * 160)}px` }}
               />
-              <span className="font-mono text-xs text-zinc-500">FY{String(year).slice(2)}</span>
             </div>
+          ))}
+        </div>
+        <div className="mt-2 flex gap-1.5 sm:gap-3">
+          {years.map(([year]) => (
+            <span key={year} className="min-w-0 flex-1 text-center text-xs text-neutral-secondary">
+              FY{String(year).slice(2)}
+            </span>
           ))}
         </div>
       </section>
 
       <section>
-        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 className="text-lg font-semibold">
+        <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="type-heading">
             Top H-1B sponsors · <FiscalYearTag fy={latestYear} ytd />
           </h2>
-          <Link href={`/employers?year=${latestYear}`} className="text-sm text-emerald-400 hover:underline">
+          <Link href={`/employers?year=${latestYear}`} className="link text-sm">
             Full leaderboard →
           </Link>
         </div>
@@ -107,19 +112,19 @@ export default async function Home() {
             <tbody>
               {top.map((r, i) => (
                 <tr key={r.employer_id}>
-                  <td className="font-mono text-zinc-500">{i + 1}</td>
+                  <td className="tabular-nums text-neutral-secondary">{i + 1}</td>
                   <td>
-                    <Link href={`/employers/${r.employer_id}`} className="hover:text-emerald-400">
+                    <Link href={`/employers/${r.employer_id}`} className="font-medium hover:text-accent-primary">
                       {r.employers?.name}
                     </Link>
                   </td>
-                  <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-                  <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
+                  <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
+                  <td className="text-right tabular-nums text-accent-primary">{fmtPct(r.certified, r.filings)}</td>
                   <WorkforceShareCell
                     certified={r.certified}
                     headcount={r.employers?.employer_headcounts}
                   />
-                  <td className="text-right font-mono">
+                  <td className="text-right tabular-nums">
                     {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
                   </td>
                 </tr>
@@ -128,15 +133,6 @@ export default async function Home() {
           </table>
         </div>
       </section>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-zinc-800 p-4">
-      <div className="font-mono text-2xl font-bold">{value}</div>
-      <div className="mt-1 text-xs text-zinc-500">{label}</div>
     </div>
   );
 }

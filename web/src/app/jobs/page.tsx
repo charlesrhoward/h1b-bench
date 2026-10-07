@@ -1,11 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getJobStats } from "@/lib/queries";
 import { FiscalYearTag } from "@/components/title-tags";
+import YearTabs, { FISCAL_YEARS } from "@/components/year-tabs";
 import { fmtInt, fmtPct } from "@/lib/format";
+import { pageMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
+export const metadata: Metadata = pageMetadata({
+  title: "Occupation benchmarks — H1B Bench",
+  description:
+    "H-1B Labor Condition Applications by SOC occupation and fiscal year: filings, certification rate, median wage, and employer count. Source: DOL OFLC.",
+  path: "/jobs",
+});
 
 export default async function JobsPage({
   searchParams,
@@ -18,32 +26,19 @@ export default async function JobsPage({
   const rows = await getJobStats(fy, 50, term || undefined);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Header fy={fy} term={term} count={rows.length} />
 
-      <div className="flex flex-wrap gap-2">
-        {YEARS.map((y) => (
-          <Link
-            key={y}
-            href={`/jobs?year=${y}${term ? `&q=${encodeURIComponent(term)}` : ""}`}
-            className={`rounded border px-3 py-1 font-mono text-sm ${
-              y === fy
-                ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
-                : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
-            }`}
-          >
-            FY{y}
-          </Link>
-        ))}
+      <YearTabs active={fy} hrefFor={(y) => `/jobs?year=${y}${term ? `&q=${encodeURIComponent(term)}` : ""}`}>
         {term && (
           <Link
             href="/jobs"
-            className="rounded border border-zinc-700 px-3 py-1 text-sm text-zinc-400 hover:border-zinc-500"
+            className="rounded-full border border-neutral-tertiary px-3.5 py-1.5 text-sm text-neutral-secondary hover:border-neutral-tertiary-hover hover:text-neutral-secondary-hover"
           >
             Clear “{term}” ×
           </Link>
         )}
-      </div>
+      </YearTabs>
 
       <div className="overflow-x-auto">
         <table className="w-full" data-hide="1 4 6">
@@ -60,21 +55,21 @@ export default async function JobsPage({
           <tbody>
             {rows.map((r) => (
               <tr key={r.soc_code}>
-                <td className="font-mono text-zinc-400">{r.soc_code}</td>
-                <td>{r.soc_title ?? "—"}</td>
-                <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-                <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
-                <td className="text-right font-mono">
+                <td className="font-code text-neutral-secondary">{r.soc_code}</td>
+                <td className="font-medium">{r.soc_title ?? "—"}</td>
+                <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
+                <td className="text-right tabular-nums text-accent-primary">{fmtPct(r.certified, r.filings)}</td>
+                <td className="text-right tabular-nums">
                   {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
                 </td>
-                <td className="text-right font-mono">{fmtInt(r.distinct_employers)}</td>
+                <td className="text-right tabular-nums">{fmtInt(r.distinct_employers)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       {rows.length === 0 && (
-        <p className="text-sm text-zinc-500">
+        <p className="type-meta">
           No occupations matched{term ? ` “${term}”` : ""} in FY{fy}.
         </p>
       )}
@@ -85,12 +80,12 @@ export default async function JobsPage({
 function Header({ fy, term, count }: { fy: number; term: string; count: number }) {
   return (
     <div>
-      <h1 className="text-3xl font-bold">Occupation benchmarks</h1>
-      <p className="mt-1 text-zinc-400">
+      <h1 className="type-title">Occupation benchmarks</h1>
+      <p className="mt-2 text-neutral-secondary">
         {term
           ? `${count} ${count === 1 ? "occupation" : "occupations"} matching “${term}” · `
           : "LCA filings by SOC occupation code · "}
-        <FiscalYearTag fy={fy} ytd={fy === YEARS[0]} />
+        <FiscalYearTag fy={fy} ytd={fy === FISCAL_YEARS[0]} />
       </p>
     </div>
   );

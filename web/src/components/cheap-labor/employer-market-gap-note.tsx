@@ -10,12 +10,12 @@ const MIN_NOTE_FILINGS = 10;
 export default function EmployerMarketGapNote({ gap }: { gap: EmployerMarketGap | null }) {
   if (!gap || gap.filings_matched < MIN_NOTE_FILINGS) return null;
   return (
-    <p className="text-xs text-zinc-500">
+    <p className="type-meta">
       Pay vs. local median (FY{CHEAP_LABOR_FY}): {fmtInt(gap.below_median)} of{" "}
       {fmtInt(gap.filings_matched)} matched filings (
       {fmtPct(gap.below_median, gap.filings_matched)}) offer less than the local median for the job.
       Median gap: {fmtGap(gap.median_gap)}.{" "}
-      <Link href="/cheap-labor" className="text-emerald-400 hover:underline">
+      <Link href="/pay-vs-market" className="link">
         How we measure this
       </Link>
     </p>
