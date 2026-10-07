@@ -9,20 +9,26 @@ export default function MobileMenu({ links }: { links: NavLink[] }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      buttonRef.current?.focus();
     };
-    const onPointer = (e: PointerEvent) => {
+    // Pointer or focus anywhere outside the menu (e.g. the search box) closes it.
+    const onOutside = (e: Event) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener("keydown", onKey);
-    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("pointerdown", onOutside);
+    document.addEventListener("focusin", onOutside);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("pointerdown", onOutside);
+      document.removeEventListener("focusin", onOutside);
     };
   }, [open]);
 
@@ -31,6 +37,7 @@ export default function MobileMenu({ links }: { links: NavLink[] }) {
   return (
     <div ref={rootRef} className="order-2 ml-auto sm:order-3 sm:ml-0 lg:hidden">
       <button
+        ref={buttonRef}
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
