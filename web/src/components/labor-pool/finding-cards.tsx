@@ -19,11 +19,11 @@ export default function FindingCards({ profile }: { profile: LcaYearProfile }) {
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div className="grid gap-x-6 gap-y-8 sm:grid-cols-3">
       {findings.map((f) => (
-        <div key={f.text} className="rounded-lg border border-zinc-800 p-5">
-          <div className="font-mono text-3xl font-bold text-emerald-400">{f.value}</div>
-          <p className="mt-2 text-sm text-zinc-400">{f.text}</p>
+        <div key={f.text} className="border-t border-neutral-secondary pt-4">
+          <div className="type-figure text-[2.5rem] text-accent-primary">{f.value}</div>
+          <p className="mt-3 text-[15px] leading-relaxed text-neutral-secondary">{f.text}</p>
         </div>
       ))}
     </div>

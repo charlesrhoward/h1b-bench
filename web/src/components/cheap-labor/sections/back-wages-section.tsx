@@ -28,11 +28,11 @@ export default function BackWagesSection({
       limits="DOL investigates a small share of employers, so these cases measure enforcement, not the full rate of violations. The data holds concluded cases only, so recent years are incomplete. Back wages are amounts the employer agreed to pay. The data does not show if the employer paid. The totals count only cases that have a findings date."
       source={
         <>
-          <a href={WHD_DATA_URL} className="text-emerald-400 hover:underline">
+          <a href={WHD_DATA_URL} className="link">
             DOL Wage and Hour Division, concluded compliance actions
           </a>
           , H-1B cases with findings from FY{first}.{" "}
-          <a href={`${REPO_URL}/blob/main/docs/back-wages-method.md`} className="text-emerald-400 hover:underline">
+          <a href={`${REPO_URL}/blob/main/docs/back-wages-method.md`} className="link">
             Method
           </a>
           , committed before the results.
@@ -45,9 +45,9 @@ export default function BackWagesSection({
         {fmtInt(totals.employees)} workers. DOL also assessed {fmtMillions(totals.penalties)} in
         penalties.
       </p>
-      <p className="text-xs text-zinc-500">Concluded cases · FY{first}–FY{years.at(-1)?.fiscal_year}</p>
+      <p className="type-meta">Concluded cases · FY{first}–FY{years.at(-1)?.fiscal_year}</p>
       <BackWagesByYear years={years} />
-      <p className="text-sm text-zinc-400">
+      <p className="type-meta">
         Back wages by fiscal year of the findings. Each bar shows the number of cases on hover.
       </p>
       <EvidenceDetails title="View the employers with the most back wages">

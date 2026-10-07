@@ -11,7 +11,7 @@ export default function WorkforceShareCell({
   const share = workforceShare(certified, headcount);
   return (
     <td
-      className={`text-right font-mono ${share.reliable ? "" : "text-zinc-500"}`}
+      className={`text-right tabular-nums ${share.reliable ? "" : "text-neutral-secondary"}`}
       title={share.title}
     >
       {share.label}

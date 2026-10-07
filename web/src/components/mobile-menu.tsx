@@ -43,7 +43,7 @@ export default function MobileMenu({ links }: { links: NavLink[] }) {
         aria-controls={panelId}
         aria-label={open ? "Close menu" : "Open menu"}
         onClick={() => setOpen((o) => !o)}
-        className="-mr-2 flex size-10 items-center justify-center rounded-md text-zinc-300 hover:bg-zinc-900 hover:text-zinc-100"
+        className="-mr-2 flex size-10 items-center justify-center rounded-full text-neutral-secondary hover:bg-neutral-secondary hover:text-neutral-primary"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
           {open ? (
@@ -54,23 +54,23 @@ export default function MobileMenu({ links }: { links: NavLink[] }) {
         </svg>
       </button>
       {open ? (
-        <div aria-hidden="true" onClick={close} className="absolute inset-x-0 top-full h-dvh bg-black/60" />
+        <div aria-hidden="true" onClick={close} className="absolute inset-x-0 top-full h-dvh bg-scrim/50" />
       ) : null}
       <nav
         id={panelId}
         aria-label="Main"
         hidden={!open}
-        className="absolute inset-x-0 top-full z-50 border-b border-zinc-800 bg-zinc-950 px-4 pb-4 sm:px-6 shadow-2xl shadow-black/60"
+        className="absolute inset-x-0 top-full z-50 border-b border-neutral-tertiary bg-neutral-elevated px-4 pb-4 shadow-elevated sm:px-6"
       >
-        <ul className="divide-y divide-zinc-800/70">
+        <ul className="divide-y divide-neutral-primary">
           {links.map((l) => (
             <li key={l.href}>
               {l.external ? (
-                <a href={l.href} target="_blank" rel="noreferrer" onClick={close} className="block py-3.5 text-base text-zinc-300 hover:text-zinc-100">
+                <a href={l.href} target="_blank" rel="noreferrer" onClick={close} className="block py-3.5 text-base text-neutral-secondary hover:text-neutral-secondary-hover">
                   {l.label}
                 </a>
               ) : (
-                <Link href={l.href} onClick={close} className="block py-3.5 text-base text-zinc-200 hover:text-zinc-100">
+                <Link href={l.href} onClick={close} className="block py-3.5 text-base text-neutral-primary hover:text-neutral-primary-hover">
                   {l.label}
                 </Link>
               )}

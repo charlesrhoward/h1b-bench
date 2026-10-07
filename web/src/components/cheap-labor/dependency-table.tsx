@@ -28,12 +28,12 @@ export default function DependencyTable({ rows }: { rows: DependencyProfile[] })
           {ordered.map((r) => (
             <tr key={r.dependency}>
               <td>{LABELS[r.dependency]}</td>
-              <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-              <td className="text-right font-mono">
+              <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
+              <td className="text-right tabular-nums">
                 {fmtPct(r.wage_level_1 + r.wage_level_2, r.wage_level_known)}
               </td>
-              <td className="text-right font-mono">{fmtPct(r.paid_at_floor, r.yearly_with_floor)}</td>
-              <td className="text-right font-mono">{r.median_wage ? `$${fmtInt(r.median_wage)}` : "—"}</td>
+              <td className="text-right tabular-nums">{fmtPct(r.paid_at_floor, r.yearly_with_floor)}</td>
+              <td className="text-right tabular-nums">{r.median_wage ? `$${fmtInt(r.median_wage)}` : "—"}</td>
             </tr>
           ))}
         </tbody>

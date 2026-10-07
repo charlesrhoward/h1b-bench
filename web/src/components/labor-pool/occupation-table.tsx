@@ -33,16 +33,16 @@ export default function OccupationTable({
         <tbody>
           {rows.map((r) => (
             <tr key={r.occ_code}>
-              <td>{r.occ_title ?? r.occ_code}</td>
-              <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-              <td className="text-right font-mono text-zinc-500">{fmtPct(r.filings, totalFilings)}</td>
-              <td className="text-right font-mono">{fmtInt(r.new_positions)}</td>
-              <td className="text-right font-mono">
+              <td className="font-medium">{r.occ_title ?? r.occ_code}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
+              <td className="text-right tabular-nums text-neutral-secondary">{fmtPct(r.filings, totalFilings)}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.new_positions)}</td>
+              <td className="text-right tabular-nums">
                 {fmtInt(r.supply_est)}
-                <span className="block text-xs text-zinc-500 sm:ml-1 sm:inline">±{fmtInt(r.supply_moe)}</span>
+                <span className="block text-xs text-neutral-secondary sm:ml-1 sm:inline">±{fmtInt(r.supply_moe)}</span>
               </td>
-              <td className="text-right font-mono">{fmtPct(fillablePositions(r), r.new_positions)}</td>
-              <td className={`text-right font-mono ${r.covered ? "text-emerald-400" : "text-zinc-500"}`}>
+              <td className="text-right tabular-nums">{fmtPct(fillablePositions(r), r.new_positions)}</td>
+              <td className={`text-right tabular-nums ${r.covered ? "text-accent-primary" : "text-neutral-secondary"}`}>
                 {r.covered ? "Yes" : "No"}
               </td>
             </tr>

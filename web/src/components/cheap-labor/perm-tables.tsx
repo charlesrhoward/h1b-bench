@@ -20,16 +20,16 @@ export function PermLayoffTable({ rows }: { rows: PermLayoffEmployer[] }) {
             <tr key={r.name_key}>
               <td>
                 {r.employer_id ? (
-                  <Link href={`/employers/${r.employer_id}`} className="hover:text-emerald-400">
+                  <Link href={`/employers/${r.employer_id}`} className="hover:text-accent-primary">
                     {r.name}
                   </Link>
                 ) : (
                   r.name
                 )}
               </td>
-              <td className="text-right font-mono">{fmtInt(r.certified)}</td>
-              <td className="text-right font-mono">{fmtInt(r.layoff_certified)}</td>
-              <td className="text-right font-mono">{fmtPct(r.layoff_certified, r.certified)}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.certified)}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.layoff_certified)}</td>
+              <td className="text-right tabular-nums">{fmtPct(r.layoff_certified, r.certified)}</td>
             </tr>
           ))}
         </tbody>
@@ -42,13 +42,13 @@ export function PermLayoffTable({ rows }: { rows: PermLayoffEmployer[] }) {
 export function EmployerPermNote({ perm }: { perm: EmployerPerm | null }) {
   if (!perm || perm.certified === 0) return null;
   return (
-    <p className="text-xs text-zinc-300">
+    <p className="type-meta">
       Green card (PERM) filings certified in FY{PERM_FY}: {fmtInt(perm.certified)}. On{" "}
       {fmtInt(perm.fw_working)}, the worker already worked for this employer.
       {perm.layoff_certified > 0
         ? ` On ${fmtInt(perm.layoff_certified)}, the employer reported a layoff in the area, in the occupation or a related occupation, in the 6 months before.`
         : ""}{" "}
-      <Link href="/cheap-labor" className="text-emerald-400 hover:underline">
+      <Link href="/pay-vs-market" className="link">
         Source
       </Link>
     </p>

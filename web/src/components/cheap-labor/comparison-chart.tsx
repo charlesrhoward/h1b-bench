@@ -9,23 +9,23 @@ export default function ComparisonChart({ title, rows, note }: {
   note: string;
 }) {
   return (
-    <figure className="space-y-4 py-3">
-      <figcaption className="text-sm font-medium text-zinc-100">{title}</figcaption>
+    <figure className="space-y-4 py-2 font-ui">
+      <figcaption className="text-sm font-medium text-neutral-primary">{title}</figcaption>
       <div className="space-y-4">
         {rows.map((row, index) => (
           <div className="space-y-2" key={row.label}>
-            <div className="flex items-baseline justify-between gap-4 text-sm text-zinc-300">
+            <div className="flex items-baseline justify-between gap-4 text-sm text-neutral-primary">
               <span>{row.label}</span>
-              <strong className="shrink-0 font-mono font-medium text-zinc-100">{fmtPct(row.count, row.total)}</strong>
+              <strong className="shrink-0 font-semibold tabular-nums">{fmtPct(row.count, row.total)}</strong>
             </div>
-            <div className="h-3 overflow-hidden rounded bg-zinc-800" aria-hidden="true">
-              <div className={`h-full ${index === 0 ? "bg-emerald-400" : "bg-zinc-500"}`}
+            <div className="h-3 overflow-hidden rounded-sm bg-chart-neutral-tertiary" aria-hidden="true">
+              <div className={`h-full ${index === 0 ? "bg-chart-accent-primary" : "bg-chart-neutral-primary"}`}
                 style={{ width: `${row.total > 0 ? (row.count / row.total) * 100 : 0}%` }} />
             </div>
           </div>
         ))}
       </div>
-      <p className="text-xs text-zinc-500">{note}</p>
+      <p className="type-meta">{note}</p>
     </figure>
   );
 }

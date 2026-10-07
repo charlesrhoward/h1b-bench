@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { supabase } from "./supabase";
 import type { Headcount } from "./workforce";
 
@@ -103,10 +104,11 @@ export async function searchEmployerHits(term: string, limit = 100) {
   return (data ?? []) as EmployerHit[];
 }
 
-export async function getEmployer(id: number) {
+/** One employer by id. Cached per request: the page and its metadata both call it. */
+export const getEmployer = cache(async (id: number) => {
   const { data } = await supabase.from("employers").select("*").eq("id", id).single();
   return data as Employer | null;
-}
+});
 
 export async function getEmployerHeadcount(id: number) {
   const { data } = await supabase

@@ -23,15 +23,15 @@ export default function LotterySection({ index, years }: { index: number; years:
       limits="A person can have offers from more than one employer for lawful reasons. Multiple registrations are not a count of fraud. The data does not name employers that coordinated registrations, or measure their pay practices."
       source={
         <>
-          <a href={USCIS_URL} className="text-emerald-400 hover:underline">
+          <a href={USCIS_URL} className="link">
             USCIS, H-1B Electronic Registration Process, historical data
           </a>
           , cap years FY{years[0].cap_fiscal_year} to FY{latest.cap_fiscal_year}.{" "}
-          <a href={RULE_URL} className="text-emerald-400 hover:underline">
+          <a href={RULE_URL} className="link">
             Final rule, Federal Register, February 2, 2024
           </a>
           .{" "}
-          <a href={`${REPO_URL}/blob/main/docs/lottery-method.md`} className="text-emerald-400 hover:underline">
+          <a href={`${REPO_URL}/blob/main/docs/lottery-method.md`} className="link">
             Method
           </a>
           , committed before the results.
@@ -45,7 +45,7 @@ export default function LotterySection({ index, years }: { index: number; years:
       </p>
       <p>
         In FY{before.cap_fiscal_year},{" "}
-        <span className="font-semibold text-zinc-100">{fmtInt(before.eligible_multiple)}</span> of{" "}
+        <span className="font-semibold text-neutral-primary">{fmtInt(before.eligible_multiple)}</span> of{" "}
         {fmtInt(before.eligible_registrations)} eligible registrations were for people with more than
         one registration ({fmtPct(before.eligible_multiple, before.eligible_registrations)}). USCIS cites evidence from the FY2023 and FY2024 lotteries. It opened fraud
         investigations and changed the rule.

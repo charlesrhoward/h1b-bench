@@ -29,15 +29,15 @@ export default function WarnSection({
       source={
         <>
           DOL OFLC LCA disclosure data, certified H-1B filings, FY{CHEAP_LABOR_FY}.{" "}
-          <a href={TX_WARN_URL} className="text-emerald-400 hover:underline">
+          <a href={TX_WARN_URL} className="link">
             Texas Workforce Commission WARN notices
           </a>
           , Oct 2024 to Sep 2025.{" "}
-          <a href={CA_WARN_URL} className="text-emerald-400 hover:underline">
+          <a href={CA_WARN_URL} className="link">
             California EDD WARN report
           </a>
           , Oct 2024 to Jun 2025.{" "}
-          <a href={`${REPO_URL}/blob/main/docs/warn-method.md`} className="text-emerald-400 hover:underline">
+          <a href={`${REPO_URL}/blob/main/docs/warn-method.md`} className="link">
             Method
           </a>
           , committed before the results.
@@ -50,7 +50,7 @@ export default function WarnSection({
         company names must match exactly.
       </p>
       <p>
-        <span className="font-semibold text-zinc-100">{fmtInt(summary.companies_matched)}</span>{" "}
+        <span className="font-semibold text-neutral-primary">{fmtInt(summary.companies_matched)}</span>{" "}
         companies filed {fmtInt(summary.notices_matched)} WARN notices to lay off{" "}
         {fmtInt(summary.workers_laid_off)} workers. In the same year, these companies had{" "}
         {fmtInt(summary.h1b_filings)} H-1B filings certified.

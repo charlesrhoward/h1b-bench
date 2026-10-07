@@ -86,23 +86,23 @@ SUPABASE_URL=https://<ref>.supabase.co SUPABASE_KEY=<publishable-key> \
 #    the Census 2018 occupation crosswalk in data/raw/ (URLs in etl/labor_pool.py), then
 (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u labor_pool.py --load)
 
-# 7. Pay vs. local median (/cheap-labor): put OFLC_Wages_2024-25.zip and
+# 7. Pay vs. local median (/pay-vs-market): put OFLC_Wages_2024-25.zip and
 #    OFLC_Wages_2025-26.zip from flag.dol.gov/wage-data/wage-data-downloads in data/raw/
 (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u market_gap.py --load)
 
-# 8. Wage-floor source (/cheap-labor): reads the FY2025 LCA xlsx files again (3-4 min)
+# 8. Wage-floor source (/pay-vs-market): reads the FY2025 LCA xlsx files again (3-4 min)
 (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u pw_source.py --load)
 
-# 9. H-1B back wages (/cheap-labor, employer pages): put WHD_enforcement.zip from
+# 9. H-1B back wages (/pay-vs-market, employer pages): put WHD_enforcement.zip from
 #    data.dol.gov/data-catalog/WHD/enforcement/ in data/raw/
 (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u back_wages.py --load)
 
-# 10. WARN layoff notices (/cheap-labor, employer pages): put tx_warn.json
+# 10. WARN layoff notices (/pay-vs-market, employer pages): put tx_warn.json
 #     (data.texas.gov/resource/8w53-c4f6.json?$limit=50000) and ca_warn_2024-25.pdf (EDD WARN
 #     report, 7/1/2024 to 6/30/2025) in data/raw/
 (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u warn.py --load)
 
-# 11. Green card filings (/cheap-labor, employer pages): reads the FY2025 PERM xlsx from step 5
+# 11. Green card filings (/pay-vs-market, employer pages): reads the FY2025 PERM xlsx from step 5
 (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u perm_lockin.py --load)
 ```
 

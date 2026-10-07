@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -14,20 +15,32 @@ import {
   workforceShare,
   type Headcount,
 } from "@/lib/workforce";
+import StatCard from "@/components/stat-card";
 import WorkforceShareCell from "@/components/workforce-share-cell";
 import EmployerMarketGapNote from "@/components/cheap-labor/employer-market-gap-note";
 import { EmployerBackWagesNote } from "@/components/cheap-labor/back-wages";
 import { EmployerPermNote } from "@/components/cheap-labor/perm-tables";
 import { EmployerWarnNote } from "@/components/cheap-labor/warn-tables";
 import { getEmployerMarketGap, getEmployerPerm, getEmployerWarn, getEmployerWhd } from "@/lib/cheap-labor";
+import { pageMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export default async function EmployerDetail({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+type Params = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { id } = await params;
+  const employer = Number.isFinite(Number(id)) ? await getEmployer(Number(id)) : null;
+  if (!employer) return { title: "Employer not found — H1B Bench" };
+  const place = [employer.city, employer.state].filter(Boolean).join(", ");
+  return pageMetadata({
+    title: `${employer.name} — H-1B filings and pay — H1B Bench`,
+    description: `H-1B Labor Condition Applications filed by ${employer.name}${place ? ` (${place})` : ""}: filings by year, certification rate, median wage, and top roles. Source: DOL OFLC.`,
+    path: `/employers/${employer.id}`,
+  });
+}
+
+export default async function EmployerDetail({ params }: Params) {
   const { id } = await params;
   const employerId = Number(id);
   if (!Number.isFinite(employerId)) notFound();
@@ -51,20 +64,20 @@ export default async function EmployerDetail({
   const latestYear = h1b.length ? h1b[h1b.length - 1] : null;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-14">
       <div>
-        <Link href="/employers" className="text-sm text-zinc-500 hover:text-zinc-300">
+        <Link href="/employers" className="text-sm text-neutral-secondary hover:text-neutral-secondary-hover">
           ← Leaderboard
         </Link>
-        <h1 className="mt-2 text-3xl font-bold text-balance [overflow-wrap:anywhere]">{employer.name}</h1>
-        <p className="mt-1 text-zinc-400">
+        <h1 className="type-title mt-3 text-balance [overflow-wrap:anywhere]">{employer.name}</h1>
+        <p className="mt-2 text-neutral-secondary">
           {[employer.city, employer.state, employer.country].filter(Boolean).join(", ")}
         </p>
         <a
           href={`https://www.google.com/search?q=${encodeURIComponent(`${employer.name} official website`)}&btnI=1`}
           target="_blank"
           rel="noreferrer"
-          className="mt-2 inline-flex items-center gap-1 rounded border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:border-emerald-500/60 hover:text-emerald-400"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neutral-secondary px-3.5 py-1.5 text-[13px] font-medium text-neutral-primary hover:border-brand-primary"
           title={`Open ${employer.name}'s website (via Google)`}
         >
           Website
@@ -75,28 +88,30 @@ export default async function EmployerDetail({
         </a>
       </div>
 
-      <section className="space-y-3">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          <Stat label="H-1B filings (all years)" value={fmtInt(totalFilings)} />
-          <Stat label="Certification rate" value={fmtPct(totalCertified, totalFilings)} />
-          <Stat label="Denied" value={fmtInt(totalDenied)} />
-          <Stat
+      <section className="space-y-6">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
+          <StatCard label="H-1B filings (all years)" value={fmtInt(totalFilings)} />
+          <StatCard label="Certification rate" value={fmtPct(totalCertified, totalFilings)} />
+          <StatCard label="Denied" value={fmtInt(totalDenied)} />
+          <StatCard
             label="Median wage (latest FY)"
             value={latestYear?.median_wage_annual ? `$${fmtInt(latestYear.median_wage_annual)}` : "—"}
           />
           <WorkforceStat latestYear={latestYear} headcount={headcount} />
         </div>
-        <p className="text-xs text-zinc-500" title={WORKFORCE_SHARE_METHOD}>
-          {headcountNote(headcount)}
-        </p>
-        <EmployerMarketGapNote gap={marketGap} />
-        <EmployerBackWagesNote whd={whd} />
-        <EmployerWarnNote warn={warn} />
-        <EmployerPermNote perm={perm} />
+        <div className="space-y-2 border-l-2 border-accent-primary pl-4">
+          <p className="type-meta" title={WORKFORCE_SHARE_METHOD}>
+            {headcountNote(headcount)}
+          </p>
+          <EmployerMarketGapNote gap={marketGap} />
+          <EmployerBackWagesNote whd={whd} />
+          <EmployerWarnNote warn={warn} />
+          <EmployerPermNote perm={perm} />
+        </div>
       </section>
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold">By fiscal year · H-1B</h2>
+        <h2 className="type-heading mb-5">By fiscal year · H-1B</h2>
         <div className="overflow-x-auto">
           <table className="w-full" data-hide="3 4 5 6 9" data-hide-md="5 9">
             <thead>
@@ -117,17 +132,17 @@ export default async function EmployerDetail({
             <tbody>
               {h1b.map((r) => (
                 <tr key={r.fiscal_year}>
-                  <td className="font-mono">FY{r.fiscal_year}</td>
-                  <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-                  <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
-                  <td className="text-right font-mono">{fmtInt(r.denied)}</td>
-                  <td className="text-right font-mono">{fmtInt(r.withdrawn + r.certified_withdrawn)}</td>
-                  <td className="text-right font-mono">{fmtInt(r.worker_positions)}</td>
+                  <td className="tabular-nums">FY{r.fiscal_year}</td>
+                  <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
+                  <td className="text-right tabular-nums text-accent-primary">{fmtPct(r.certified, r.filings)}</td>
+                  <td className="text-right tabular-nums">{fmtInt(r.denied)}</td>
+                  <td className="text-right tabular-nums">{fmtInt(r.withdrawn + r.certified_withdrawn)}</td>
+                  <td className="text-right tabular-nums">{fmtInt(r.worker_positions)}</td>
                   <WorkforceShareCell certified={r.certified} headcount={headcount} />
-                  <td className="text-right font-mono">
+                  <td className="text-right tabular-nums">
                     {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
                   </td>
-                  <td className="text-zinc-400">{r.top_worksite_state ?? "—"}</td>
+                  <td className="text-neutral-secondary">{r.top_worksite_state ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -136,8 +151,8 @@ export default async function EmployerDetail({
       </section>
 
       <section>
-        <h2 className="mb-1 text-lg font-semibold">Top certified roles</h2>
-        <p className="mb-3 text-xs text-zinc-500">
+        <h2 className="type-heading mb-1">Top certified roles</h2>
+        <p className="type-meta mb-4">
           Based on the most recent 1,000 certified filings
         </p>
         <div className="overflow-x-auto">
@@ -153,10 +168,10 @@ export default async function EmployerDetail({
             <tbody>
               {topJobs.map((j) => (
                 <tr key={j.title}>
-                  <td>{j.title}</td>
-                  <td className="font-mono text-zinc-400">{j.soc ?? "—"}</td>
-                  <td className="text-right font-mono">{fmtInt(j.count)}</td>
-                  <td className="text-right font-mono">
+                  <td className="font-medium">{j.title}</td>
+                  <td className="font-code text-neutral-secondary">{j.soc ?? "—"}</td>
+                  <td className="text-right tabular-nums">{fmtInt(j.count)}</td>
+                  <td className="text-right tabular-nums">
                     {j.medianWage ? `$${fmtInt(j.medianWage)}` : "—"}
                   </td>
                 </tr>
@@ -176,10 +191,10 @@ function WorkforceStat({
   latestYear: EmployerYearStat | null;
   headcount: Headcount | null;
 }) {
-  if (!latestYear) return <Stat label="% of workforce" value="—" muted />;
+  if (!latestYear) return <StatCard label="% of workforce" value="—" muted />;
   const share = workforceShare(latestYear.certified, headcount);
   return (
-    <Stat
+    <StatCard
       label={`% of workforce (FY${latestYear.fiscal_year})`}
       value={share.label}
       muted={!share.reliable}
@@ -192,23 +207,4 @@ function headcountNote(headcount: Headcount | null): string {
   if (!headcount) return "Workforce: no PERM headcount on file, so % of workforce is unavailable.";
   const matchedByName = headcount.match_method === "name" ? " (matched by name)" : "";
   return `Workforce: ${describeHeadcount(headcount)}${matchedByName}.`;
-}
-
-function Stat({
-  label,
-  value,
-  muted = false,
-  title,
-}: {
-  label: string;
-  value: string;
-  muted?: boolean;
-  title?: string;
-}) {
-  return (
-    <div className="rounded-lg border border-zinc-800 p-4" title={title}>
-      <div className={`font-mono text-2xl font-bold ${muted ? "text-zinc-500" : ""}`}>{value}</div>
-      <div className="mt-1 text-xs text-zinc-500">{label}</div>
-    </div>
-  );
 }

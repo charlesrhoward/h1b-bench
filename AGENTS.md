@@ -15,7 +15,7 @@ a number.
   explains how the number was made.
 - If the data does not support a claim, do not make the claim. Do not overstate a finding
   to fit the case.
-- Every `/cheap-labor` finding states what the data cannot tell us (`EvidenceSection`
+- Every `/pay-vs-market` finding states what the data cannot tell us (`EvidenceSection`
   requires `limits` and `source`).
 
 ## Repository map
@@ -26,9 +26,10 @@ a number.
 | `etl/` | Python pipeline: parse government files, then load Supabase. `etl/schema.sql` holds tables, views, RLS, and the live migration history. |
 | `data/raw/`, `data/processed/` | Downloaded source files and parquet output. Gitignored. Never commit them. |
 | `docs/*-method.md` | One method per finding. Write or update the method before you publish a new number. |
-| `docs/ui/` | Reference screenshots of `/cheap-labor`. |
+| `docs/ui/` | Reference screenshots of `/pay-vs-market` (taken before the Unbound redesign). |
+| `DESIGN.md` | Unbound design system: font roles, color tokens, type rules. Source for `web/src/app/tokens.css`. |
 
-`/cheap-labor` findings and their methods:
+`/pay-vs-market` findings and their methods (the old `/cheap-labor` URL redirects there; code still lives in `cheap-labor` modules):
 
 | # | Finding | Method | Loader |
 |---|---------|--------|--------|
@@ -91,9 +92,10 @@ Rules: `web/eslint.shared-rules.mjs`, `web/eslint.config.mjs`, `ruff.toml`.
 - Write user-facing copy in Simplified Technical English (ASD-STE100): short sentences,
   one instruction or fact per sentence, active voice, common words. Agents that have the
   `ste-benefit-copy` skill should use it.
-- Keep the existing site styling. Reuse `web/src/components/cheap-labor/*`,
-  `investigation.css`, and the zinc and emerald tokens. Do not add a new visual pattern
-  without the owner's approval.
+- The visual design follows the Unbound design system in `DESIGN.md`: role-based fonts
+  (Inter UI, Source Serif 4 body, Fraunces display) and semantic light/dark color tokens.
+  `web/AGENTS.md` ("Design system") says how the app applies it. Reuse the existing
+  components. Do not add a new visual pattern without the owner's approval.
 
 <!-- BEGIN:local-agent-message-board -->
 

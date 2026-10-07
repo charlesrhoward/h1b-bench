@@ -18,7 +18,7 @@ employers without starting over. For PERM decisions in FY2025:
 
 DOL OFLC PERM disclosure data, FY2025 (`PERM_Disclosure_Data_FY2025_Q4.xlsx`): cases with
 a DOL decision from October 1, 2024 to September 30, 2025. The FY2026 file is not used, so
-the year is complete and matches the other sections of /cheap-labor.
+the year is complete and matches the other sections of /pay-vs-market.
 
 Columns, as named in the file:
 

@@ -1,13 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getTopEmployers, searchEmployerHits } from "@/lib/queries";
 import { fmtInt, fmtPct } from "@/lib/format";
+import { pageMetadata } from "@/lib/site";
 import { WORKFORCE_SHARE_METHOD } from "@/lib/workforce";
 import { FiscalYearTag } from "@/components/title-tags";
 import WorkforceShareCell from "@/components/workforce-share-cell";
+import YearTabs, { FISCAL_YEARS } from "@/components/year-tabs";
 
 export const dynamic = "force-dynamic";
 
-const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
+export const metadata: Metadata = pageMetadata({
+  title: "Employer leaderboard — H1B Bench",
+  description:
+    "Every U.S. employer's H-1B Labor Condition Applications by fiscal year: filings, certification rate, workers, share of workforce, median wage, and top role. Source: DOL OFLC.",
+  path: "/employers",
+});
 
 export default async function EmployersPage({
   searchParams,
@@ -20,10 +28,10 @@ export default async function EmployersPage({
   if (term) {
     const hits = await searchEmployerHits(term);
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold">Employer search</h1>
-          <p className="mt-1 text-zinc-400">
+          <h1 className="type-title">Employer search</h1>
+          <p className="mt-2 text-neutral-secondary">
             {hits.length} {hits.length === 1 ? "match" : "matches"} for “{term}” · all-time H-1B filings
           </p>
         </div>
@@ -40,23 +48,23 @@ export default async function EmployersPage({
             <tbody>
               {hits.map((h, i) => (
                 <tr key={h.id}>
-                  <td className="font-mono text-zinc-500">{i + 1}</td>
+                  <td className="tabular-nums text-neutral-secondary">{i + 1}</td>
                   <td>
-                    <Link href={`/employers/${h.id}`} className="hover:text-emerald-400">
+                    <Link href={`/employers/${h.id}`} className="font-medium hover:text-accent-primary">
                       {h.name}
                     </Link>
                   </td>
-                  <td className="text-zinc-400">
+                  <td className="text-neutral-secondary">
                     {[h.city, h.state].filter(Boolean).join(", ") || "—"}
                   </td>
-                  <td className="text-right font-mono">{fmtInt(h.filings)}</td>
+                  <td className="text-right tabular-nums">{fmtInt(h.filings)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         {hits.length === 0 && (
-          <p className="text-sm text-zinc-500">
+          <p className="type-meta">
             No employers matched. Try a shorter or different spelling — the search is typo-tolerant.
           </p>
         )}
@@ -68,30 +76,16 @@ export default async function EmployersPage({
   const rows = await getTopEmployers(fy, 100);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Employer leaderboard</h1>
-        <p className="mt-1 text-zinc-400">
+        <h1 className="type-title">Employer leaderboard</h1>
+        <p className="mt-2 text-neutral-secondary">
           H-1B Labor Condition Applications by employer ·{" "}
-          <FiscalYearTag fy={fy} ytd={fy === YEARS[0]} />
+          <FiscalYearTag fy={fy} ytd={fy === FISCAL_YEARS[0]} />
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {YEARS.map((y) => (
-          <Link
-            key={y}
-            href={`/employers?year=${y}`}
-            className={`rounded border px-3 py-1 font-mono text-sm ${
-              y === fy
-                ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
-                : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
-            }`}
-          >
-            FY{y}
-          </Link>
-        ))}
-      </div>
+      <YearTabs active={fy} hrefFor={(y) => `/employers?year=${y}`} />
 
       <div className="overflow-x-auto">
         <table className="w-full" data-hide="3 5 6 7 9 10" data-hide-md="6 10">
@@ -114,32 +108,32 @@ export default async function EmployersPage({
           <tbody>
             {rows.map((r, i) => (
               <tr key={`${r.employer_id}-${r.fiscal_year}`}>
-                <td className="font-mono text-zinc-500">{i + 1}</td>
+                <td className="tabular-nums text-neutral-secondary">{i + 1}</td>
                 <td>
-                  <Link href={`/employers/${r.employer_id}`} className="hover:text-emerald-400">
+                  <Link href={`/employers/${r.employer_id}`} className="font-medium hover:text-accent-primary">
                     {r.employers?.name}
                   </Link>
                 </td>
-                <td className="text-zinc-400">{r.employers?.state ?? "—"}</td>
-                <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-                <td className="text-right font-mono text-emerald-400">{fmtPct(r.certified, r.filings)}</td>
-                <td className="text-right font-mono text-zinc-500">{fmtInt(r.denied)}</td>
-                <td className="text-right font-mono">{fmtInt(r.worker_positions)}</td>
+                <td className="text-neutral-secondary">{r.employers?.state ?? "—"}</td>
+                <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
+                <td className="text-right tabular-nums text-accent-primary">{fmtPct(r.certified, r.filings)}</td>
+                <td className="text-right tabular-nums text-neutral-secondary">{fmtInt(r.denied)}</td>
+                <td className="text-right tabular-nums">{fmtInt(r.worker_positions)}</td>
                 <WorkforceShareCell
                   certified={r.certified}
                   headcount={r.employers?.employer_headcounts}
                 />
-                <td className="text-right font-mono">
+                <td className="text-right tabular-nums">
                   {r.median_wage_annual ? `$${fmtInt(r.median_wage_annual)}` : "—"}
                 </td>
-                <td className="max-w-48 truncate text-zinc-400">{r.top_job_title ?? "—"}</td>
+                <td className="max-w-48 truncate text-neutral-secondary">{r.top_job_title ?? "—"}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p className="max-w-3xl text-xs text-zinc-500">
-        <span className="text-zinc-400">% of workforce</span> — {WORKFORCE_SHARE_METHOD} Grey
+      <p className="type-meta max-w-3xl">
+        <span className="font-medium text-neutral-primary">% of workforce</span> — {WORKFORCE_SHARE_METHOD} Grey
         values are less reliable: the headcount appears on only one filing, the employer&apos;s
         filings disagree on it, or the employer filed more LCAs than the employees it reported.
         Hover a value for its source.

@@ -38,16 +38,17 @@ import {
   type PwSurveyPublisher,
 } from "@/lib/cheap-labor";
 import { fmtInt, fmtPct } from "@/lib/format";
-import { REPO_URL } from "@/lib/site";
+import { REPO_URL, pageMetadata } from "@/lib/site";
 import "./investigation.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Is H-1B used as cheap labor? — H1B Bench",
+export const metadata: Metadata = pageMetadata({
+  title: "H-1B pay vs. the local market — H1B Bench",
   description:
     "Federal data on H-1B pay and use: wage levels, pay below the local median, back wages, layoffs, lottery registrations, and green card filings.",
-};
+  path: "/pay-vs-market",
+});
 
 const DOL_SOURCE = `DOL OFLC LCA disclosure data, certified H-1B filings, FY${CHEAP_LABOR_FY}.`;
 
@@ -68,13 +69,13 @@ export default async function CheapLaborPage() {
     getPermLayoffEmployers(),
   ]);
   if (profile.length === 0) {
-    return <p className="text-zinc-400">Results for FY{CHEAP_LABOR_FY} are not loaded yet.</p>;
+    return <p className="type-meta">Results for FY{CHEAP_LABOR_FY} are not loaded yet.</p>;
   }
 
   return (
-    <article className="investigation max-w-4xl space-y-10">
+    <article className="investigation mx-auto max-w-3xl space-y-12">
       <InvestigationIntro summary={marketGap.find((row) => row.dependency === "all")} />
-      <div className="space-y-10">
+      <div className="space-y-12">
         <InvestigationNav chapters={[
           { index: 1, label: "The pay gap", available: marketGap.some((row) => row.dependency === "all") },
           { index: 2, label: "The wage floor", available: profile.length > 0 },
@@ -85,15 +86,15 @@ export default async function CheapLaborPage() {
           { index: 7, label: "The lottery changed", available: lottery.some((row) => row.cap_fiscal_year < BENEFICIARY_CENTRIC_FROM) && lottery.some((row) => row.cap_fiscal_year >= BENEFICIARY_CENTRIC_FROM) },
           { index: 8, label: "The green card link", available: !!permSummary },
         ]} />
-        <div className="space-y-12">
+        <div className="space-y-14">
           <MarketGapSection rows={marketGap} leaders={leaders} />
           <WageLevelSection profile={profile} />
           <DependencySection profile={profile} />
           <PwSourceSection rows={pwSources} publishers={publishers} />
-          <div className="space-y-4 border-t border-zinc-800 pt-10">
-            <p className="font-mono text-xs text-emerald-400">Beyond the salary</p>
-            <h2 className="text-2xl font-bold tracking-tight text-balance">Different records. Different questions.</h2>
-            <p className="leading-relaxed text-zinc-400">
+          <div className="space-y-5 border-t border-neutral-tertiary pt-12">
+            <p className="text-[13px] font-medium text-accent-primary">Beyond the salary</p>
+            <h2 className="type-statement text-balance">Different records. Different questions.</h2>
+            <p className="type-body text-neutral-secondary">
               Pay comparisons show a gap. Enforcement records show documented violations.
               Layoffs, lottery entries, and green card filings add context, with limits of their own.
             </p>
@@ -102,21 +103,21 @@ export default async function CheapLaborPage() {
           <WarnSection index={6} summary={warnSummary} companies={warnCompanies} />
           <LotterySection index={7} years={lottery} />
           <PermSection index={8} summary={permSummary} employers={permEmployers} />
-          <section className="scroll-mt-8 space-y-6 border-t border-zinc-800 pt-10" id="reading-the-evidence" aria-labelledby="reading-guide-title">
-            <p className="font-mono text-xs text-emerald-400">A note on the evidence</p>
-            <h2 className="text-2xl font-bold tracking-tight text-balance" id="reading-guide-title">Keep three distinctions in mind.</h2>
-            <dl className="space-y-5 leading-relaxed [&_dt]:font-semibold [&_dd]:mt-1 [&_dd]:text-zinc-400">
+          <section className="scroll-mt-8 space-y-6 border-t border-neutral-tertiary pt-12" id="reading-the-evidence" aria-labelledby="reading-guide-title">
+            <p className="text-[13px] font-medium text-accent-primary">A note on the evidence</p>
+            <h2 className="type-statement text-balance" id="reading-guide-title">Keep three distinctions in mind.</h2>
+            <dl className="type-body space-y-5 [&_dt]:font-semibold [&_dd]:mt-1 [&_dd]:text-neutral-secondary">
               <div><dt>An offer is not a paycheck.</dt><dd>Filings report an offered wage. They do not show actual earnings or prove that a worker received a visa.</dd></div>
               <div><dt>A benchmark is not a legal minimum.</dt><dd>The local median includes all experience levels. A below-median offer alone does not establish a violation.</dd></div>
               <div><dt>Overlap is not replacement.</dt><dd>A company can report layoffs and H-1B filings for different jobs. These records cannot show who replaced whom.</dd></div>
             </dl>
-            <p className="text-sm leading-relaxed text-zinc-500">Each finding above includes its source, scope, and limits. The linked methods explain how we calculated the results.</p>
+            <p className="type-meta">Each finding above includes its source, scope, and limits. The linked methods explain how we calculated the results.</p>
           </section>
-          <aside className="space-y-3 border-t border-zinc-800 pt-8">
-            <p className="font-mono text-xs text-zinc-500">Read next</p>
-            <Link className="block font-medium text-emerald-400 hover:underline" href="/labor-pool">Who is available to do this work? <span aria-hidden="true">↗</span></Link>
-            <p className="text-sm text-zinc-400">Compare H-1B demand with the U.S. labor pool.</p>
-            <Link className="inline-block text-sm text-emerald-400 hover:underline" href="/employers">Look up an employer <span aria-hidden="true">→</span></Link>
+          <aside className="space-y-3 rounded-xl bg-article-footer-subtle p-6 text-article-footer-subtle sm:p-8">
+            <p className="text-[13px] font-medium text-neutral-secondary">Read next</p>
+            <Link className="type-promo block text-[1.375rem] hover:text-accent-primary" href="/labor-pool">Who is available to do this work? <span aria-hidden="true">↗</span></Link>
+            <p className="text-[15px] text-neutral-secondary">Compare H-1B demand with the U.S. labor pool.</p>
+            <Link className="link inline-block text-sm" href="/employers">Look up an employer <span aria-hidden="true">→</span></Link>
           </aside>
         </div>
       </div>
@@ -136,7 +137,7 @@ function WageLevelSection({ profile }: { profile: DependencyProfile[] }) {
       source={
         <>
           {DOL_SOURCE} Level percentiles:{" "}
-          <a href={WAGE_LEVEL_SOURCE_URL} className="text-emerald-400 hover:underline">
+          <a href={WAGE_LEVEL_SOURCE_URL} className="link">
             DOL proposed rule, Federal Register, March 27, 2026
           </a>
           .
@@ -150,7 +151,7 @@ function WageLevelSection({ profile }: { profile: DependencyProfile[] }) {
       <WageLevelBar levels={levels} known={known} />
       <p>
         In FY{CHEAP_LABOR_FY},{" "}
-        <span className="font-semibold text-zinc-100">{fmtPct(belowMedian, known)}</span> of filings
+        <span className="font-semibold text-neutral-primary">{fmtPct(belowMedian, known)}</span> of filings
         with a known wage level were at Level I or II. That is the wage floor, not necessarily the offered pay.
       </p>
     </EvidenceSection>
@@ -195,7 +196,7 @@ function MarketGapSection({ rows, leaders }: { rows: MarketGapSummary[]; leaders
       source={
         <>
           {DOL_SOURCE} DOL OFLC Online Wage Library, Level III wage, wage years 2024-25 and 2025-26.{" "}
-          <a href={`${REPO_URL}/blob/main/docs/market-gap-method.md`} className="text-emerald-400 hover:underline">
+          <a href={`${REPO_URL}/blob/main/docs/market-gap-method.md`} className="link">
             Method
           </a>
           , committed before the results.
@@ -204,7 +205,7 @@ function MarketGapSection({ rows, leaders }: { rows: MarketGapSummary[]; leaders
     >
       <p>The median is the midpoint: half of local workers in that occupation earn more, and half earn less.</p>
       <p>
-        <span className="font-semibold text-zinc-100">{fmtPct(all.below_median, all.filings_matched)}</span>{" "}
+        <span className="font-semibold text-neutral-primary">{fmtPct(all.below_median, all.filings_matched)}</span>{" "}
         of matched filings offer less than the local median. When a filing is below the median, the
         median gap is {fmtGap(all.median_gap_below)} a year.
       </p>
@@ -214,8 +215,8 @@ function MarketGapSection({ rows, leaders }: { rows: MarketGapSummary[]; leaders
         .map((row) => ({ label: row.dependency === "true" ? "H-1B dependent employers" : "Other employers", count: row.below_median, total: row.filings_matched }))}
         note={`Same occupation and area · All experience levels · FY${CHEAP_LABOR_FY}`} />
       <p>
-        An &ldquo;H-1B dependent&rdquo; employer reports a large share of H-1B workers on its staff.
-        <a href="#finding-3" className="text-emerald-400 hover:underline"> See the definition and wage-floor comparison.</a>
+        An &ldquo;H-1B dependent&rdquo; employer reports a large share of H-1B workers on its staff.{" "}
+        <a href="#finding-3" className="link">See the definition and wage-floor comparison.</a>
       </p>
       <EvidenceDetails title="View the pay comparison data">
         <p>The shortfall cited above uses only offers below the local median. The table&apos;s median gap includes all matched offers in each group.</p>
@@ -247,7 +248,7 @@ function PwSourceSection({ rows, publishers }: { rows: PwSourceSummary[]; publis
       source={
         <>
           {DOL_SOURCE}{" "}
-          <a href={`${REPO_URL}/blob/main/docs/pw-source-method.md`} className="text-emerald-400 hover:underline">
+          <a href={`${REPO_URL}/blob/main/docs/pw-source-method.md`} className="link">
             Method
           </a>
           , committed before the results.

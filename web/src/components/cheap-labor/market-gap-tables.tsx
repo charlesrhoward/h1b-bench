@@ -35,9 +35,9 @@ export function MarketGapTable({ rows }: { rows: MarketGapSummary[] }) {
           {ordered.map((r) => (
             <tr key={r.dependency}>
               <td>{DEPENDENCY_LABELS[r.dependency]}</td>
-              <td className="text-right font-mono">{fmtInt(r.filings_matched)}</td>
-              <td className="text-right font-mono">{fmtPct(r.below_median, r.filings_matched)}</td>
-              <td className="text-right font-mono">{fmtGap(r.median_gap)}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.filings_matched)}</td>
+              <td className="text-right tabular-nums">{fmtPct(r.below_median, r.filings_matched)}</td>
+              <td className="text-right tabular-nums">{fmtGap(r.median_gap)}</td>
             </tr>
           ))}
         </tbody>
@@ -63,13 +63,13 @@ export function BelowMedianLeaders({ rows }: { rows: EmployerMarketGap[] }) {
           {rows.map((r) => (
             <tr key={r.employer_id}>
               <td>
-                <Link href={`/employers/${r.employer_id}`} className="hover:text-emerald-400">
+                <Link href={`/employers/${r.employer_id}`} className="hover:text-accent-primary">
                   {r.employers?.name ?? `Employer ${r.employer_id}`}
                 </Link>
               </td>
-              <td className="text-right font-mono">{fmtInt(r.filings_matched)}</td>
-              <td className="text-right font-mono">{fmtPct(r.below_median, r.filings_matched)}</td>
-              <td className="text-right font-mono">{fmtGap(r.median_gap)}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.filings_matched)}</td>
+              <td className="text-right tabular-nums">{fmtPct(r.below_median, r.filings_matched)}</td>
+              <td className="text-right tabular-nums">{fmtGap(r.median_gap)}</td>
             </tr>
           ))}
         </tbody>

@@ -28,9 +28,9 @@ export function PwSourceTable({ rows }: { rows: PwSourceSummary[] }) {
           {rows.map((r) => (
             <tr key={r.source}>
               <td>{PW_SOURCE_LABELS[r.source]}</td>
-              <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-              <td className="text-right font-mono text-zinc-500">{fmtPct(r.filings, total)}</td>
-              <td className="text-right font-mono">{fmtPct(r.below_median, r.gap_matched)}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
+              <td className="text-right tabular-nums text-neutral-secondary">{fmtPct(r.filings, total)}</td>
+              <td className="text-right tabular-nums">{fmtPct(r.below_median, r.gap_matched)}</td>
             </tr>
           ))}
         </tbody>
@@ -55,8 +55,8 @@ export function PwPublisherTable({ rows }: { rows: PwSurveyPublisher[] }) {
           {rows.map((r) => (
             <tr key={r.publisher}>
               <td>{r.publisher}</td>
-              <td className="text-right font-mono">{fmtInt(r.filings)}</td>
-              <td className="text-right font-mono">{fmtPct(r.below_median, r.gap_matched)}</td>
+              <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
+              <td className="text-right tabular-nums">{fmtPct(r.below_median, r.gap_matched)}</td>
             </tr>
           ))}
         </tbody>

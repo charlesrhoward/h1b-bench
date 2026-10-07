@@ -162,7 +162,7 @@ export default function SiteSearch() {
 
   return (
     <div ref={rootRef} className="relative w-full">
-      <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-500">
+      <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-neutral-secondary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-3.5-3.5" />
@@ -179,9 +179,9 @@ export default function SiteSearch() {
         aria-expanded={showDropdown}
         aria-controls="site-search-results"
         aria-activedescendant={showDropdown ? `search-hit-${active}` : undefined}
-        className="w-full rounded-md border border-zinc-800 bg-zinc-900/70 py-1.5 pl-9 pr-3 text-sm sm:pr-14 lg:pr-3 xl:pr-14 text-zinc-100 placeholder-zinc-500 outline-none focus:border-emerald-500/60 focus:bg-zinc-900"
+        className="w-full rounded-full border border-transparent bg-neutral-secondary py-2 pl-10 pr-3 text-sm text-neutral-primary placeholder-neutral-secondary outline-none focus:border-neutral-tertiary focus:bg-neutral-primary sm:pr-14 lg:pr-3 xl:pr-14"
       />
-      <kbd className="pointer-events-none absolute inset-y-0 right-2.5 hidden items-center rounded border border-zinc-700 px-1.5 font-mono text-[10px] text-zinc-500 sm:flex lg:hidden xl:flex my-auto h-5">
+      <kbd className="pointer-events-none absolute inset-y-0 right-3 my-auto hidden h-5 items-center rounded border border-neutral-tertiary px-1.5 font-code text-[10px] text-neutral-secondary sm:flex lg:hidden xl:flex">
         ⌘K
       </kbd>
 
@@ -190,7 +190,7 @@ export default function SiteSearch() {
           id="site-search-results"
           role="listbox"
           ref={listRef}
-          className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[26rem] overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/60"
+          className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[26rem] overflow-y-auto rounded-xl border border-neutral-tertiary bg-neutral-elevated py-1 shadow-elevated"
         >
           <ResultsBody
             query={query}
@@ -220,7 +220,7 @@ function ResultsBody({
 }) {
   if (items.length === 0) {
     return (
-      <p className="px-4 py-6 text-center text-sm text-zinc-500">
+      <p className="px-4 py-6 text-center text-sm text-neutral-secondary">
         {loading ? "Searching…" : `No matches for “${query.trim()}”`}
       </p>
     );
@@ -243,8 +243,8 @@ function ResultsBody({
         data-index={viewAllIndex}
         onMouseEnter={() => onHover(viewAllIndex)}
         onClick={() => onGo(`/employers?q=${encodeURIComponent(query.trim())}`)}
-        className={`w-full border-t border-zinc-800 px-4 py-2.5 text-left text-sm ${
-          active === viewAllIndex ? "bg-emerald-500/10 text-emerald-400" : "text-zinc-400"
+        className={`w-full border-t border-neutral-primary px-4 py-2.5 text-left text-sm ${
+          active === viewAllIndex ? "bg-neutral-secondary text-accent-primary-hover" : "text-accent-primary"
         }`}
       >
         View all employers matching “{query.trim()}” →
@@ -255,7 +255,7 @@ function ResultsBody({
 
 function SectionLabel({ className, children }: { className: string; children: React.ReactNode }) {
   return (
-    <p className={`px-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 ${className}`}>
+    <p className={`px-4 pb-1 text-[11px] font-medium uppercase tracking-wider text-neutral-secondary ${className}`}>
       {children}
     </p>
   );
@@ -311,18 +311,18 @@ function EmployerRow({
       onMouseEnter={() => onHover(index)}
       onClick={() => onGo(item.href)}
       className={`flex w-full items-baseline justify-between gap-3 px-4 py-2 text-left ${
-        active ? "bg-emerald-500/10" : ""
+        active ? "bg-neutral-secondary" : ""
       }`}
     >
       <span className="min-w-0">
-        <span className={`block truncate text-sm ${active ? "text-emerald-300" : "text-zinc-100"}`}>
+        <span className={`block truncate text-sm ${active ? "text-neutral-primary-hover" : "text-neutral-primary"}`}>
           {hit.name}
         </span>
-        <span className="block text-xs text-zinc-500">
+        <span className="block text-xs text-neutral-secondary">
           {[hit.city, hit.state].filter(Boolean).join(", ") || "—"}
         </span>
       </span>
-      <span className="shrink-0 font-mono text-xs text-zinc-500">
+      <span className="shrink-0 text-xs tabular-nums text-neutral-secondary">
         {compact.format(hit.filings)} filings
       </span>
     </button>
@@ -352,16 +352,16 @@ function OccupationRow({
       onMouseEnter={() => onHover(index)}
       onClick={() => onGo(item.href)}
       className={`flex w-full items-baseline justify-between gap-3 px-4 py-2 text-left ${
-        active ? "bg-emerald-500/10" : ""
+        active ? "bg-neutral-secondary" : ""
       }`}
     >
       <span className="min-w-0">
-        <span className={`block truncate text-sm ${active ? "text-emerald-300" : "text-zinc-100"}`}>
+        <span className={`block truncate text-sm ${active ? "text-neutral-primary-hover" : "text-neutral-primary"}`}>
           {hit.soc_title ?? hit.soc_code}
         </span>
-        <span className="block font-mono text-xs text-zinc-500">{hit.soc_code}</span>
+        <span className="block font-code text-xs text-neutral-secondary">{hit.soc_code}</span>
       </span>
-      <span className="shrink-0 font-mono text-xs text-zinc-500">
+      <span className="shrink-0 text-xs tabular-nums text-neutral-secondary">
         {hit.median_wage_annual ? `$${money.format(hit.median_wage_annual)} median` : "—"}
       </span>
     </button>

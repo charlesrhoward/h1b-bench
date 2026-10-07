@@ -11,11 +11,11 @@ export default function MeasureCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-zinc-800 p-6">
-      <p className="font-mono text-xs uppercase tracking-wider text-zinc-500">{label}</p>
+    <div className="flex flex-col gap-5 rounded-xl bg-neutral-tertiary p-6 sm:p-7">
+      <p className="text-xs font-medium uppercase tracking-wider text-neutral-secondary">{label}</p>
       <div>
-        <div className="font-mono text-5xl font-bold">{value}</div>
-        <p className="mt-2 text-zinc-300">{statement}</p>
+        <div className="type-figure text-[3.5rem]">{value}</div>
+        <p className="mt-3 font-body text-lg leading-snug text-neutral-primary">{statement}</p>
       </div>
       {children}
     </div>
