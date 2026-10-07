@@ -15,7 +15,7 @@ first so we can agree on the approach before you build it.
 
 ```sh
 cd web
-pnpm install                     # also installs the pre-commit hook
+pnpm install                     # also installs the pre-commit and pre-push hooks
 cp .env.example .env.local       # point at your own Supabase project
 pnpm dev
 ```
@@ -31,16 +31,20 @@ processed data live in `data/` and are gitignored — never commit them.
 
 ## Preflight
 
-The same checks run locally and in CI (`.github/workflows/ci.yml`). CI runs `lint`,
-`typecheck`, `ruff`, and `build` as parallel jobs. The `preflight` job passes only when all
+The same checks run locally and in CI (`.github/workflows/ci.yml`). The `CI` workflow runs `lint`,
+`typecheck`, `etl`, and `build` as parallel jobs. The `preflight` job passes only when all
 four pass; it is the required check on `main`, so a PR that fails any of them cannot merge.
 
-| Check     | Command (from `web/`) | Runs on         |
-|-----------|-----------------------|-----------------|
-| Lint      | `pnpm lint`           | pre-commit + CI |
-| Typecheck | `pnpm typecheck`      | pre-commit + CI |
-| Build     | `pnpm build`          | CI              |
-| Ruff (`etl/`) | `ruff check --ignore-noqa` (from repo root) | CI |
+| Check     | Command (from `web/`) | Runs on                     |
+|-----------|-----------------------|-----------------------------|
+| Lint      | `pnpm lint`           | pre-commit + pre-push + CI  |
+| Typecheck | `pnpm typecheck`      | pre-commit + pre-push + CI  |
+| Build     | `pnpm build`          | pre-push + CI               |
+| ETL (`etl/`, ruff) | `../scripts/check-etl.sh` | pre-push + CI      |
+
+`pnpm preflight` runs all four. The pre-push hook runs it, so a push that would fail CI
+fails on your machine first. `scripts/check-etl.sh` uses `./venv/bin/ruff` when it is
+ruff 0.16.10, otherwise `uvx ruff@0.16.10` or `pipx run ruff==0.16.10`.
 
 Lint rules live in `web/eslint.shared-rules.mjs`. Every rule is an error, and warnings
 also fail (`--max-warnings 0`). The main limits:
@@ -60,11 +64,11 @@ There are no exceptions:
 
 If a change trips a limit, split the code. Do not loosen a rule for one file.
 
-Run the checks before you push:
+Run the checks by hand at any time:
 
 ```sh
-cd web && pnpm preflight                 # web: lint, typecheck, build
-./venv/bin/ruff check --ignore-noqa      # etl: from the repo root
+cd web && pnpm preflight                 # lint, typecheck, build, etl checks
+scripts/check-etl.sh                     # etl checks only, from the repo root
 ```
 
 ### Python (`etl/`)

@@ -47,11 +47,11 @@ a number.
 ## Commands
 
 ```sh
-cd web && pnpm preflight              # lint, typecheck, build
-./venv/bin/ruff check --ignore-noqa   # etl/, from the repo root
+cd web && pnpm preflight              # lint, typecheck, build, etl checks (pre-push runs this)
+scripts/check-etl.sh                  # etl checks only, from the repo root
 ```
 
-CI runs `lint`, `typecheck`, `ruff`, and `build`. The required `preflight` check passes only
+The `CI` workflow runs `lint`, `typecheck`, `etl`, and `build`. The required `preflight` check passes only
 when all four pass. Admins cannot bypass it.
 
 ## Lint policy: no exceptions
