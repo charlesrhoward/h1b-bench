@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <SiteSearch />
               </div>
             </div>
-            <nav className="order-2 ml-auto flex flex-wrap justify-end gap-x-6 gap-y-1 text-sm text-zinc-400 sm:order-3 sm:ml-0">
+            <nav className="order-2 -mx-6 flex w-[calc(100%+3rem)] gap-x-5 overflow-x-auto whitespace-nowrap px-6 text-sm text-zinc-400 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,black_85%,transparent)] sm:order-3 sm:[mask-image:none] sm:mx-0 sm:w-auto sm:gap-x-6 sm:overflow-visible sm:px-0">
               <Link href="/employers" className="hover:text-zinc-100">Employers</Link>
               <Link href="/jobs" className="hover:text-zinc-100">Occupations</Link>
               <Link href="/labor-pool" className="hover:text-zinc-100">Labor pool</Link>
@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 target="_blank"
                 rel="noreferrer"
               >
-                Source: DOL OFLC
+                Source<span className="hidden sm:inline">: DOL OFLC</span>
               </a>
             </nav>
           </div>

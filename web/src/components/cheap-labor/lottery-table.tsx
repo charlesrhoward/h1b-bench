@@ -40,7 +40,7 @@ export function LotteryBars({ years }: { years: UscisRegistrationYear[] }) {
 export function LotteryTable({ years }: { years: UscisRegistrationYear[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[40rem]">
+      <table className="w-full sm:min-w-[40rem]" data-hide="2 5">
         <thead>
           <tr>
             <th scope="col">Cap year</th>

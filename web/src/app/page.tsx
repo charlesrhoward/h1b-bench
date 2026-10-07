@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getOverviewStats, getTopEmployers } from "@/lib/queries";
-import { fmtInt, fmtPct } from "@/lib/format";
+import { fmtCompact, fmtInt, fmtPct } from "@/lib/format";
 import { WORKFORCE_SHARE_METHOD } from "@/lib/workforce";
 import WorkforceShareCell from "@/components/workforce-share-cell";
 
@@ -15,7 +15,7 @@ export default async function Home() {
 
   return (
     <div className="space-y-12">
-      <section className="relative space-y-5 py-10 sm:py-20">
+      <section className="relative space-y-5 pb-4 sm:py-20">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(to_right,#34d399_1px,transparent_1px),linear-gradient(to_bottom,#34d399_1px,transparent_1px)] [background-size:140px_140px] [mask-image:radial-gradient(ellipse_80%_80%_at_60%_30%,black,transparent_80%)]"
@@ -45,7 +45,7 @@ export default async function Home() {
           </div>
         </div>
         <p className="font-mono text-sm text-emerald-400">DOL OFLC disclosure data · FY2020–FY2026 Q3</p>
-        <h1 className="max-w-3xl text-5xl font-bold tracking-tight sm:text-6xl">
+        <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
           Who sponsors H-1B workers, what they pay, and how often they&apos;re certified.
         </h1>
         <p className="max-w-2xl text-zinc-400 sm:text-lg">
@@ -63,10 +63,13 @@ export default async function Home() {
 
       <section>
         <h2 className="mb-4 text-lg font-semibold">Filings by fiscal year</h2>
-        <div className="flex items-end gap-3">
+        <div className="flex items-end gap-1.5 sm:gap-3">
           {years.map(([year, v]) => (
-            <div key={year} className="flex flex-1 flex-col items-center gap-2">
-              <span className="font-mono text-xs text-zinc-400">{fmtInt(v.filings)}</span>
+            <div key={year} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+              <span className="font-mono text-xs text-zinc-400">
+                <span className="sm:hidden">{fmtCompact(v.filings)}</span>
+                <span className="hidden sm:inline">{fmtInt(v.filings)}</span>
+              </span>
               <div
                 className="w-full rounded-t bg-emerald-500/80"
                 style={{ height: `${Math.max(4, (v.filings / maxFilings) * 160)}px` }}
@@ -78,7 +81,7 @@ export default async function Home() {
       </section>
 
       <section>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <h2 className="text-lg font-semibold">
             Top H-1B sponsors · FY{latestYear}
             <span className="ml-2 align-middle font-mono text-xs font-normal text-zinc-500">
@@ -90,7 +93,7 @@ export default async function Home() {
           </Link>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[40rem]">
+          <table className="w-full sm:min-w-[40rem]" data-hide="4 6">
             <thead>
               <tr>
                 <th>#</th>

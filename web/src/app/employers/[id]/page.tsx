@@ -98,7 +98,7 @@ export default async function EmployerDetail({
       <section>
         <h2 className="mb-4 text-lg font-semibold">By fiscal year · H-1B</h2>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[50rem]">
+          <table className="w-full sm:min-w-[50rem]" data-hide="3 4 5 6 9">
             <thead>
               <tr>
                 <th>FY</th>
@@ -141,7 +141,7 @@ export default async function EmployerDetail({
           Based on the most recent 1,000 certified filings
         </p>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[30rem]">
+          <table className="w-full sm:min-w-[30rem]" data-hide="2">
             <thead>
               <tr>
                 <th>Job title</th>

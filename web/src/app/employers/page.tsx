@@ -27,7 +27,7 @@ export default async function EmployersPage({
           </p>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[30rem]">
+          <table className="w-full sm:min-w-[30rem]" data-hide="3">
             <thead>
               <tr>
                 <th>#</th>
@@ -95,7 +95,7 @@ export default async function EmployersPage({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[58rem]">
+        <table className="w-full sm:min-w-[58rem]" data-hide="3 5 6 7 9 10">
           <thead>
             <tr>
               <th>#</th>
