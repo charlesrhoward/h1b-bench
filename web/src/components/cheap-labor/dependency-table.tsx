@@ -7,9 +7,11 @@ const LABELS: Record<DependencyProfile["dependency"], string> = {
   unknown: "Not stated",
 };
 
+const dependentFirst = (row: DependencyProfile) => (row.dependency === "true" ? 0 : 1);
+
 /** Dependent vs. other employers: wage level mix, pay at the legal minimum, median offer. */
 export default function DependencyTable({ rows }: { rows: DependencyProfile[] }) {
-  const ordered = [...rows].sort((a, b) => (a.dependency === "true" ? -1 : b.dependency === "true" ? 1 : 0));
+  const ordered = [...rows].sort((a, b) => dependentFirst(a) - dependentFirst(b));
   return (
     <div className="overflow-x-auto">
       <table className="w-full" data-hide="2">

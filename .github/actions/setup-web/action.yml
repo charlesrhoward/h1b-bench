@@ -1,0 +1,18 @@
+name: Set up web
+description: Install pnpm, Node, and web/ dependencies from the lockfile.
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 9.15.9
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+        cache-dependency-path: web/pnpm-lock.yaml
+
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+      working-directory: web
