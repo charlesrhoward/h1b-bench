@@ -27,7 +27,7 @@ td:last-child {
 }
 
 /* Phones: <table data-hide="2 5"> hides those columns (1-based) so the key numbers fit. */
-@media (width < 40rem) {
+@media (max-width: 39.99rem) {
   table[data-hide~="1"] :is(th, td):nth-child(1) {
     display: none;
   }
