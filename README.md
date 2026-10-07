@@ -101,6 +101,9 @@ SUPABASE_URL=https://<ref>.supabase.co SUPABASE_KEY=<publishable-key> \
 #     (data.texas.gov/resource/8w53-c4f6.json?$limit=50000) and ca_warn_2024-25.pdf (EDD WARN
 #     report, 7/1/2024 to 6/30/2025) in data/raw/
 (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u warn.py --load)
+
+# 11. Green card filings (/cheap-labor, employer pages): reads the FY2025 PERM xlsx from step 5
+(cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u perm_lockin.py --load)
 ```
 
 The labor pool test follows [docs/labor-pool-method.md](docs/labor-pool-method.md), which

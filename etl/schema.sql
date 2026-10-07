@@ -5,7 +5,7 @@
 -- -> lca_dependency_profile -> lca_dependency_profile_yearly_floor -> lca_dependency_profile_exact_floor
 -- -> market_gap -> drop_market_gap_insert_policies -> pw_source -> drop_pw_source_insert_policies
 -- -> whd_h1b -> drop_whd_h1b_insert_policies -> warn_h1b -> drop_warn_h1b_insert_policies
--- -> uscis_registrations.
+-- -> uscis_registrations -> perm_lockin -> drop_perm_lockin_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -273,6 +273,39 @@ insert into uscis_registrations values
   (2025, 479953, 470342, 423028, 47314, 135137),
   (2026, 358737, 343981, 336153, 7828, 120141);
 
+-- PERM green card filings: job already filled, prior layoffs, DOL wait
+-- (docs/perm-lockin-method.md), loaded by etl/perm_lockin.py --load. Certified only.
+create table perm_lockin_summary (
+  perm_fiscal_year smallint primary key,
+  certified integer not null,
+  fw_working integer not null,           -- worker already employed by the employer
+  professional_certified integer not null,
+  professional_fw_working integer not null,
+  layoff_certified integer not null,     -- employer reported a layoff in the 6 months before
+  layoff_employers integer not null,
+  median_days integer not null,          -- RECEIVED_DATE to DECISION_DATE
+  p90_days integer not null
+);
+
+create table perm_layoff_employers (
+  perm_fiscal_year smallint not null,
+  name_key text not null,                -- norm_name of EMP_BUSINESS_NAME
+  name text not null,
+  employer_id bigint references employers(id),
+  certified integer not null,
+  layoff_certified integer not null,
+  primary key (perm_fiscal_year, name_key)
+);
+
+create table employer_perm (
+  perm_fiscal_year smallint not null,
+  employer_id bigint not null references employers(id),
+  certified integer not null,
+  fw_working integer not null,
+  layoff_certified integer not null,
+  primary key (perm_fiscal_year, employer_id)
+);
+
 -- RLS: read-only public data
 alter table employers enable row level security;
 alter table lca_cases enable row level security;
@@ -292,6 +325,9 @@ alter table warn_h1b_summary enable row level security;
 alter table warn_h1b_companies enable row level security;
 alter table employer_warn enable row level security;
 alter table uscis_registrations enable row level security;
+alter table perm_lockin_summary enable row level security;
+alter table perm_layoff_employers enable row level security;
+alter table employer_perm enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
@@ -311,6 +347,9 @@ create policy "public read warn_h1b_summary" on warn_h1b_summary for select usin
 create policy "public read warn_h1b_companies" on warn_h1b_companies for select using (true);
 create policy "public read employer_warn" on employer_warn for select using (true);
 create policy "public read uscis_registrations" on uscis_registrations for select using (true);
+create policy "public read perm_lockin_summary" on perm_lockin_summary for select using (true);
+create policy "public read perm_layoff_employers" on perm_layoff_employers for select using (true);
+create policy "public read employer_perm" on employer_perm for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
@@ -332,6 +371,9 @@ create policy "public read uscis_registrations" on uscis_registrations for selec
 --   create policy "bulk insert warn_h1b_summary" on warn_h1b_summary for insert with check (true);
 --   create policy "bulk insert warn_h1b_companies" on warn_h1b_companies for insert with check (true);
 --   create policy "bulk insert employer_warn" on employer_warn for insert with check (true);
+--   create policy "bulk insert perm_lockin_summary" on perm_lockin_summary for insert with check (true);
+--   create policy "bulk insert perm_layoff_employers" on perm_layoff_employers for insert with check (true);
+--   create policy "bulk insert employer_perm" on employer_perm for insert with check (true);
 
 -- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
 create view fy_overview with (security_invoker = true) as

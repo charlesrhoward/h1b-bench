@@ -289,3 +289,64 @@ export async function getUscisRegistrations() {
     .order("cap_fiscal_year");
   return (data ?? []) as UscisRegistrationYear[];
 }
+
+/** PERM disclosure year used by the green card section. */
+export const PERM_FY = 2025;
+
+export type PermLockinSummary = {
+  certified: number;
+  fw_working: number;
+  professional_certified: number;
+  professional_fw_working: number;
+  layoff_certified: number;
+  layoff_employers: number;
+  median_days: number;
+  p90_days: number;
+};
+
+export type PermLayoffEmployer = {
+  name_key: string;
+  name: string;
+  employer_id: number | null;
+  certified: number;
+  layoff_certified: number;
+};
+
+export type EmployerPerm = {
+  certified: number;
+  fw_working: number;
+  layoff_certified: number;
+};
+
+/** Certified PERM filings: worker already employed, prior layoffs, DOL wait; null when not loaded. */
+export async function getPermLockinSummary() {
+  const { data } = await supabase
+    .from("perm_lockin_summary")
+    .select(
+      "certified, fw_working, professional_certified, professional_fw_working, layoff_certified, layoff_employers, median_days, p90_days",
+    )
+    .eq("perm_fiscal_year", PERM_FY)
+    .maybeSingle();
+  return data as PermLockinSummary | null;
+}
+
+/** Employers with the most certified PERM filings after a reported layoff. */
+export async function getPermLayoffEmployers() {
+  const { data } = await supabase
+    .from("perm_layoff_employers")
+    .select("name_key, name, employer_id, certified, layoff_certified")
+    .eq("perm_fiscal_year", PERM_FY)
+    .order("layoff_certified", { ascending: false });
+  return (data ?? []) as PermLayoffEmployer[];
+}
+
+/** One employer's certified PERM filings for the year, or null when none link to it. */
+export async function getEmployerPerm(employerId: number) {
+  const { data } = await supabase
+    .from("employer_perm")
+    .select("certified, fw_working, layoff_certified")
+    .eq("perm_fiscal_year", PERM_FY)
+    .eq("employer_id", employerId)
+    .maybeSingle();
+  return data as EmployerPerm | null;
+}
