@@ -11,19 +11,23 @@ export function fmtMillions(n: number): string {
 export function BackWagesByYear({ years }: { years: WhdYear[] }) {
   const max = Math.max(...years.map((y) => Number(y.back_wages)), 1);
   return (
-    <div className="flex items-end gap-1.5" role="list" aria-label="H-1B back wages by fiscal year">
+    <div className="flex items-end gap-px sm:gap-1.5" role="list" aria-label="H-1B back wages by fiscal year">
       {years.map((y) => (
         <div
           key={y.fiscal_year}
           role="listitem"
-          className="flex flex-1 flex-col items-center gap-1"
+          className="flex min-w-0 flex-1 flex-col items-center gap-1"
           title={`FY${y.fiscal_year}: ${fmtMillions(Number(y.back_wages))}, ${fmtInt(y.cases)} cases`}
         >
           <div
             className="w-full rounded-t bg-amber-400/80"
             style={{ height: `${Math.max(2, (Number(y.back_wages) / max) * 120)}px` }}
           />
-          <span className="font-mono text-[10px] text-zinc-500">{String(y.fiscal_year).slice(2)}</span>
+          <span
+            className={`font-mono text-[10px] text-zinc-500 ${y.fiscal_year % 5 === 0 ? "" : "invisible sm:visible"}`}
+          >
+            {String(y.fiscal_year).slice(2)}
+          </span>
         </div>
       ))}
     </div>
@@ -34,7 +38,7 @@ export function BackWagesByYear({ years }: { years: WhdYear[] }) {
 export function BackWagesTable({ rows }: { rows: WhdTopEmployer[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[40rem]">
+      <table className="w-full sm:min-w-[40rem]" data-hide="2 3">
         <thead>
           <tr>
             <th>Employer (as named by WHD)</th>

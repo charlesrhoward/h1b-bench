@@ -45,7 +45,7 @@ export default async function JobsPage({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[36rem]">
+        <table className="w-full sm:min-w-[36rem]" data-hide="1 4 6">
           <thead>
             <tr>
               <th>SOC</th>

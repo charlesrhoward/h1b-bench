@@ -12,7 +12,7 @@ export default function DependencyTable({ rows }: { rows: DependencyProfile[] })
   const ordered = [...rows].sort((a, b) => (a.dependency === "true" ? -1 : b.dependency === "true" ? 1 : 0));
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[40rem]">
+      <table className="w-full sm:min-w-[40rem]" data-hide="2">
         <thead>
           <tr>
             <th>Employer type</th>

@@ -11,7 +11,7 @@ export default function OccupationTable({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[52rem]">
+      <table className="w-full sm:min-w-[52rem]" data-hide="2 3 7">
         <thead>
           <tr>
             <th>Occupation</th>
@@ -38,7 +38,7 @@ export default function OccupationTable({
               <td className="text-right font-mono">{fmtInt(r.new_positions)}</td>
               <td className="text-right font-mono">
                 {fmtInt(r.supply_est)}
-                <span className="ml-1 text-xs text-zinc-500">±{fmtInt(r.supply_moe)}</span>
+                <span className="block text-xs text-zinc-500 sm:ml-1 sm:inline">±{fmtInt(r.supply_moe)}</span>
               </td>
               <td className="text-right font-mono">{fmtPct(fillablePositions(r), r.new_positions)}</td>
               <td className={`text-right font-mono ${r.covered ? "text-emerald-400" : "text-zinc-500"}`}>
