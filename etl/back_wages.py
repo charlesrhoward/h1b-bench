@@ -8,11 +8,15 @@ Input: data/raw/WHD_enforcement.zip (data.dol.gov/data-catalog/WHD/enforcement/W
 --load needs the temporary insert policies from etl/schema.sql; truncate the three tables
 first on a refresh.
 """
+import logging
 import os
 import sys
 import zipfile
 
 import pandas as pd
+from cli_log import configure_logging
+
+log = logging.getLogger(__name__)
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "data")
 WHD_ZIP = os.path.join(ROOT, "raw", "WHD_enforcement.zip")
@@ -40,12 +44,12 @@ def load_cases():
     df = pd.concat(frames, ignore_index=True).drop_duplicates("CASE_ID")
     for c in NUMERIC:
         df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0)
-    print(f"WHD concluded cases: {len(df):,}", flush=True)
+    log.info(f"WHD concluded cases: {len(df):,}")
     df = df[(df["H1B_VIOLTN_CNT"] > 0) | (df["H1B_BW_ATP_AMT"] > 0)].copy()
     end = pd.to_datetime(df["FINDINGS_END_DATE"], errors="coerce")
     df["fiscal_year"] = (end.dt.year + (end.dt.month >= 10).astype("Int64")).astype("Int64")
     df["display_name"] = df["LEGAL_NAME"].where(df["LEGAL_NAME"].fillna("").str.strip() != "", df["TRADE_NM"])
-    print(f"H-1B cases: {len(df):,}; back wages ${df['H1B_BW_ATP_AMT'].sum():,.0f}", flush=True)
+    log.info(f"H-1B cases: {len(df):,}; back wages ${df['H1B_BW_ATP_AMT'].sum():,.0f}")
     return df
 
 
@@ -60,7 +64,8 @@ def year_table(df):
 def top_employers(df):
     df = df.assign(name_key=df["display_name"].map(norm_name))
     grouped = df.groupby("name_key").agg(
-        name=("display_name", lambda s: s.mode().iloc[0] if s.notna().any() else None), state=("ST_CD", lambda s: s.mode().iloc[0] if s.notna().any() else None),
+        name=("display_name", lambda s: s.mode().iloc[0] if s.notna().any() else None),
+        state=("ST_CD", lambda s: s.mode().iloc[0] if s.notna().any() else None),
         cases=("CASE_ID", "size"), back_wages=("H1B_BW_ATP_AMT", "sum"), employees=("H1B_EE_ATP_CNT", "sum"),
         penalties=("H1B_CMP_ASSD_AMT", "sum"),
     ).reset_index()
@@ -88,7 +93,7 @@ def employer_links(df, id_map):
         cases=("CASE_ID", "size"), back_wages=("H1B_BW_ATP_AMT", "sum"), employees=("H1B_EE_ATP_CNT", "sum"),
         penalties=("H1B_CMP_ASSD_AMT", "sum"), latest_fiscal_year=("fiscal_year", "max"),
     ).reset_index()
-    print(f"linked {len(linked):,} of {len(df):,} H-1B cases to {len(out):,} employers", flush=True)
+    log.info(f"linked {len(linked):,} of {len(df):,} H-1B cases to {len(out):,} employers")
     return out.astype({"employer_id": int, "cases": int, "back_wages": int, "employees": int, "penalties": int})
 
 
@@ -96,8 +101,8 @@ def main():
     df = load_cases()
     years, top = year_table(df), top_employers(df)
     with pd.option_context("display.width", 200):
-        print(years.tail(12).to_string(index=False))
-        print(top.head(12).to_string(index=False))
+        log.info(years.tail(12).to_string(index=False))
+        log.info(top.head(12).to_string(index=False))
     if "--load" not in sys.argv:
         return
     from load_supabase import batched, fetch_employer_id_map, post_batch, records
@@ -110,8 +115,9 @@ def main():
     for batch in batched(records(links, ["employer_id", "cases", "back_wages", "employees", "penalties",
                                          "latest_fiscal_year"]), 2000):
         post_batch("employer_whd_h1b", batch)
-    print(f"loaded {len(years)} years, {len(top)} top employers, {len(links):,} employer links", flush=True)
+    log.info(f"loaded {len(years)} years, {len(top)} top employers, {len(links):,} employer links")
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()

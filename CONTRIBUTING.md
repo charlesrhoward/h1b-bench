@@ -32,14 +32,15 @@ processed data live in `data/` and are gitignored — never commit them.
 ## Preflight
 
 The same checks run locally and in CI (`.github/workflows/ci.yml`). CI runs `lint`,
-`typecheck`, and `build` as parallel jobs. The `preflight` job passes only when all three
-pass; it is the required check on `main`, so a PR that fails any of them cannot merge.
+`typecheck`, `ruff`, and `build` as parallel jobs. The `preflight` job passes only when all
+four pass; it is the required check on `main`, so a PR that fails any of them cannot merge.
 
 | Check     | Command (from `web/`) | Runs on         |
 |-----------|-----------------------|-----------------|
 | Lint      | `pnpm lint`           | pre-commit + CI |
 | Typecheck | `pnpm typecheck`      | pre-commit + CI |
 | Build     | `pnpm build`          | CI              |
+| Ruff (`etl/`) | `ruff check --ignore-noqa` (from repo root) | CI |
 
 Lint rules live in `web/eslint.shared-rules.mjs`. Every rule is an error, and warnings
 also fail (`--max-warnings 0`). The main limits:
@@ -62,8 +63,23 @@ If a change trips a limit, split the code. Do not loosen a rule for one file.
 Run the checks before you push:
 
 ```sh
-cd web && pnpm preflight
+cd web && pnpm preflight                 # web: lint, typecheck, build
+./venv/bin/ruff check --ignore-noqa      # etl: from the repo root
 ```
+
+### Python (`etl/`)
+
+Ruff rules live in `ruff.toml` and match the web limits where Python has an equivalent:
+complexity 8, nesting depth 3, 4 arguments, no unused imports/variables/arguments,
+no else-after-return, no `Any` annotations, and no `print`. CI also caps files at 500 lines.
+
+Scripts log through `log = logging.getLogger(__name__)`. Each script's `__main__` block
+calls `configure_logging()` from `etl/cli_log.py`, which writes plain messages to stdout. Install the
+version CI pins: `./venv/bin/pip install ruff==0.16.10`.
+
+The same no-exceptions rule applies. `ruff.toml` has no ignore list and no per-file ignores.
+CI runs with `--ignore-noqa` and fails on any `# noqa`, `# ruff: noqa`, or `# type: ignore`
+comment.
 
 ## Pull requests
 

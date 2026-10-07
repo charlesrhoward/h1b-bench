@@ -7,12 +7,15 @@ docs/perm-lockin-method.md.
 --load needs the temporary insert policies from etl/schema.sql; truncate the three tables
 first on a refresh.
 """
+import logging
 import os
 import sys
 
 import pandas as pd
-
+from cli_log import configure_logging
 from warn import norm_name
+
+log = logging.getLogger(__name__)
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "data")
 PERM_YEAR = 2025
@@ -32,7 +35,7 @@ def load_certified():
     days = pd.to_datetime(df["DECISION_DATE"]) - pd.to_datetime(df["RECEIVED_DATE"])
     df["days"] = days.dt.days
     df["name_key"] = df["EMP_BUSINESS_NAME"].map(norm_name)
-    print(f"certified FY{PERM_YEAR} PERM filings: {len(df):,}", flush=True)
+    log.info(f"certified FY{PERM_YEAR} PERM filings: {len(df):,}")
     return df
 
 
@@ -61,9 +64,9 @@ def main():
     summary, employers = summarize(df), by_employer(df)
     top = employers[employers["layoff_certified"] > 0].sort_values("layoff_certified", ascending=False)
     top = top.head(TOP_EMPLOYERS).copy()
-    print(summary, flush=True)
+    log.info(summary)
     with pd.option_context("display.width", 200):
-        print(top.to_string(index=False))
+        log.info(top.to_string(index=False))
     if "--load" not in sys.argv:
         return
     from load_supabase import batched, fetch_employer_id_map, post_batch, records
@@ -77,8 +80,9 @@ def main():
     for batch in batched(records(linked, ["perm_fiscal_year", "employer_id", "certified", "fw_working",
                                           "layoff_certified"]), 2000):
         post_batch("employer_perm", batch)
-    print(f"loaded summary, {len(top)} layoff employers, {len(linked):,} employer rows", flush=True)
+    log.info(f"loaded summary, {len(top)} layoff employers, {len(linked):,} employer rows")
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()

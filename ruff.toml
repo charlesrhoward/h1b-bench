@@ -1,0 +1,35 @@
+# Python lint for etl/. Mirrors web/eslint.shared-rules.mjs where Python has an equivalent.
+# No per-file-ignores and no ignore list; CI runs with --ignore-noqa, so `# noqa` has no effect.
+include = ["etl/**/*.py"]
+target-version = "py312"
+line-length = 120
+
+[lint]
+preview = true
+explicit-preview-rules = true
+select = [
+  "E", "W",     # pycodestyle
+  "F",          # pyflakes: unused imports/variables, undefined names
+  "I",          # import order
+  "B",          # bugbear
+  "UP",         # pyupgrade
+  "SIM",        # simplify (incl. no-unneeded-ternary: SIM210/SIM211)
+  "RET",        # no-else-return (RET505-508)
+  "ARG",        # unused arguments (prefix with _ to mark intentional)
+  "C90",        # complexity
+  "PLR0913",    # max-params (all arguments)
+  "PLR0917",    # max-params (positional)
+  "PLR1702",    # max-depth (nested blocks)
+  "ANN401",     # no-explicit-any
+  "T20",        # no print: log through logging.getLogger(__name__), set up by cli_log.py
+  "PGH",        # no blanket `type: ignore`
+  "RUF",
+]
+
+[lint.mccabe]
+max-complexity = 8
+
+[lint.pylint]
+max-args = 4
+max-positional-args = 4
+max-nested-blocks = 3

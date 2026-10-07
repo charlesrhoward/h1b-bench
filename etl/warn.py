@@ -13,6 +13,7 @@ first on a refresh.
 """
 import glob
 import json
+import logging
 import os
 import re
 import sys
@@ -20,6 +21,9 @@ from datetime import date
 
 import pandas as pd
 import pdfplumber
+from cli_log import configure_logging
+
+log = logging.getLogger(__name__)
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "data")
 LCA_YEAR = 2025
@@ -55,7 +59,8 @@ def company_key(name):
 
 
 def load_tx():
-    rows = json.load(open(os.path.join(ROOT, "raw", "tx_warn.json")))
+    with open(os.path.join(ROOT, "raw", "tx_warn.json")) as fh:
+        rows = json.load(fh)
     df = pd.DataFrame(rows)
     return pd.DataFrame({
         "state": "TX",
@@ -65,13 +70,18 @@ def load_tx():
     })
 
 
+def ca_page_rows(page):
+    """Notice rows from one CA WARN PDF page: rows whose first cell is an MM/DD/YYYY date."""
+    return [{"notice_date": r[0], "company": r[3], "workers": r[5]}
+            for r in page.extract_table() or []
+            if r and r[0] and re.match(r"\d{2}/\d{2}/\d{4}", r[0])]
+
+
 def load_ca():
     rows = []
     with pdfplumber.open(os.path.join(ROOT, "raw", "ca_warn_2024-25.pdf")) as pdf:
         for page in pdf.pages:
-            for r in page.extract_table() or []:
-                if r and r[0] and re.match(r"\d{2}/\d{2}/\d{4}", r[0]):
-                    rows.append({"notice_date": r[0], "company": r[3], "workers": r[5]})
+            rows.extend(ca_page_rows(page))
     df = pd.DataFrame(rows)
     return pd.DataFrame({
         "state": "CA",
@@ -86,7 +96,7 @@ def load_notices():
     in_window = notices.apply(lambda r: WINDOWS[r["state"]][0] <= r["notice_date"] <= WINDOWS[r["state"]][1], axis=1)
     notices = notices[in_window].copy()
     notices["key"] = notices["company"].map(company_key)
-    print(f"WARN notices in window: {len(notices):,} ({notices['state'].value_counts().to_dict()})", flush=True)
+    log.info(f"WARN notices in window: {len(notices):,} ({notices['state'].value_counts().to_dict()})")
     return notices.dropna(subset=["key"])
 
 
@@ -119,13 +129,14 @@ def main():
                "companies_matched": len(companies), "notices_matched": int(companies["notices"].sum()),
                "workers_laid_off": int(companies["workers_laid_off"].sum()),
                "h1b_filings": int(companies["h1b_filings"].sum())}
-    print(summary, flush=True)
+    log.info(summary)
     with pd.option_context("display.width", 200, "display.max_colwidth", 40):
-        print(companies.head(TOP_COMPANIES).to_string(index=False))
+        log.info(companies.head(TOP_COMPANIES).to_string(index=False))
     if "--load" in sys.argv:
         from warn_load import load_to_supabase
         load_to_supabase(summary, companies, lca, TOP_COMPANIES)
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()

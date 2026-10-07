@@ -36,6 +36,36 @@ jobs:
       - uses: ./.github/actions/setup-web
       - run: pnpm typecheck
 
+  ruff:
+    name: ruff
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: .
+    env:
+      RUFF_VERSION: 0.16.10
+    steps:
+      - uses: actions/checkout@v4
+      # Rules: ruff.toml. --ignore-noqa makes `# noqa` comments inert.
+      - run: pipx run "ruff==$RUFF_VERSION" check --ignore-noqa --output-format github
+      # Ruff has no file-length rule and cannot reject noqa comments, so check both here.
+      - name: No suppressions, 500-line cap
+        run: |
+          failed=0
+          if grep -rnE '#\s*(noqa|ruff:\s*noqa|type:\s*ignore|pyright:\s*ignore)' --include='*.py' etl; then
+            echo "::error::Suppression comments are not allowed. Fix the code."
+            failed=1
+          fi
+          for f in $(git ls-files 'etl/*.py'); do
+            lines=$(wc -l < "$f")
+            if [ "$lines" -gt 500 ]; then
+              echo "::error file=$f::$lines lines (max 500)"
+              failed=1
+            fi
+          done
+          exit $failed
+
   build:
     name: build
     runs-on: ubuntu-latest
@@ -61,16 +91,17 @@ jobs:
   preflight:
     name: preflight
     if: always()
-    needs: [lint, typecheck, build]
+    needs: [lint, typecheck, ruff, build]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     defaults:
       run:
         working-directory: .
     steps:
-      - name: Require lint, typecheck, and build to succeed
+      - name: Require lint, typecheck, ruff, and build to succeed
         run: |
-          echo "lint=${{ needs.lint.result }} typecheck=${{ needs.typecheck.result }} build=${{ needs.build.result }}"
+          echo "lint=${{ needs.lint.result }} typecheck=${{ needs.typecheck.result }} ruff=${{ needs.ruff.result }} build=${{ needs.build.result }}"
           test "${{ needs.lint.result }}" = success
           test "${{ needs.typecheck.result }}" = success
+          test "${{ needs.ruff.result }}" = success
           test "${{ needs.build.result }}" = success
