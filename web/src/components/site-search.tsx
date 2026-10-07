@@ -143,7 +143,7 @@ export default function SiteSearch() {
   const viewAllIndex = items.length;
 
   return (
-    <div ref={rootRef} className="relative w-full sm:w-80 lg:w-96">
+    <div ref={rootRef} className="relative w-full">
       <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-500">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <circle cx="11" cy="11" r="7" />
@@ -161,9 +161,9 @@ export default function SiteSearch() {
         aria-expanded={showDropdown}
         aria-controls="site-search-results"
         aria-activedescendant={showDropdown ? `search-hit-${active}` : undefined}
-        className="w-full rounded-md border border-zinc-800 bg-zinc-900/70 py-1.5 pl-9 pr-14 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-emerald-500/60 focus:bg-zinc-900"
+        className="w-full rounded-md border border-zinc-800 bg-zinc-900/70 py-1.5 pl-9 pr-3 text-sm sm:pr-14 lg:pr-3 xl:pr-14 text-zinc-100 placeholder-zinc-500 outline-none focus:border-emerald-500/60 focus:bg-zinc-900"
       />
-      <kbd className="pointer-events-none absolute inset-y-0 right-2.5 hidden items-center rounded border border-zinc-700 px-1.5 font-mono text-[10px] text-zinc-500 sm:flex my-auto h-5">
+      <kbd className="pointer-events-none absolute inset-y-0 right-2.5 hidden items-center rounded border border-zinc-700 px-1.5 font-mono text-[10px] text-zinc-500 sm:flex lg:hidden xl:flex my-auto h-5">
         ⌘K
       </kbd>
 

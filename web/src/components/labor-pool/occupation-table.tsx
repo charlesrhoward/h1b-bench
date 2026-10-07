@@ -11,7 +11,7 @@ export default function OccupationTable({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full sm:min-w-[52rem]" data-hide="2 3 7">
+      <table className="w-full" data-hide="2 3 7" data-hide-md="3">
         <thead>
           <tr>
             <th>Occupation</th>
@@ -19,7 +19,8 @@ export default function OccupationTable({
             <th className="text-right">Share</th>
             <th className="text-right">New H-1B positions</th>
             <th className="text-right" title="Unemployed, bachelor's degree or higher, last job in this occupation. ± is the 90% margin of error.">
-              Unemployed, bachelor&apos;s+
+              Unemployed<span className="sm:hidden"> (degree)</span>
+              <span className="hidden sm:inline">, bachelor&apos;s+</span>
             </th>
             <th className="text-right" title="Share of new H-1B positions the unemployed alone could fill (Measure 2)">
               Could fill

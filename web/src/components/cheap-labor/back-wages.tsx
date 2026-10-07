@@ -38,7 +38,7 @@ export function BackWagesByYear({ years }: { years: WhdYear[] }) {
 export function BackWagesTable({ rows }: { rows: WhdTopEmployer[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full sm:min-w-[40rem]" data-hide="2 3">
+      <table className="w-full" data-hide="2 3">
         <thead>
           <tr>
             <th>Employer (as named by WHD)</th>

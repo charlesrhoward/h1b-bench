@@ -9,6 +9,7 @@ import LotterySection from "@/components/cheap-labor/sections/lottery-section";
 import PermSection from "@/components/cheap-labor/sections/perm-section";
 import WarnSection from "@/components/cheap-labor/sections/warn-section";
 import WageLevelBar from "@/components/cheap-labor/wage-level-bar";
+import { Eyebrow } from "@/components/title-tags";
 import {
   CHEAP_LABOR_FY,
   MIN_RANKED_FILINGS,
@@ -68,8 +69,8 @@ export default async function CheapLaborPage() {
   return (
     <div className="max-w-4xl space-y-12">
       <header className="space-y-4">
-        <p className="font-mono text-sm text-emerald-400">FY{CHEAP_LABOR_FY} · federal data only</p>
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Is H-1B used as cheap labor?</h1>
+        <Eyebrow parts={[`FY${CHEAP_LABOR_FY}`, "federal data only"]} />
+        <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">Is H-1B used as cheap labor?</h1>
         <p className="text-zinc-400 sm:text-lg">
           This page tests the claim with federal data. Each section states one result, its source,
           and its limits. For unemployed Americans who could fill these jobs, see the{" "}

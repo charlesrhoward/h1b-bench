@@ -3,6 +3,7 @@ import FindingCards from "@/components/labor-pool/finding-cards";
 import MeasureCard from "@/components/labor-pool/measure-card";
 import OccupationTable from "@/components/labor-pool/occupation-table";
 import TierBars from "@/components/labor-pool/tier-bars";
+import { Eyebrow } from "@/components/title-tags";
 import { fmtInt, fmtPct } from "@/lib/format";
 import {
   LABOR_POOL_FY,
@@ -53,10 +54,8 @@ export default async function LaborPoolPage() {
   return (
     <div className="max-w-5xl space-y-14">
       <header className="max-w-4xl space-y-4">
-        <p className="font-mono text-sm text-emerald-400">
-          FY{LABOR_POOL_FY} H-1B filings · ACS {national.acs_year} · unemployed only
-        </p>
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Could Americans fill these jobs?</h1>
+        <Eyebrow parts={[`FY${LABOR_POOL_FY} H-1B filings`, `ACS ${national.acs_year}`, "unemployed only"]} />
+        <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">Could Americans fill these jobs?</h1>
         <p className="text-zinc-400 sm:text-lg">
           Could unemployed Americans fill most H-1B jobs? We compare new H-1B positions with
           unemployed Americans who had the same job, from federal data.

@@ -56,7 +56,7 @@ export default async function EmployerDetail({
         <Link href="/employers" className="text-sm text-zinc-500 hover:text-zinc-300">
           ← Leaderboard
         </Link>
-        <h1 className="mt-2 text-3xl font-bold">{employer.name}</h1>
+        <h1 className="mt-2 text-3xl font-bold text-balance [overflow-wrap:anywhere]">{employer.name}</h1>
         <p className="mt-1 text-zinc-400">
           {[employer.city, employer.state, employer.country].filter(Boolean).join(", ")}
         </p>
@@ -98,7 +98,7 @@ export default async function EmployerDetail({
       <section>
         <h2 className="mb-4 text-lg font-semibold">By fiscal year · H-1B</h2>
         <div className="overflow-x-auto">
-          <table className="w-full sm:min-w-[50rem]" data-hide="3 4 5 6 9">
+          <table className="w-full" data-hide="3 4 5 6 9" data-hide-md="5 9">
             <thead>
               <tr>
                 <th>FY</th>
@@ -141,7 +141,7 @@ export default async function EmployerDetail({
           Based on the most recent 1,000 certified filings
         </p>
         <div className="overflow-x-auto">
-          <table className="w-full sm:min-w-[30rem]" data-hide="2">
+          <table className="w-full" data-hide="2">
             <thead>
               <tr>
                 <th>Job title</th>

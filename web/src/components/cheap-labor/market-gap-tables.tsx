@@ -22,7 +22,7 @@ export function MarketGapTable({ rows }: { rows: MarketGapSummary[] }) {
   const ordered = [...rows].sort((a, b) => order.indexOf(a.dependency) - order.indexOf(b.dependency));
   return (
     <div className="overflow-x-auto">
-      <table className="w-full sm:min-w-[40rem]" data-hide="2">
+      <table className="w-full" data-hide="2">
         <thead>
           <tr>
             <th>Employer type</th>
@@ -50,7 +50,7 @@ export function MarketGapTable({ rows }: { rows: MarketGapSummary[] }) {
 export function BelowMedianLeaders({ rows }: { rows: EmployerMarketGap[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full sm:min-w-[36rem]" data-hide="2">
+      <table className="w-full" data-hide="2">
         <thead>
           <tr>
             <th>Employer</th>

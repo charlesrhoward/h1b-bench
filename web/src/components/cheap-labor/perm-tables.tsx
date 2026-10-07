@@ -6,7 +6,7 @@ import { PERM_FY, type EmployerPerm, type PermLayoffEmployer } from "@/lib/cheap
 export function PermLayoffTable({ rows }: { rows: PermLayoffEmployer[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full sm:min-w-[36rem]" data-hide="2">
+      <table className="w-full" data-hide="2">
         <thead>
           <tr>
             <th>Employer</th>
