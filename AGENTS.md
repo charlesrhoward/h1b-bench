@@ -1,9 +1,99 @@
 # Agent instructions
 
-Follow `CONTRIBUTING.md` for development checks and pull requests.
-Read `web/AGENTS.md` before changing the Next.js application.
-
 `AGENTS.md` is the source of truth. Keep `CLAUDE.md` as a symlink to it.
+Follow `CONTRIBUTING.md` for setup, checks, and pull requests.
+Read `web/AGENTS.md` before you change the Next.js app.
+
+## Purpose and point of view
+
+H1B Bench is an accurate, data-driven tool that shows what U.S. government H-1B data says.
+It has a point of view. It puts the human side first, and it makes the case that major
+corporations abuse the program. The data makes that case. The point of view never changes
+a number.
+
+- Every claim cites its source: a public government file and the `docs/*-method.md` that
+  explains how the number was made.
+- If the data does not support a claim, do not make the claim. Do not overstate a finding
+  to fit the case.
+- Every `/cheap-labor` finding states what the data cannot tell us (`EvidenceSection`
+  requires `limits` and `source`).
+
+## Repository map
+
+| Path | What it holds |
+|------|---------------|
+| `web/` | Next.js 16 app (App Router, Tailwind 4). Reads Supabase with the publishable key only. |
+| `etl/` | Python pipeline: parse government files, then load Supabase. `etl/schema.sql` holds tables, views, RLS, and the live migration history. |
+| `data/raw/`, `data/processed/` | Downloaded source files and parquet output. Gitignored. Never commit them. |
+| `docs/*-method.md` | One method per finding. Write or update the method before you publish a new number. |
+| `docs/ui/` | Reference screenshots of `/cheap-labor`. |
+
+`/cheap-labor` findings and their methods:
+
+| # | Finding | Method | Loader |
+|---|---------|--------|--------|
+| 1 | Pay vs. local median | `docs/market-gap-method.md` | `etl/market_gap.py --load` |
+| 2–3 | Wage levels, H-1B dependent employers | LCA data, view `lca_dependency_profile` | `etl/load_supabase.py` |
+| 4 | Who sets the wage floor | `docs/pw-source-method.md` | `etl/pw_source.py --load` |
+| 5 | Back wages | `docs/back-wages-method.md` | `etl/back_wages.py --load` |
+| 6 | Layoff (WARN) notices | `docs/warn-method.md` | `etl/warn.py --load` |
+| 7 | Multiple lottery registrations | `docs/lottery-method.md` | rows in `etl/schema.sql` (`uscis_registrations`) |
+| 8 | Green card filings | `docs/perm-lockin-method.md` | `etl/perm_lockin.py --load` |
+
+`/labor-pool` uses `docs/labor-pool-method.md` (written before the first run) and
+`docs/labor-pool-results.md`.
+
+## Commands
+
+```sh
+cd web && pnpm preflight              # lint, typecheck, build
+./venv/bin/ruff check --ignore-noqa   # etl/, from the repo root
+```
+
+CI runs `lint`, `typecheck`, `ruff`, and `build`. The required `preflight` check passes only
+when all four pass. Admins cannot bypass it.
+
+## Lint policy: no exceptions
+
+- Do not add `eslint-disable`, `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, `# noqa`,
+  or `# type: ignore`. CI fails on each of them.
+- No rule runs at `warn`. Do not add ignore paths, per-file overrides, or looser limits.
+  Old code gets no exception.
+- When code trips a limit (complexity 8, depth 3, 4 parameters, 500 lines), split the code.
+- In `etl/`, log with `logging.getLogger(__name__)`. Do not use `print`.
+
+Rules: `web/eslint.shared-rules.mjs`, `web/eslint.config.mjs`, `ruff.toml`.
+
+## Data accuracy
+
+- An LCA certification is a filing step. It is not a visa, a hire, or a petition approval.
+  Copy and UI must not say otherwise.
+- Never fabricate, sample, estimate, or fill in data. A missing value stays missing.
+- Label approximations as approximations (for example, "% of workforce" uses
+  self-reported PERM headcounts).
+- If you change how wages, dates, or employer names are normalized, say so in the PR and
+  name each table or materialized view that needs a reload.
+
+## ETL and Supabase
+
+- Pipeline order and download steps: README, "Reproducing the dataset". DOL files are
+  behind bot protection, so the owner downloads them in a browser.
+- Loads write with the publishable key through temporary anon insert policies. After each
+  load, drop those policies and refresh the materialized views (`lca_year_profile`,
+  `lca_dependency_profile`). `etl/schema.sql` lists the steps.
+- **Production database: ask first, every time.** You may read freely. Get explicit
+  approval in chat before any write: a loader run with `--load` or `all`, any
+  `etl/schema.sql` or policy change, or any migration. Approval covers one action only.
+- Record each applied schema change in the `etl/schema.sql` migration history.
+
+## Copy and design
+
+- Write user-facing copy in Simplified Technical English (ASD-STE100): short sentences,
+  one instruction or fact per sentence, active voice, common words. Agents that have the
+  `ste-benefit-copy` skill should use it.
+- Keep the existing site styling. Reuse `web/src/components/cheap-labor/*`,
+  `investigation.css`, and the zinc and emerald tokens. Do not add a new visual pattern
+  without the owner's approval.
 
 <!-- BEGIN:local-agent-message-board -->
 
