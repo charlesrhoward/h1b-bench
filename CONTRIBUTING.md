@@ -31,22 +31,38 @@ processed data live in `data/` and are gitignored — never commit them.
 
 ## Preflight
 
-The same checks run locally and in CI (`.github/workflows/ci.yml`). The `preflight` check
-is required on `main`, so a PR that fails it cannot merge.
+The same checks run locally and in CI (`.github/workflows/ci.yml`). CI runs `lint`,
+`typecheck`, and `build` as parallel jobs. The `preflight` job passes only when all three
+pass; it is the required check on `main`, so a PR that fails any of them cannot merge.
 
-| Check     | Command (from `web/`)                | Runs on               |
-|-----------|--------------------------------------|-----------------------|
-| Lint      | `pnpm exec eslint src --max-warnings 0` | pre-commit + CI    |
-| Typecheck | `pnpm exec tsc --noEmit`             | pre-commit + CI       |
-| Build     | `pnpm build`                         | CI                    |
+| Check     | Command (from `web/`) | Runs on         |
+|-----------|-----------------------|-----------------|
+| Lint      | `pnpm lint`           | pre-commit + CI |
+| Typecheck | `pnpm typecheck`      | pre-commit + CI |
+| Build     | `pnpm build`          | CI              |
 
-ESLint caps files at 500 lines, cyclomatic complexity at 10, and nesting depth at 3. If a
-change trips a limit, split the code rather than disabling the rule.
+Lint rules live in `web/eslint.shared-rules.mjs`. Every rule is an error, and warnings
+also fail (`--max-warnings 0`). The main limits:
 
-Run all three before you push:
+- Files: 500 lines max, blank lines and comments included
+- Functions: cyclomatic complexity 8, nesting depth 3, 4 parameters, 3 nested callbacks
+- No `any`, no nested ternaries, no `console.log` (`console.warn`/`console.error` are allowed)
+- Prefix unused variables and arguments with `_`
+
+There are no exceptions:
+
+- No rule runs at `warn`. The config raises every preset and local rule to `error`.
+- Inline `eslint-disable` / `eslint-enable` comments are ignored and fail lint.
+- `@ts-ignore`, `@ts-nocheck`, and `@ts-expect-error` fail lint.
+- The ignore list holds generated output only (`.next`, `out`, `build`, `next-env.d.ts`).
+  Legacy code is not grandfathered.
+
+If a change trips a limit, split the code. Do not loosen a rule for one file.
+
+Run the checks before you push:
 
 ```sh
-cd web && pnpm exec eslint src --max-warnings 0 && pnpm exec tsc --noEmit && pnpm build
+cd web && pnpm preflight
 ```
 
 ## Pull requests

@@ -5,37 +5,72 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    working-directory: web
+
 jobs:
-  web:
-    name: preflight
+  lint:
+    name: lint
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-web
+      # Rules: web/eslint.shared-rules.mjs. Every rule is an error; inline disables and ts-ignore fail.
+      - run: pnpm lint
 
-      - uses: pnpm/action-setup@v4
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-web
+      - run: pnpm typecheck
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-web
+
+      - uses: actions/cache@v4
         with:
-          version: 9.15.9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: web/pnpm-lock.yaml
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Lint (max 500 lines/file, complexity <= 10, depth <= 3)
-        run: pnpm exec eslint src --max-warnings 0
-
-      - name: Typecheck
-        run: pnpm exec tsc --noEmit
+          path: web/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('web/pnpm-lock.yaml') }}-${{ hashFiles('web/src/**') }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('web/pnpm-lock.yaml') }}-
 
       # Public publishable key — same one shipped to every browser; safe to inline.
-      - name: Build
-        run: pnpm build
+      - run: pnpm build
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://skiuhovfpiaofmctajhr.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Zzz1XAfsHrVgUyzGscuDSA_JYGYiwdG
+
+  # Required status check on main. Keep this job name stable: it gates merges
+  # and fails unless every job above succeeded.
+  preflight:
+    name: preflight
+    if: always()
+    needs: [lint, typecheck, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Require lint, typecheck, and build to succeed
+        run: |
+          echo "lint=${{ needs.lint.result }} typecheck=${{ needs.typecheck.result }} build=${{ needs.build.result }}"
+          test "${{ needs.lint.result }}" = success
+          test "${{ needs.typecheck.result }}" = success
+          test "${{ needs.build.result }}" = success

@@ -25,6 +25,40 @@ type Item =
 const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
 const money = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 0 });
 
+type SearchResponse = { employers: EmployerHit[]; occupations: OccupationHit[] };
+
+type RowHandlers = {
+  active: number;
+  onHover: (i: number) => void;
+  onGo: (href: string) => void;
+};
+
+const ARROW_STEP: Record<string, number> = { ArrowDown: 1, ArrowUp: -1 };
+
+function toItems(data: SearchResponse): Item[] {
+  return [
+    ...data.employers.map(
+      (hit): Item => ({ kind: "employer", href: `/employers/${hit.id}`, hit }),
+    ),
+    ...data.occupations.map(
+      (hit): Item => ({
+        kind: "occupation",
+        href: `/jobs?q=${encodeURIComponent(hit.soc_title ?? hit.soc_code)}`,
+        hit,
+      }),
+    ),
+  ];
+}
+
+function viewAllHref(query: string): string | null {
+  const term = query.trim();
+  return term ? `/employers?q=${encodeURIComponent(term)}` : null;
+}
+
+function itemKey(item: Item): string {
+  return item.kind === "employer" ? `e-${item.hit.id}` : `o-${item.hit.soc_code}`;
+}
+
 export default function SiteSearch() {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -73,23 +107,8 @@ export default function SiteSearch() {
           signal: controller.signal,
         });
         if (!res.ok) return;
-        const data = (await res.json()) as {
-          employers: EmployerHit[];
-          occupations: OccupationHit[];
-        };
-        const next: Item[] = [
-          ...data.employers.map(
-            (hit): Item => ({ kind: "employer", href: `/employers/${hit.id}`, hit }),
-          ),
-          ...data.occupations.map(
-            (hit): Item => ({
-              kind: "occupation",
-              href: `/jobs?q=${encodeURIComponent(hit.soc_title ?? hit.soc_code)}`,
-              hit,
-            }),
-          ),
-        ];
-        setItems(next);
+        const data = (await res.json()) as SearchResponse;
+        setItems(toItems(data));
         setCounts({ employers: data.employers.length, occupations: data.occupations.length });
         setActive(0);
         setOpen(true);
@@ -120,17 +139,17 @@ export default function SiteSearch() {
       return;
     }
     if (!open) return;
-    if (e.key === "ArrowDown") {
+    const step = ARROW_STEP[e.key];
+    if (step !== undefined) {
       e.preventDefault();
-      setActive((i) => Math.min(i + 1, items.length)); // items.length = "view all" row
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActive((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (active < items.length) go(items[active].href);
-      else if (query.trim()) go(`/employers?q=${encodeURIComponent(query.trim())}`);
+      // items.length = "view all" row
+      setActive((i) => Math.min(Math.max(i + step, 0), items.length));
+      return;
     }
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    const href = active < items.length ? items[active].href : viewAllHref(query);
+    if (href) go(href);
   };
 
   useEffect(() => {
@@ -140,7 +159,6 @@ export default function SiteSearch() {
   }, [active]);
 
   const showDropdown = open && query.trim().length >= 2;
-  const viewAllIndex = items.length;
 
   return (
     <div ref={rootRef} className="relative w-full">
@@ -174,47 +192,98 @@ export default function SiteSearch() {
           ref={listRef}
           className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[26rem] overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/60"
         >
-          {loading && items.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-zinc-500">Searching…</p>
-          ) : items.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-zinc-500">
-              No matches for “{query.trim()}”
-            </p>
-          ) : (
-            <>
-              {counts.employers > 0 && (
-                <p className="px-4 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-                  Employers
-                </p>
-              )}
-              {items.map((item, i) =>
-                item.kind === "occupation" && i === counts.employers ? (
-                  <div key="occ-section">
-                    <p className="px-4 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-                      Occupations
-                    </p>
-                    <OccupationRow item={item} index={i} active={active === i} onHover={setActive} onGo={go} />
-                  </div>
-                ) : item.kind === "employer" ? (
-                  <EmployerRow key={`e-${item.hit.id}`} item={item} index={i} active={active === i} onHover={setActive} onGo={go} />
-                ) : (
-                  <OccupationRow key={`o-${item.hit.soc_code}`} item={item} index={i} active={active === i} onHover={setActive} onGo={go} />
-                ),
-              )}
-              <button
-                data-index={viewAllIndex}
-                onMouseEnter={() => setActive(viewAllIndex)}
-                onClick={() => go(`/employers?q=${encodeURIComponent(query.trim())}`)}
-                className={`w-full border-t border-zinc-800 px-4 py-2.5 text-left text-sm ${
-                  active === viewAllIndex ? "bg-emerald-500/10 text-emerald-400" : "text-zinc-400"
-                }`}
-              >
-                View all employers matching “{query.trim()}” →
-              </button>
-            </>
-          )}
+          <ResultsBody
+            query={query}
+            items={items}
+            loading={loading}
+            employerCount={counts.employers}
+            handlers={{ active, onHover: setActive, onGo: go }}
+          />
         </div>
       )}
+    </div>
+  );
+}
+
+function ResultsBody({
+  query,
+  items,
+  loading,
+  employerCount,
+  handlers,
+}: {
+  query: string;
+  items: Item[];
+  loading: boolean;
+  employerCount: number;
+  handlers: RowHandlers;
+}) {
+  if (items.length === 0) {
+    return (
+      <p className="px-4 py-6 text-center text-sm text-zinc-500">
+        {loading ? "Searching…" : `No matches for “${query.trim()}”`}
+      </p>
+    );
+  }
+  const viewAllIndex = items.length;
+  const { active, onHover, onGo } = handlers;
+  return (
+    <>
+      {employerCount > 0 && <SectionLabel className="pt-3">Employers</SectionLabel>}
+      {items.map((item, i) => (
+        <ResultRow
+          key={itemKey(item)}
+          item={item}
+          index={i}
+          startsOccupations={item.kind === "occupation" && i === employerCount}
+          handlers={handlers}
+        />
+      ))}
+      <button
+        data-index={viewAllIndex}
+        onMouseEnter={() => onHover(viewAllIndex)}
+        onClick={() => onGo(`/employers?q=${encodeURIComponent(query.trim())}`)}
+        className={`w-full border-t border-zinc-800 px-4 py-2.5 text-left text-sm ${
+          active === viewAllIndex ? "bg-emerald-500/10 text-emerald-400" : "text-zinc-400"
+        }`}
+      >
+        View all employers matching “{query.trim()}” →
+      </button>
+    </>
+  );
+}
+
+function SectionLabel({ className, children }: { className: string; children: React.ReactNode }) {
+  return (
+    <p className={`px-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 ${className}`}>
+      {children}
+    </p>
+  );
+}
+
+function ResultRow({
+  item,
+  index,
+  startsOccupations,
+  handlers,
+}: {
+  item: Item;
+  index: number;
+  startsOccupations: boolean;
+  handlers: RowHandlers;
+}) {
+  const rowProps = {
+    index,
+    active: handlers.active === index,
+    onHover: handlers.onHover,
+    onGo: handlers.onGo,
+  };
+  if (item.kind === "employer") return <EmployerRow item={item} {...rowProps} />;
+  if (!startsOccupations) return <OccupationRow item={item} {...rowProps} />;
+  return (
+    <div>
+      <SectionLabel className="pt-2">Occupations</SectionLabel>
+      <OccupationRow item={item} {...rowProps} />
     </div>
   );
 }
