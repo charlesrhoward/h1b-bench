@@ -20,7 +20,7 @@ export function BackWagesByYear({ years }: { years: WhdYear[] }) {
           title={`FY${y.fiscal_year}: ${fmtMillions(Number(y.back_wages))}, ${fmtInt(y.cases)} cases`}
         >
           <div
-            className="w-full rounded-t bg-amber-400/80"
+            className="w-full rounded-t bg-emerald-400/80"
             style={{ height: `${Math.max(2, (Number(y.back_wages) / max) * 120)}px` }}
           />
           <span
@@ -77,7 +77,7 @@ export function EmployerBackWagesNote({ whd }: { whd: EmployerWhd | null }) {
   if (!whd) return null;
   const workers = whd.employees === 1 ? "1 worker" : `${fmtInt(whd.employees)} workers`;
   return (
-    <p className="text-xs text-amber-300/90">
+    <p className="text-xs text-zinc-300">
       DOL H-1B enforcement: {fmtInt(whd.cases)} {whd.cases === 1 ? "case" : "cases"}. The employer
       agreed to pay ${fmtInt(Number(whd.back_wages))} in H-1B back wages to {workers}
       {whd.latest_fiscal_year ? ` (latest findings FY${whd.latest_fiscal_year})` : ""}.{" "}

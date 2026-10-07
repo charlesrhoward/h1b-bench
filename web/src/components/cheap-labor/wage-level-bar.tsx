@@ -2,10 +2,10 @@ import { fmtPct } from "@/lib/format";
 import { WAGE_LEVEL_PERCENTILES } from "@/lib/cheap-labor";
 
 const SEGMENT_TONE: Record<keyof typeof WAGE_LEVEL_PERCENTILES, string> = {
-  I: "bg-amber-400 level-low",
-  II: "bg-amber-300/70 level-mid",
-  III: "bg-zinc-500 level-median",
-  IV: "bg-zinc-600 level-high",
+  I: "bg-emerald-400",
+  II: "bg-emerald-300/70",
+  III: "bg-zinc-500",
+  IV: "bg-zinc-600",
 };
 
 /** Stacked bar of filings by DOL wage level, each labeled with its local-wage percentile. */
@@ -17,9 +17,9 @@ export default function WageLevelBar({
   known: number;
 }) {
   return (
-    <figure className="wage-level-chart space-y-3">
-      <figcaption>Share of filings at each wage level</figcaption>
-      <div className="wage-level-track flex h-4 overflow-hidden rounded" aria-hidden="true">
+    <figure className="space-y-3">
+      <figcaption className="text-sm font-medium text-zinc-100">Share of filings at each wage level</figcaption>
+      <div className="flex h-4 overflow-hidden rounded" aria-hidden="true">
         {levels.map((l) => (
           <div
             key={l.level}

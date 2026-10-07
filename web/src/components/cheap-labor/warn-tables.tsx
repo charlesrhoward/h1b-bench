@@ -45,7 +45,7 @@ export function EmployerWarnNote({ warn }: { warn: EmployerWarn | null }) {
   if (!warn) return null;
   const notices = warn.notices === 1 ? "1 notice" : `${fmtInt(warn.notices)} notices`;
   return (
-    <p className="text-xs text-amber-300/90">
+    <p className="text-xs text-zinc-300">
       WARN layoff notices, FY{CHEAP_LABOR_FY} ({warn.states}): {notices} to lay off{" "}
       {fmtInt(warn.workers_laid_off)} workers, counted across all names of this company.{" "}
       <Link href="/cheap-labor" className="text-emerald-400 hover:underline">

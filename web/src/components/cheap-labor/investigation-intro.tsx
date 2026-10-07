@@ -1,67 +1,45 @@
 import { CHEAP_LABOR_FY, type MarketGapSummary } from "@/lib/cheap-labor";
 import { fmtInt, fmtPct } from "@/lib/format";
+import { Eyebrow } from "@/components/title-tags";
 
 export default function InvestigationIntro({ summary }: { summary?: MarketGapSummary }) {
   const hasComparison = summary && summary.filings_matched > 0;
   return (
-    <header className="investigation-intro" id="top">
-      <div className="investigation-dateline">
-        <span>H1B Bench <span aria-hidden="true">/</span> The evidence</span>
-        <span>Wage analysis · FY{CHEAP_LABOR_FY}</span>
-      </div>
-      <div className="investigation-headline">
-        <p className="story-kicker">The question: Is H-1B used as cheap labor?</p>
-        <h1>Look past the salary.<br />Look at <em>the pay gap.</em></h1>
-        <p className="story-deck">
-          A six-figure offer can still fall below local pay.
-          We compared H-1B offers with the median wage for the same occupation and area.
-        </p>
-        <p className="story-byline">An analysis by H1B Bench <span aria-hidden="true">·</span> Public records. Open methods.</p>
-      </div>
+    <header className="space-y-5" id="top">
+      <Eyebrow parts={[`FY${CHEAP_LABOR_FY}`, "the evidence on pay"]} />
+      <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">Is H-1B used as cheap labor?</h1>
       {hasComparison ? <LeadFinding summary={summary} /> : (
-        <p className="finding-unavailable">The local pay comparison is unavailable. Other available evidence appears below.</p>
+        <p className="text-zinc-400">The local pay comparison is unavailable. Other available evidence appears below.</p>
       )}
-      <div className="story-takeaway">
-        <p className="story-kicker">What this means</p>
-        <div>
-          <p>
-            {hasComparison
-              ? "The data supports a specific concern: many H-1B offers are low relative to local pay, even when the salary looks high."
-              : "The wage floor, the offered salary, and the local median measure different things. This investigation separates them."}
-          </p>
-          <p className="takeaway-limit">
-            Below-median pay does not by itself prove a wage violation or that an American worker lost a job.
-            These are offers on certified filings, not records of actual pay or visa grants.
-          </p>
-        </div>
+      <div className="space-y-3 border-l-2 border-emerald-400 pl-5 text-sm leading-relaxed text-zinc-300">
+        <p>
+          <strong className="text-zinc-100">Why it matters.</strong>{" "}
+          A six-figure salary can still fall below local pay. The useful comparison is the same occupation in the same area.
+        </p>
+        <p>
+          <strong className="text-zinc-100">What this does not prove.</strong>{" "}
+          A below-median offer alone does not establish a wage violation or job replacement.
+          These filings report offers, not actual paychecks or visa grants.
+        </p>
       </div>
     </header>
   );
 }
 
 function LeadFinding({ summary }: { summary: MarketGapSummary }) {
-  const share = (summary.below_median / summary.filings_matched) * 100;
   return (
-    <figure className="lead-finding">
-      <div className="lead-finding-number">
-        <strong>{fmtPct(summary.below_median, summary.filings_matched)}</strong>
-        <span>of matched filings offer<br />less than the local median</span>
-      </div>
-      <div className="lead-finding-chart">
-        <figcaption>Where H-1B offers fall against local pay</figcaption>
-        <div className="lead-finding-bar" aria-hidden="true">
-          <span style={{ width: `${share}%` }} />
-        </div>
-        <div className="lead-finding-labels">
-          <span><i />Below the median <strong>{fmtPct(summary.below_median, summary.filings_matched)}</strong></span>
-          <span><i />At or above <strong>{fmtPct(summary.filings_matched - summary.below_median, summary.filings_matched)}</strong></span>
-        </div>
-        <p className="chart-note">
-          {fmtInt(summary.filings_matched)} matched filings · FY{CHEAP_LABOR_FY} · U.S. Department of Labor<br />
-          Low end of the offered range. Local median includes all experience levels.
-        </p>
-        <a href="#finding-1" className="chart-method-link">How we made the comparison <span aria-hidden="true">↗</span></a>
-      </div>
-    </figure>
+    <div className="space-y-3">
+      <p className="text-lg leading-relaxed text-zinc-300 sm:text-xl">
+        <strong className="text-zinc-100">
+          The clearest finding: {fmtPct(summary.below_median, summary.filings_matched)} of matched filings offer less than local median pay.
+        </strong>{" "}
+        That comparison uses {fmtInt(summary.filings_matched)} H-1B filings from FY{CHEAP_LABOR_FY}.
+      </p>
+      <p className="text-sm leading-relaxed text-zinc-400">
+        We compare the low end of each offered range with the median for the same occupation and area.
+        That median includes all experience levels.{" "}
+        <a href="#finding-1" className="text-emerald-400 hover:underline">See the pay comparison <span aria-hidden="true">→</span></a>
+      </p>
+    </div>
   );
 }

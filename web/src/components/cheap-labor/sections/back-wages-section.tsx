@@ -23,7 +23,7 @@ export default function BackWagesSection({
   return (
     <EvidenceSection
       index={index}
-      title={`${fmtMillions(totals.back_wages)} in back wages. Documented violations.`}
+      title={`${fmtMillions(totals.back_wages)} in back wages from documented violations.`}
       takeaway="These cases establish that violations occurred. They cannot tell us how common violations are across all H-1B employers."
       limits="DOL investigates a small share of employers, so these cases measure enforcement, not the full rate of violations. The data holds concluded cases only, so recent years are incomplete. Back wages are amounts the employer agreed to pay. The data does not show if the employer paid. The totals count only cases that have a findings date."
       source={
@@ -45,7 +45,7 @@ export default function BackWagesSection({
         {fmtInt(totals.employees)} workers. DOL also assessed {fmtMillions(totals.penalties)} in
         penalties.
       </p>
-      <p className="chart-period">Concluded cases · FY{first}–FY{years.at(-1)?.fiscal_year}</p>
+      <p className="text-xs text-zinc-500">Concluded cases · FY{first}–FY{years.at(-1)?.fiscal_year}</p>
       <BackWagesByYear years={years} />
       <p className="text-sm text-zinc-400">
         Back wages by fiscal year of the findings. Each bar shows the number of cases on hover.

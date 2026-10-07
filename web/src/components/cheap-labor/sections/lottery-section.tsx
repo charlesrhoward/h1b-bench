@@ -18,7 +18,7 @@ export default function LotterySection({ index, years }: { index: number; years:
   return (
     <EvidenceSection
       index={index}
-      title="The lottery changed. Multiple registrations fell."
+      title="Multiple registrations fell after the lottery changed."
       takeaway="A person once gained more chances through multiple employer registrations. Since FY2025, selection is by person."
       limits="A person can have offers from more than one employer for lawful reasons. Multiple registrations are not a count of fraud. The data does not name employers that coordinated registrations, or measure their pay practices."
       source={

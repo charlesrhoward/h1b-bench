@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Newsreader } from "next/font/google";
 import ComparisonChart from "@/components/cheap-labor/comparison-chart";
 import DependencyTable from "@/components/cheap-labor/dependency-table";
 import EvidenceDetails from "@/components/cheap-labor/evidence-details";
@@ -42,8 +41,6 @@ import { fmtInt, fmtPct } from "@/lib/format";
 import { REPO_URL } from "@/lib/site";
 import "./investigation.css";
 
-const newsreader = Newsreader({ subsets: ["latin"], variable: "--font-investigation", style: ["normal", "italic"] });
-
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -75,9 +72,9 @@ export default async function CheapLaborPage() {
   }
 
   return (
-    <article className={`investigation ${newsreader.variable}`}>
+    <article className="investigation max-w-4xl space-y-10">
       <InvestigationIntro summary={marketGap.find((row) => row.dependency === "all")} />
-      <div className="investigation-reading-layout">
+      <div className="space-y-10">
         <InvestigationNav chapters={[
           { index: 1, label: "The pay gap", available: marketGap.some((row) => row.dependency === "all") },
           { index: 2, label: "The wage floor", available: profile.length > 0 },
@@ -88,15 +85,15 @@ export default async function CheapLaborPage() {
           { index: 7, label: "The lottery changed", available: lottery.some((row) => row.cap_fiscal_year < BENEFICIARY_CENTRIC_FROM) && lottery.some((row) => row.cap_fiscal_year >= BENEFICIARY_CENTRIC_FROM) },
           { index: 8, label: "The green card link", available: !!permSummary },
         ]} />
-        <div className="investigation-story">
+        <div className="space-y-12">
           <MarketGapSection rows={marketGap} leaders={leaders} />
           <WageLevelSection profile={profile} />
           <DependencySection profile={profile} />
           <PwSourceSection rows={pwSources} publishers={publishers} />
-          <div className="story-divider">
-            <p className="story-kicker">Beyond the salary</p>
-            <h2>Different records. Different questions.</h2>
-            <p>
+          <div className="space-y-4 border-t border-zinc-800 pt-10">
+            <p className="font-mono text-xs text-emerald-400">Beyond the salary</p>
+            <h2 className="text-2xl font-bold tracking-tight text-balance">Different records. Different questions.</h2>
+            <p className="leading-relaxed text-zinc-400">
               Pay comparisons show a gap. Enforcement records show documented violations.
               Layoffs, lottery entries, and green card filings add context, with limits of their own.
             </p>
@@ -105,21 +102,21 @@ export default async function CheapLaborPage() {
           <WarnSection index={6} summary={warnSummary} companies={warnCompanies} />
           <LotterySection index={7} years={lottery} />
           <PermSection index={8} summary={permSummary} employers={permEmployers} />
-          <section className="reading-guide" id="reading-the-evidence" aria-labelledby="reading-guide-title">
-            <p className="story-kicker">A note on the evidence</p>
-            <h2 id="reading-guide-title">Keep three distinctions in mind.</h2>
-            <dl>
+          <section className="scroll-mt-8 space-y-6 border-t border-zinc-800 pt-10" id="reading-the-evidence" aria-labelledby="reading-guide-title">
+            <p className="font-mono text-xs text-emerald-400">A note on the evidence</p>
+            <h2 className="text-2xl font-bold tracking-tight text-balance" id="reading-guide-title">Keep three distinctions in mind.</h2>
+            <dl className="space-y-5 leading-relaxed [&_dt]:font-semibold [&_dd]:mt-1 [&_dd]:text-zinc-400">
               <div><dt>An offer is not a paycheck.</dt><dd>Filings report an offered wage. They do not show actual earnings or prove that a worker received a visa.</dd></div>
               <div><dt>A benchmark is not a legal minimum.</dt><dd>The local median includes all experience levels. A below-median offer alone does not establish a violation.</dd></div>
               <div><dt>Overlap is not replacement.</dt><dd>A company can report layoffs and H-1B filings for different jobs. These records cannot show who replaced whom.</dd></div>
             </dl>
-            <p>Each finding above includes its source, scope, and limits. The linked methods explain how we calculated the results.</p>
+            <p className="text-sm leading-relaxed text-zinc-500">Each finding above includes its source, scope, and limits. The linked methods explain how we calculated the results.</p>
           </section>
-          <aside className="story-next">
-            <p className="story-kicker">Read next</p>
-            <Link href="/labor-pool">Who is available to do this work? <span aria-hidden="true">↗</span></Link>
-            <p>Compare H-1B demand with the U.S. labor pool.</p>
-            <Link className="story-next-secondary" href="/employers">Look up an employer <span aria-hidden="true">→</span></Link>
+          <aside className="space-y-3 border-t border-zinc-800 pt-8">
+            <p className="font-mono text-xs text-zinc-500">Read next</p>
+            <Link className="block font-medium text-emerald-400 hover:underline" href="/labor-pool">Who is available to do this work? <span aria-hidden="true">↗</span></Link>
+            <p className="text-sm text-zinc-400">Compare H-1B demand with the U.S. labor pool.</p>
+            <Link className="inline-block text-sm text-emerald-400 hover:underline" href="/employers">Look up an employer <span aria-hidden="true">→</span></Link>
           </aside>
         </div>
       </div>
@@ -133,7 +130,7 @@ function WageLevelSection({ profile }: { profile: DependencyProfile[] }) {
   return (
     <EvidenceSection
       index={2}
-      title="The wage floor can sit below the local median."
+      title="Meeting the wage floor can still mean below-median pay."
       takeaway="An offer can meet the listed wage floor and still fall below the midpoint of local pay."
       limits="The level sets the minimum only. An employer can pay more than the minimum."
       source={
@@ -166,7 +163,7 @@ function DependencySection({ profile }: { profile: DependencyProfile[] }) {
   return (
     <EvidenceSection
       index={3}
-      title="Employers differ in how often they offer the minimum."
+      title="H-1B dependent employers offer the minimum more often."
       takeaway="Employers that report H-1B dependence more often offer exactly the listed wage floor."
       limits="The “H-1B dependent” label comes from the employer's own filing. These groups can differ in their jobs, locations, and experience requirements. The comparison does not isolate the effect of H-1B dependence."
       source={DOL_SOURCE}
@@ -192,7 +189,7 @@ function MarketGapSection({ rows, leaders }: { rows: MarketGapSummary[]; leaders
   return (
     <EvidenceSection
       index={1}
-      title="The gap is about local pay, not a small salary."
+      title={`${fmtPct(all.below_median, all.filings_matched)} of matched offers fall below local median pay.`}
       takeaway="Compare an offer with what the same occupation pays in the same area. A national salary average can miss that difference."
       limits={`Offered pay is the bottom of the offered range. The local median covers all workers in the occupation and area, at all experience levels. ${fmtInt(all.filings_matched)} of ${fmtInt(all.filings_eligible)} yearly, full-time filings matched an area and a wage. DOL left the worksite county blank on most filings in its FY${CHEAP_LABOR_FY} Q4 file, so most of those filings are not in the count.`}
       source={
@@ -218,7 +215,7 @@ function MarketGapSection({ rows, leaders }: { rows: MarketGapSummary[]; leaders
         note={`Same occupation and area · All experience levels · FY${CHEAP_LABOR_FY}`} />
       <p>
         An &ldquo;H-1B dependent&rdquo; employer reports a large share of H-1B workers on its staff.
-        <a href="#finding-3" className="inline-method-link"> See the definition and wage-floor comparison.</a>
+        <a href="#finding-3" className="text-emerald-400 hover:underline"> See the definition and wage-floor comparison.</a>
       </p>
       <EvidenceDetails title="View the pay comparison data">
         <p>The shortfall cited above uses only offers below the local median. The table&apos;s median gap includes all matched offers in each group.</p>
@@ -244,7 +241,7 @@ function PwSourceSection({ rows, publishers }: { rows: PwSourceSummary[]; publis
   return (
     <EvidenceSection
       index={4}
-      title="The source of the wage floor matters, too."
+      title="Offers tied to private surveys fall below the median more often."
       takeaway="Offers tied to private salary surveys fall below the local median more often than offers tied to government wage data."
       limits="The source is the employer's own entry on the filing. A private survey can be lawful and accurate. This comparison does not show that the survey caused lower pay. It uses only filings with a local-median match, as described in finding 01."
       source={

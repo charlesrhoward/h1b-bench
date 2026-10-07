@@ -21,7 +21,7 @@ export default function PermSection({
   return (
     <EvidenceSection
       index={index}
-      title="Green card sponsors usually already employ the professional worker."
+      title="Most professional green card filings are for existing employees."
       takeaway="The employer often tests the U.S. labor market for a job that its sponsored worker already holds. These records do not show H-1B status."
       limits="The green card file does not show the worker's visa status, so it does not show how many are H-1B workers. Both answers are the employer's own entries on the form. A layoff is lawful if the employer told the laid-off workers about the job and considered them. The data does not show that step. The wait is the DOL step only. The full green card wait is longer."
       source={
