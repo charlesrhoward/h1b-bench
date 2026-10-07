@@ -1,4 +1,5 @@
 import EvidenceSection from "@/components/cheap-labor/evidence-section";
+import EvidenceDetails from "@/components/cheap-labor/evidence-details";
 import { WarnCompanyTable } from "@/components/cheap-labor/warn-tables";
 import { CHEAP_LABOR_FY, type WarnCompany, type WarnSummary } from "@/lib/cheap-labor";
 import { fmtInt } from "@/lib/format";
@@ -22,7 +23,8 @@ export default function WarnSection({
   return (
     <EvidenceSection
       index={index}
-      title={`In the same year they filed for H-1B workers, employers gave notice to lay off ${fmtInt(summary.workers_laid_off)} workers.`}
+      title="Layoff notices and H-1B filings can overlap."
+      takeaway="Some employers filed for H-1B workers in the same year they announced layoffs. The records do not show that one group replaced the other."
       limits="WARN notices do not list jobs, so a layoff can be in different roles than the H-1B filings. WARN applies only to large layoffs, generally 50 or more workers at one site. The data covers two states, and California covers 9 of the 12 months. A notice under a site or brand name does not match, so these counts are lower than the true totals."
       source={
         <>
@@ -54,10 +56,10 @@ export default function WarnSection({
         {fmtInt(summary.h1b_filings)} H-1B filings certified.
       </p>
       {companies.length > 0 ? (
-        <>
+        <EvidenceDetails title="View the matched companies and layoff notices">
           <p>The matched companies with the most workers in WARN notices:</p>
           <WarnCompanyTable rows={companies} />
-        </>
+        </EvidenceDetails>
       ) : null}
     </EvidenceSection>
   );

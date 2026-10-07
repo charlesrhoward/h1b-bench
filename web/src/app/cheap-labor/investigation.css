@@ -1,0 +1,8 @@
+/* Full tables remain available inside disclosures, including on phones. */
+.investigation .evidence-details table :is(th, td):nth-child(n) {
+  display: table-cell;
+}
+
+.investigation .evidence-details-body > .overflow-x-auto {
+  overflow: visible;
+}

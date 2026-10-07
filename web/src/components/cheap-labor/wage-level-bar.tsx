@@ -2,8 +2,8 @@ import { fmtPct } from "@/lib/format";
 import { WAGE_LEVEL_PERCENTILES } from "@/lib/cheap-labor";
 
 const SEGMENT_TONE: Record<keyof typeof WAGE_LEVEL_PERCENTILES, string> = {
-  I: "bg-amber-400",
-  II: "bg-amber-300/70",
+  I: "bg-emerald-400",
+  II: "bg-emerald-300/70",
   III: "bg-zinc-500",
   IV: "bg-zinc-600",
 };
@@ -17,8 +17,9 @@ export default function WageLevelBar({
   known: number;
 }) {
   return (
-    <div className="space-y-3">
-      <div className="flex h-4 overflow-hidden rounded">
+    <figure className="space-y-3">
+      <figcaption className="text-sm font-medium text-zinc-100">Share of filings at each wage level</figcaption>
+      <div className="flex h-4 overflow-hidden rounded" aria-hidden="true">
         {levels.map((l) => (
           <div
             key={l.level}
@@ -41,6 +42,6 @@ export default function WageLevelBar({
           </div>
         ))}
       </div>
-    </div>
+    </figure>
   );
 }

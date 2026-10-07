@@ -18,7 +18,7 @@ export default function DependencyTable({ rows }: { rows: DependencyProfile[] })
             <th>Employer type</th>
             <th className="text-right">Filings</th>
             <th className="text-right">Level I or II</th>
-            <th className="text-right">Paid exactly the legal minimum</th>
+            <th className="text-right">Offered exactly the wage floor</th>
             <th className="text-right">Median offered pay</th>
           </tr>
         </thead>

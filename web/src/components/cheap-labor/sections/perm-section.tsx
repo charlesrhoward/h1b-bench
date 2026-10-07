@@ -1,4 +1,5 @@
 import EvidenceSection from "@/components/cheap-labor/evidence-section";
+import EvidenceDetails from "@/components/cheap-labor/evidence-details";
 import { PermLayoffTable } from "@/components/cheap-labor/perm-tables";
 import { PERM_FY, type PermLayoffEmployer, type PermLockinSummary } from "@/lib/cheap-labor";
 import { fmtInt, fmtPct } from "@/lib/format";
@@ -20,7 +21,8 @@ export default function PermSection({
   return (
     <EvidenceSection
       index={index}
-      title={`${fmtPct(summary.professional_fw_working, summary.professional_certified)} of green card filings for professional jobs were for a worker the employer already employed.`}
+      title="Most professional green card filings are for existing employees."
+      takeaway="The employer often tests the U.S. labor market for a job that its sponsored worker already holds. These records do not show H-1B status."
       limits="The green card file does not show the worker's visa status, so it does not show how many are H-1B workers. Both answers are the employer's own entries on the form. A layoff is lawful if the employer told the laid-off workers about the job and considered them. The data does not show that step. The wait is the DOL step only. The full green card wait is longer."
       source={
         <>
@@ -53,7 +55,9 @@ export default function PermSection({
         filings came from {fmtInt(summary.layoff_employers)} employers that reported a layoff in the area,
         in the occupation or a related occupation, in the 6 months before the filing.
       </p>
-      {employers.length > 0 ? <PermLayoffTable rows={employers} /> : null}
+      {employers.length > 0 ? (
+        <EvidenceDetails title="View green card sponsors that reported prior layoffs"><PermLayoffTable rows={employers} /></EvidenceDetails>
+      ) : null}
       <p>
         The DOL approval is for one employer only. A worker who moves to a different employer must
         start a new case with that employer. The DOL step alone took a median of {fmtInt(summary.median_days)} days. For 90% of filings, it took{" "}

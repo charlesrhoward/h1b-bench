@@ -42,7 +42,7 @@ export function PermLayoffTable({ rows }: { rows: PermLayoffEmployer[] }) {
 export function EmployerPermNote({ perm }: { perm: EmployerPerm | null }) {
   if (!perm || perm.certified === 0) return null;
   return (
-    <p className="text-xs text-amber-300/90">
+    <p className="text-xs text-zinc-300">
       Green card (PERM) filings certified in FY{PERM_FY}: {fmtInt(perm.certified)}. On{" "}
       {fmtInt(perm.fw_working)}, the worker already worked for this employer.
       {perm.layoff_certified > 0

@@ -20,7 +20,7 @@ export function LotteryBars({ years }: { years: UscisRegistrationYear[] }) {
             title={`${fmtInt(y.eligible_multiple)} of ${fmtInt(y.eligible_registrations)} for people with multiple registrations`}
           >
             <div className="bg-zinc-600" style={{ flexGrow: y.eligible_single }} />
-            <div className="bg-amber-400/80" style={{ flexGrow: y.eligible_multiple }} />
+            <div className="bg-emerald-400/80" style={{ flexGrow: y.eligible_multiple }} />
           </div>
         </div>
       ))}
@@ -29,7 +29,7 @@ export function LotteryBars({ years }: { years: UscisRegistrationYear[] }) {
           <span className="inline-block size-2.5 bg-zinc-600" /> One registration
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block size-2.5 bg-amber-400/80" /> Multiple registrations
+          <span className="inline-block size-2.5 bg-emerald-400/80" /> Multiple registrations
         </span>
       </div>
     </div>

@@ -117,8 +117,8 @@ export default async function LaborPoolPage() {
 
 function ScopeNotice() {
   return (
-    <div className="rounded-lg border border-amber-400/40 bg-amber-400/5 p-5">
-      <p className="font-semibold text-amber-300">This page counts only the unemployed.</p>
+    <div className="rounded-lg border border-zinc-700 bg-zinc-900/50 p-5">
+      <p className="font-semibold text-zinc-100">This page counts only the unemployed.</p>
       <p className="mt-2 text-sm text-zinc-300">
         It does not count the underemployed. Underemployed means two groups. Some are degree holders
         in jobs below their skills. Others work part time but want full-time work. The page also
