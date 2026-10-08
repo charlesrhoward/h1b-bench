@@ -297,6 +297,51 @@ export async function getEmployerLayoffFilings(employerId: number) {
   return data as EmployerLayoffFilings | null;
 }
 
+/** Method measure 8: one WARN notice on an employer's timeline, with counted filings around it. */
+export type LayoffNotice = {
+  notice_date: string;
+  state: string;
+  company: string;
+  location: string | null;
+  workers: number | null;
+  followed: boolean;
+  filings_after: number;
+  filings_before: number;
+};
+
+/** Method measure 8: certified H-1B filings received in one month, split as in measure 7. */
+export type LayoffMonth = {
+  month: string;
+  new_employment: number;
+  change_employer: number;
+  not_counted: number;
+};
+
+export type EmployerLayoffTimeline = { notices: LayoffNotice[]; months: LayoffMonth[] };
+
+/**
+ * One employer's layoff timeline (company-level rows), or null when it has none. Throws on a
+ * query failure, like the other reads, so the tables must exist before this code deploys.
+ */
+export async function getEmployerLayoffTimeline(employerId: number): Promise<EmployerLayoffTimeline | null> {
+  const [notices, months] = await Promise.all([
+    supabase
+      .from("employer_layoff_notices")
+      .select("notice_date, state, company, location, workers, followed, filings_after, filings_before")
+      .eq("employer_id", employerId)
+      .order("notice_date")
+      .throwOnError(),
+    supabase
+      .from("employer_layoff_months")
+      .select("month, new_employment, change_employer, not_counted")
+      .eq("employer_id", employerId)
+      .order("month")
+      .throwOnError(),
+  ]);
+  if (!notices.data?.length) return null;
+  return { notices: notices.data as LayoffNotice[], months: (months.data ?? []) as LayoffMonth[] };
+}
+
 export type UscisRegistrationYear = {
   cap_fiscal_year: number;
   total_registrations: number;

@@ -20,18 +20,19 @@ import EmployerMarketGapNote from "@/components/cheap-labor/employer-market-gap-
 import { EmployerBackWagesNote } from "@/components/cheap-labor/back-wages";
 import { EmployerPermNote } from "@/components/cheap-labor/perm-tables";
 import { EmployerLayoffFilingsNote } from "@/components/cheap-labor/layoff-filings-tables";
-import { getEmployerLayoffFilings, getEmployerMarketGap, getEmployerPerm, getEmployerWhd } from "@/lib/cheap-labor";
+import {
+  getEmployerLayoffFilings,
+  getEmployerLayoffTimeline,
+  getEmployerMarketGap,
+  getEmployerPerm,
+  getEmployerWhd,
+} from "@/lib/cheap-labor";
+import LayoffTimeline from "@/components/cheap-labor/layoff-timeline";
 import { pageMetadata } from "@/lib/site";
 import { employerJsonLd } from "@/lib/json-ld";
 import JsonLd from "@/components/json-ld";
-import Breadcrumbs from "@/components/breadcrumbs";
-import HeaderFigure from "@/components/header-figure";
-import workerBox from "@/assets/art/worker-box.webp";
-import workerBoxDark from "@/assets/art/worker-box-dark.webp";
-import ironworkersLunch from "@/assets/art/ironworkers-lunch.webp";
-import ironworkersLunchDark from "@/assets/art/ironworkers-lunch-dark.webp";
-import { ParentChip, ParentNote } from "@/components/employer-parent";
-import { EmployerFlagCards, EmployerFlagPills } from "@/components/employer-flags";
+import { ParentNote } from "@/components/employer-parent";
+import EmployerHero from "@/components/employer-hero";
 import { employerFlags } from "@/lib/employer-flags";
 import { loadEmployer } from "@/lib/employer-page";
 import { EMPLOYER_OG_ALT, EMPLOYER_OG_SIZE } from "@/lib/employer-og";
@@ -42,25 +43,6 @@ export const revalidate = 3600;
 export function generateStaticParams() {
   return [];
 }
-
-/** Header art: the worker with a box after layoffs, the ironworkers' lunch otherwise. The lunch scene is wide (4:3). */
-const HEADER_ART = {
-  layoffs: {
-    light: workerBox,
-    dark: workerBoxDark,
-    sizes: "(min-width: 1024px) 15rem, 11rem",
-    figure: "right-0 bottom-0 w-44 lg:w-60",
-    header: "sm:min-h-60 sm:pr-48 lg:min-h-80 lg:pr-64",
-  },
-  default: {
-    light: ironworkersLunch,
-    dark: ironworkersLunchDark,
-    sizes: "(min-width: 1024px) 36rem, 18rem",
-    /** Large and faded, so it can sit a little behind the title. */
-    figure: "right-0 bottom-0 w-72 opacity-60 lg:w-144",
-    header: "sm:min-h-54 sm:pr-64 lg:min-h-108 lg:pr-120",
-  },
-} as const;
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -86,7 +68,7 @@ export default async function EmployerDetail({ params }: Params) {
   if (slug !== segment) permanentRedirect(`/employers/${segment}`);
   const employerId = employer.id;
 
-  const [stats, topJobs, headcount, marketGap, whd, layoffFilings, perm] = await Promise.all([
+  const [stats, topJobs, headcount, marketGap, whd, layoffFilings, perm, layoffTimeline] = await Promise.all([
     getEmployerStats(employerId),
     getEmployerTopJobs(employerId),
     getEmployerHeadcount(employerId),
@@ -94,6 +76,7 @@ export default async function EmployerDetail({ params }: Params) {
     getEmployerWhd(employerId),
     getEmployerLayoffFilings(employerId),
     getEmployerPerm(employerId),
+    getEmployerLayoffTimeline(employerId),
   ]);
 
   const flags = employerFlags(marketGap, layoffFilings);
@@ -103,43 +86,12 @@ export default async function EmployerDetail({ params }: Params) {
   const totalDenied = h1b.reduce((s, r) => s + r.denied, 0);
   const latestYear = h1b.length ? h1b[h1b.length - 1] : null;
 
-  const art = flags.layoffs ? HEADER_ART.layoffs : HEADER_ART.default;
-
   return (
     <div className={`${displayFont.variable} space-y-14`}>
       <JsonLd data={employerJsonLd(employer, `/employers/${segment}`)} />
-      <div className={`relative ${art.header}`}>
-        <HeaderFigure light={art.light} dark={art.dark} sizes={art.sizes} className={art.figure} />
-        <Breadcrumbs
-          trail={[
-            { name: "Employers", href: "/employers" },
-            { name: employer.name, href: `/employers/${segment}` },
-          ]}
-        />
-        <h1 className="type-title mt-4 text-balance [overflow-wrap:anywhere]">{employer.name}</h1>
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          <EmployerFlagPills flags={flags} />
-          <ParentChip parent={parent} />
-        </div>
-        <p className="mt-2 text-neutral-secondary">
-          {[employer.city, employer.state, employer.country].filter(Boolean).join(", ")}
-        </p>
-        <a
-          href={`https://www.google.com/search?q=${encodeURIComponent(`${employer.name} official website`)}&btnI=1`}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neutral-secondary px-3.5 py-1.5 text-[13px] font-medium text-neutral-primary hover:border-brand-primary"
-          title={`Open ${employer.name}'s website (via Google)`}
-        >
-          Website
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M7 17 17 7" />
-            <path d="M8 7h9v9" />
-          </svg>
-        </a>
-      </div>
+      <EmployerHero found={found} flags={flags} />
 
-      <EmployerFlagCards flags={flags} />
+      <LayoffTimeline timeline={flags.layoffs ? layoffTimeline : null} employer={employer.name} />
 
       <section className="space-y-6">
         <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">

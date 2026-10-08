@@ -8,9 +8,10 @@ Inputs:
 
   ./venv/bin/python -u etl/layoff_filings.py                             # compute + print
   (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u layoff_filings.py --load)
+  ... layoff_filings.py --load-timeline   # only the two timeline tables (measure 8)
 
---load needs the temporary insert policies from etl/schema.sql; truncate the three
-layoff_filings tables first on a refresh.
+--load needs the temporary insert policies from etl/schema.sql; truncate the five
+layoff tables (three layoff_filings tables, two timeline tables) first on a refresh.
 """
 import glob
 import logging
@@ -21,6 +22,7 @@ import numpy as np
 import pandas as pd
 from ca_warn import load_ca_notices
 from cli_log import configure_logging
+from layoff_timeline import timeline
 from warn import company_key, norm_name
 
 log = logging.getLogger(__name__)
@@ -199,9 +201,15 @@ def main():
     companies.to_parquet(out, index=False)
     matched.drop(columns=["key_raw", "key_canon"]).to_parquet(
         os.path.join(ROOT, "processed", "layoff_filings_notices.parquet"), index=False)
+    notices_t, months_t = timeline(companies, matched, lca, not_counted)
+    notices_t.to_parquet(os.path.join(ROOT, "processed", "layoff_timeline_notices.parquet"), index=False)
+    months_t.to_parquet(os.path.join(ROOT, "processed", "layoff_timeline_months.parquet"), index=False)
     if "--load" in sys.argv:
         from layoff_filings_load import load_to_supabase
         load_to_supabase(summary, companies, lca, TOP_COMPANIES)
+    if "--load" in sys.argv or "--load-timeline" in sys.argv:
+        from layoff_filings_load import load_timeline_to_supabase
+        load_timeline_to_supabase(notices_t, months_t)
 
 
 if __name__ == "__main__":

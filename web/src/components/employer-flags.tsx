@@ -116,10 +116,10 @@ function LayoffsCard({ row }: { row: EmployerLayoffFilings }) {
 }
 
 /** Flag cards at the top of an employer page. Renders nothing when the employer has no flag. */
-export function EmployerFlagCards({ flags }: { flags: EmployerFlags }) {
+export function EmployerFlagCards({ flags, className = "grid gap-4 md:grid-cols-2" }: { flags: EmployerFlags; className?: string }) {
   if (!hasFlags(flags)) return null;
   return (
-    <section aria-label="Flags" className="grid gap-4 md:grid-cols-2">
+    <section aria-label="Flags" className={className}>
       {flags.underpaid ? <UnderpaidCard gap={flags.underpaid} /> : null}
       {flags.layoffs ? <LayoffsCard row={flags.layoffs} /> : null}
     </section>
