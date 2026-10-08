@@ -14,13 +14,13 @@ export function LayoffFilingsTable({ rows }: { rows: LayoffFilingsCompany[] }) {
       <table className="w-full" data-hide="2 4 6" data-hide-md="2">
         <thead>
           <tr>
-            <th>Company (as named in the notice)</th>
+            <th>Company (name in the notice)</th>
             <th>States</th>
-            <th className="text-right">Workers in notices</th>
+            <th className="text-right">Workers in layoff notices</th>
             <th className="text-right">First notice</th>
-            <th className="text-right">New H-1B filings, 12 months after</th>
-            <th className="text-right">Within 90 days</th>
-            <th className="text-right">12 months before</th>
+            <th className="text-right">New-worker H-1B filings, 12 months after</th>
+            <th className="text-right">Of those, within 90 days</th>
+            <th className="text-right">Same filings, 12 months before</th>
           </tr>
         </thead>
         <tbody>
