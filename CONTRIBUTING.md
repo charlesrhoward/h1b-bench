@@ -42,8 +42,11 @@ four pass; it is the required check on `main`, so a PR that fails any of them ca
 | Build     | `pnpm build`          | pre-push + CI               |
 | ETL (`etl/`, ruff) | `../scripts/check-etl.sh` | pre-push + CI      |
 
-`pnpm preflight` runs all four. The pre-push hook runs it, so a push that would fail CI
-fails on your machine first. `pnpm typecheck` runs `next typegen` before `tsc`, so it never
+`pnpm preflight` runs all four. The pre-push hook runs it on a clean checkout of each pushed
+commit (`scripts/preflight-clean.sh`): a temporary worktree with dependencies installed from
+that commit's lockfile. Uncommitted edits, untracked files, and output from a local `next dev`
+cannot make it pass, so a push that would fail CI fails on your machine first. It adds about
+20 seconds. Run it by hand with `pnpm preflight:clean`. `pnpm typecheck` runs `next typegen` before `tsc`, so it never
 depends on types that a local `next dev` left behind (`next-env.d.ts`, `.next/types`). `scripts/check-etl.sh` uses `./venv/bin/ruff` when it is
 ruff 0.16.10, otherwise `uvx ruff@0.16.10` or `pipx run ruff==0.16.10`.
 

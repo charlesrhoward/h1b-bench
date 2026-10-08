@@ -1,2 +1,6 @@
-cd web
-pnpm preflight
+# Each pushed commit runs the full preflight on a clean checkout (scripts/preflight-clean.sh).
+zero=0000000000000000000000000000000000000000
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue
+  scripts/preflight-clean.sh "$local_sha" </dev/null || exit 1
+done
