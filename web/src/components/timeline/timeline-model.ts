@@ -22,7 +22,7 @@ export type TimelineModel = {
   /** Color of the events and the spans. */
   eventColor: keyof Palette;
   legend: { event: string; hollowEvent: string; span: string };
-  /** Label for the y axis. */
+  /** Label for the y axis. Narrow charts leave it out, so the marker labels have room. */
   yLabel: string;
   /** How many of the largest events get a text label on the chart. */
   labeledEvents: number;
@@ -52,8 +52,11 @@ export type TimelineEvent = {
 
 export type TimelineSpan = { start: string; end: string };
 
-/** A dashed reference line. A "start" label reads to the right of the line, an "end" label to the left. */
-export type TimelineMarker = { date: string; label: string; side: "start" | "end" };
+/**
+ * A dashed reference line. A "start" label reads to the right of the line, an "end" label to the
+ * left. Narrow charts show `shortLabel`.
+ */
+export type TimelineMarker = { date: string; label: string; shortLabel: string; side: "start" | "end" };
 
 /** Chart heights, in pixels. The loading placeholder uses them too, so the page does not jump. */
 export const TIMELINE_HEIGHT = { wide: 320, narrow: 260 };

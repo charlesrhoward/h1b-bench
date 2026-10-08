@@ -333,7 +333,8 @@ export async function getEmployerLayoffTimeline(employerId: number): Promise<Emp
       .eq("employer_id", employerId)
       .order("month"),
   ]);
-  if (notices.error || months.error) console.error("layoff timeline:", (notices.error ?? months.error)?.message);
+  const error = notices.error ?? months.error;
+  if (error) console.error("layoff timeline:", error.message);
   if (!notices.data?.length) return null;
   return { notices: notices.data as LayoffNotice[], months: (months.data ?? []) as LayoffMonth[] };
 }

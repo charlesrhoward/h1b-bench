@@ -7,8 +7,8 @@ SUPABASE_KEY at import time.
 """
 import logging
 
-from load_supabase import batched, fetch_employer_id_map, post_batch, records
 from layoff_timeline import employer_keys
+from load_supabase import batched, fetch_employer_id_map, post_batch, records
 from warn_load import employer_rows, top_filer_ids
 
 log = logging.getLogger(__name__)
@@ -48,4 +48,5 @@ def load_timeline_to_supabase(notices, months):
     months = ids.merge(months, on="key").assign(month=lambda d: d["month"].dt.date.astype(str))
     post_all("employer_layoff_notices", notices, NOTICE_COLS)
     post_all("employer_layoff_months", months, MONTH_COLS)
-    log.info(f"loaded {len(notices):,} notice rows and {len(months):,} month rows for {ids['employer_id'].nunique():,} employers")
+    employers = ids["employer_id"].nunique()
+    log.info(f"loaded {len(notices):,} notice rows and {len(months):,} month rows for {employers:,} employers")

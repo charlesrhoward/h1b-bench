@@ -72,7 +72,7 @@ function noticeEvent(day: NoticeDay): TimelineEvent {
     hollow: !day.followed,
     tip: [
       `${fmtDay(day.date)} · WARN layoff ${count === 1 ? "notice" : `notices (${count})`}`,
-      `Workers: ${day.workers == null ? "not listed" : fmtInt(day.workers)}`,
+      ...(count > 1 ? [`Workers: ${day.workers == null ? "not listed" : fmtInt(day.workers)}`] : []),
       ...siteLines(day.notices),
       `Name on the notice: ${names}`,
       `Next 12 months: ${plural(day.after, "H-1B filing", "H-1B filings")} for new workers`,
@@ -148,8 +148,8 @@ export function layoffTimelineModel(timeline: EmployerLayoffTimeline): TimelineM
     events: days.map(noticeEvent),
     spans: afterSpans(days),
     markers: [
-      { date: NOTICES.start, label: "Notices from Oct 2020", side: "start" },
-      { date: NOTICES.end, label: "Notices to Jun 2025", side: "end" },
+      { date: NOTICES.start, label: "Notices from Oct 2020", shortLabel: "Oct 2020", side: "start" },
+      { date: NOTICES.end, label: "Notices to Jun 2025", shortLabel: "Jun 2025", side: "end" },
     ],
     eventColor: "yellow",
     legend: {

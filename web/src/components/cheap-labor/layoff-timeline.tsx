@@ -12,6 +12,9 @@ const NOTES = [
   "The counts include every employer name that matches the company name.",
 ];
 
+const READOUT =
+  "Each yellow dot is a WARN layoff notice. A larger dot means more workers. The bars show certified H-1B filings by the month the company sent them. The shaded area is the 12 months after a notice.";
+
 const SOURCE =
   "DOL OFLC LCA disclosure data (FY2020 to FY2026 Q3); WARN notices from state labor agencies, compiled on Hugging Face (APProjects), and the California EDD WARN reports.";
 
@@ -71,12 +74,7 @@ export default function LayoffTimeline({ timeline, employer }: { timeline: Emplo
         model={model}
         label={`Timeline of ${employer}'s WARN layoff notices and certified H-1B filings by month`}
         viewLabel="Filings shown"
-        readout={
-          <p className="type-small max-w-3xl">
-            Each yellow dot is a WARN layoff notice. A larger dot means more workers. The bars show certified H-1B
-            filings by the month the company sent them. The shaded area is the 12 months after a notice.
-          </p>
-        }
+        readout={READOUT}
         notes={NOTES}
         source={SOURCE}
         method="layoff-filings-method.md"

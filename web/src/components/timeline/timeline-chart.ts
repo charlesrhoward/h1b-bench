@@ -10,6 +10,7 @@ import {
   type TimelineBin,
   type TimelineEvent,
   type TimelineModel,
+  type TimelineMarker,
   type TimelineSeries,
 } from "./timeline-model";
 
@@ -20,14 +21,18 @@ function frameFor(width: number): Frame {
   return { width, height: narrow ? TIMELINE_HEIGHT.narrow : TIMELINE_HEIGHT.wide, top: 34, right: narrow ? 8 : 16, bottom: 28, left: narrow ? 40 : 52 };
 }
 
+/** Marker labels sit in the top margin; event labels stay below this line. */
+const MARKER_TEXT_BOTTOM = 18;
+
 /** The y layout: bars fill the bottom, and the event lane sits above the tallest bar. */
 type Layout = { max: number; lane: number; top: number; ticks: number[] };
 
-/** Round tick values (1, 2, or 5 times a power of ten) from 0 to about `max`. */
+/** Round whole-number tick values (1, 2, or 5 times a power of ten) from 0 to about `max`. */
 function niceTicks(max: number, count = 4): number[] {
   const raw = max / count;
   const power = 10 ** Math.floor(Math.log10(raw));
-  const step = [1, 2, 5, 10].map((m) => m * power).find((s) => s >= raw) ?? raw;
+  // Counts are whole numbers, so a step is never below 1.
+  const step = Math.max(1, [1, 2, 5, 10].map((m) => m * power).find((s) => s >= raw) ?? raw);
   return Array.from({ length: Math.floor(max / step) + 1 }, (_, i) => i * step);
 }
 
@@ -101,13 +106,15 @@ function eventLabels(model: TimelineModel, s: ReturnType<typeof scales>, layout:
     py: y.apply(layout.lane),
     radius: r.apply(e.size ?? 0),
   }));
-  const placed = placeLabels(candidates, { x0: 0, x1: f.width, y0: f.top - 4, y1: f.height - f.bottom });
+  // Labels go above the lane only: beside or below it they would cover other dots and the bars.
+  const placed = placeLabels(candidates, { x0: 0, x1: f.width, y0: MARKER_TEXT_BOTTOM, y1: y.apply(layout.lane) - 1 });
   return { placed, radius: (e: TimelineEvent) => r.apply(e.size ?? 0) };
 }
 
-function markerMarks(model: TimelineModel, palette: Palette) {
-  const line = { x: (m: { date: string }) => utcDate(m.date), stroke: palette.muted, strokeDasharray: "3 3", strokeOpacity: 0.7 };
-  const text = { x: (m: { date: string }) => utcDate(m.date), text: "label", frameAnchor: "top" as const, dy: -22, fill: palette.muted, fontSize: 11 };
+function markerMarks(model: TimelineModel, palette: Palette, narrow: boolean) {
+  const at = (m: TimelineMarker) => utcDate(m.date);
+  const line = { x: at, stroke: palette.muted, strokeDasharray: "3 3", strokeOpacity: 0.7 };
+  const text = { x: at, text: narrow ? "shortLabel" : "label", frameAnchor: "top" as const, dy: -22, fill: palette.muted, fontSize: 11 };
   return [
     Plot.ruleX(model.markers, line),
     Plot.text(model.markers.filter((m) => m.side === "start"), { ...text, textAnchor: "start", dx: 4 }),
@@ -147,6 +154,7 @@ export function buildTimeline(model: TimelineModel, view: string, width: number,
   const s = scales(model, layout, f);
   const { placed, radius } = eventLabels(model, s, layout, f);
   const barWidth = (f.width - f.left - f.right) / Math.max(1, model.bins.length);
+  const narrow = width < NARROW_WIDTH;
   return Plot.plot({
     width,
     height: f.height,
@@ -155,14 +163,14 @@ export function buildTimeline(model: TimelineModel, view: string, width: number,
     marginBottom: f.bottom,
     marginLeft: f.left,
     x: { ...s.x, label: null, ticks: "year", tickFormat: "%Y" },
-    y: { ...s.y, label: model.yLabel, ticks: layout.ticks, tickFormat: (v: number) => fmtInt(v), grid: true },
+    y: { ...s.y, label: narrow ? null : model.yLabel, ticks: layout.ticks, tickFormat: (v: number) => fmtInt(v), grid: true },
     r: s.r,
     style: chartStyle(palette),
     marks: [
       ...spanMarks(model, layout, palette),
       ...barMarks(model.bins, series, palette, barWidth > 6 ? 1 : 0),
       Plot.ruleY([0], { stroke: palette.rule }),
-      ...markerMarks(model, palette),
+      ...markerMarks(model, palette, narrow),
       ...eventMarks(model, layout, palette),
       ...labelMarks(placed, { x: (e) => utcDate(e.date).getTime(), y: () => layout.lane, radius }, { fill: palette.ink, halo: palette.surface }),
       ...pointerMarks(targets(model, series, layout), layout, palette),

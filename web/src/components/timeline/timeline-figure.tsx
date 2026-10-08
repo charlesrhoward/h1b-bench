@@ -18,7 +18,8 @@ export type TimelineFigureProps = {
   label: string;
   /** Name of the view picker. */
   viewLabel: string;
-  readout: React.ReactNode;
+  /** One or two sentences that tell the reader how to read the chart. */
+  readout: string;
   notes: string[];
   source: string;
   /** Method file in docs/. */
@@ -34,7 +35,7 @@ export default function TimelineFigure({ model, label, viewLabel, readout, notes
   const controls =
     model.views.length > 1 ? <Segmented label={viewLabel} value={view} choices={model.views} onChange={setView} /> : null;
   return (
-    <ExploreFigure controls={controls} readout={readout} notes={notes} source={source} method={method}>
+    <ExploreFigure controls={controls} readout={<p className="type-small max-w-3xl">{readout}</p>} notes={notes} source={source} method={method}>
       <div className="space-y-3">
         <TimelineLegend model={model} series={viewSeries(model, view)} />
         <TimelinePlot model={model} view={view} label={label} />
