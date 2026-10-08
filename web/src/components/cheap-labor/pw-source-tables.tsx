@@ -21,7 +21,7 @@ export function PwSourceTable({ rows }: { rows: PwSourceSummary[] }) {
             <th>Where the wage floor came from</th>
             <th className="text-right">Filings</th>
             <th className="text-right">Share</th>
-            <th className="text-right">Below local median</th>
+            <th className="text-right">Below local median (of matched filings)</th>
           </tr>
         </thead>
         <tbody>
