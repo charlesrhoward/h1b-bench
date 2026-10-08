@@ -34,7 +34,9 @@ The match rate is published with the result.
 - **Area:** the worksite county name and state are normalized (uppercase; the words
   COUNTY, PARISH, BOROUGH, CENSUS AREA, MUNICIPALITY, CITY AND BOROUGH and punctuation are
   removed; SAINT becomes ST) and matched to `Geography.csv`. No fuzzy matching is used.
-- **Local median:** Level III hourly wage × 2,080 hours.
+- **Local median:** Level III hourly wage × 2,080 hours. Rows that `ALC_Export.csv` labels
+  "Annual Wage" (mostly teaching occupations, SOC 25-) already give yearly pay, so they are
+  used as they are. See "Corrections".
 
 ## Measures (all reported, none dropped)
 
@@ -53,3 +55,16 @@ The match rate is published with the result.
 - OEWS wages describe all workers in the occupation and area, at all experience levels.
 - Filings that cannot be matched to an area or wage row are left out. They are not counted
   as above or below.
+
+## Corrections
+
+- **2026-10-07: yearly wage rows.** The first run multiplied every Level III wage by 2,080
+  hours. The wage library gives some occupations a yearly wage (label "Annual Wage"), so
+  14,417 of the 404,917 matched filings got a local median near $300 million. Each of them
+  counted as below the median. The fixed run uses those wages as they are. The matched count
+  did not change. All filings: below the local median went from 57.1% to 55.8%, and the
+  median gap went from −$6,834 to −$4,427. Not H-1B dependent: 53.0% to 51.3%, gap −$960 to
+  $0. H-1B dependent: 70.0% to 69.9%. The wage-floor finding (`docs/pw-source-method.md`)
+  reuses this match: union-contract floors went from 92.7% to 77.5% below the median, and
+  OEWS floors from 55.3% to 54.1%. Reloaded tables: `market_gap_summary`,
+  `employer_market_gap`, `pw_source_summary`, `pw_survey_publishers`.

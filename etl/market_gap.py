@@ -3,6 +3,8 @@
 Local median = OFLC Online Wage Library All Industries Level III wage (the 50th
 percentile of local pay for the occupation) x 2,080 hours, matched by worksite county and
 6-digit SOC, using the wage year (July-June) that contains the filing's received date.
+Rows that the wage library labels "Annual Wage" (mostly teaching occupations) already give
+yearly pay, so they are used as they are.
 
 Inputs (data/raw/):
   OFLC_Wages_2024-25.zip, OFLC_Wages_2025-26.zip   flag.dol.gov/wage-data/wage-data-downloads
@@ -31,6 +33,8 @@ ROOT = os.path.join(os.path.dirname(__file__), "..", "data")
 OUT_DIR = os.path.join(ROOT, "processed")
 LCA_YEAR = 2025
 HOURS_PER_YEAR = 2080
+# ALC_Export.csv Label for rows whose levels are yearly pay, not hourly.
+ANNUAL_LABEL = "Annual Wage"
 # Wage year label -> (first day, last day) and the zip that holds it
 WAGE_YEARS = {
     "2024-25": (date(2024, 7, 1), date(2025, 6, 30), "OFLC_Wages_2024-25.zip"),
@@ -66,7 +70,10 @@ def load_wage_year(label, zip_name):
     geo = geo[geo["county_key"].isin(ambiguous[ambiguous == 1].index)]
     area_by_county = geo.drop_duplicates("county_key").set_index("county_key")["Area"]
 
-    alc["local_median"] = pd.to_numeric(alc["Level3"], errors="coerce") * HOURS_PER_YEAR
+    level3 = pd.to_numeric(alc["Level3"], errors="coerce")
+    annual = alc["Label"].str.strip().eq(ANNUAL_LABEL)
+    alc["local_median"] = level3.where(annual, level3 * HOURS_PER_YEAR)
+    log.info(f"wage year {label}: {int(annual.sum()):,} rows are yearly wages (label {ANNUAL_LABEL!r})")
     medians = alc.dropna(subset=["local_median"]).set_index(["Area", "SocCode"])["local_median"]
     log.info(f"wage year {label}: {len(area_by_county):,} counties, {len(medians):,} area x SOC wages")
     return area_by_county, medians
