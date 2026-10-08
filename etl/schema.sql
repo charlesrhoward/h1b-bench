@@ -17,7 +17,9 @@
 -- -> layoff_filings_breakdown (truncate layoff_filings_summary, layoff_filings_companies,
 --    employer_layoff_filings; add filings_after_new_employment, filings_after_change_employer,
 --    filings_after_not_counted; temporary insert policies; reload, docs/layoff-filings-method.md
---    measure 7) -> drop_layoff_filings_breakdown_insert_policies.
+--    measure 7) -> drop_layoff_filings_breakdown_insert_policies
+-- -> lca_cases_employer_recent_certified_idx (2026-10-08: approved concurrent covering
+--    index for recent certified roles; no data, normalization, or materialized-view reload).
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -77,6 +79,11 @@ create table lca_cases (
 );
 
 create index lca_cases_employer_idx on lca_cases (employer_id);
+-- Applied concurrently in production on 2026-10-08. Run outside a transaction.
+create index concurrently lca_cases_employer_recent_certified_idx
+on lca_cases (employer_id, decision_date desc)
+include (job_title, soc_code, wage_from_annual)
+where case_status = 'Certified' and wage_from_annual is not null;
 create index lca_cases_fy_idx on lca_cases (fiscal_year);
 create index lca_cases_status_idx on lca_cases (case_status);
 create index lca_cases_visa_idx on lca_cases (visa_class);
