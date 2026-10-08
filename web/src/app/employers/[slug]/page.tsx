@@ -27,6 +27,7 @@ import Breadcrumbs from "@/components/breadcrumbs";
 import { EmployerFlagCards, EmployerFlagPills } from "@/components/employer-flags";
 import { employerFlags } from "@/lib/employer-flags";
 import { loadEmployer } from "@/lib/employer-page";
+import { EMPLOYER_OG_ALT, EMPLOYER_OG_SIZE } from "@/lib/employer-og";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: `${employer.name} — H-1B filings and pay — H1B Bench`,
     description: `H-1B Labor Condition Applications filed by ${employer.name}${place ? ` (${place})` : ""}: filings by year, certification rate, median wage, and top roles. Source: DOL OFLC.`,
     path: `/employers/${segment}`,
+    image: { url: `/employers/${segment}/opengraph-image`, ...EMPLOYER_OG_SIZE, alt: EMPLOYER_OG_ALT },
   });
 }
 
