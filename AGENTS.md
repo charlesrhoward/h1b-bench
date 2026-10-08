@@ -92,9 +92,13 @@ Rules: `web/eslint.shared-rules.mjs`, `web/eslint.config.mjs`, `ruff.toml`.
 - Loads write with the publishable key through temporary anon insert policies. After each
   load, drop those policies and refresh the materialized views (`lca_year_profile`,
   `lca_dependency_profile`). `etl/schema.sql` lists the steps.
-- **Production database: ask first, every time.** You may read freely. Get explicit
-  approval in chat before any write: a loader run with `--load` or `all`, any
-  `etl/schema.sql` or policy change, or any migration. Approval covers one action only.
+- **Production database.** Only the owner and the owner's agents have production
+  credentials. External contributors do not: they propose a schema change or a reload in
+  a pull request, and the owner applies it. The owner's agents may read and write without
+  asking first: loader runs (`--load`, `all`), migrations, and policy changes. For each write:
+  - Apply the migration before you merge code that reads the new table or column. Page
+    queries throw on failure, so code that ships first breaks the page.
+  - Drop the temporary insert policies after the load, then check the row counts.
 - Record each applied schema change in the `etl/schema.sql` migration history.
 
 ## Copy and design
