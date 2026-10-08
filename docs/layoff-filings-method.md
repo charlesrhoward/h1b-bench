@@ -87,3 +87,29 @@ in `docs/layoff-filings-results.md`.
 - The WARN file is a third-party compilation of state records.
 - Exact key matching misses notices filed under a site, brand, or subsidiary name, so
   these counts are lower than the true totals.
+
+## Amendment, 2026-10-07: changes made at verification, before publication
+
+These changes were made after the first results were computed, during the verification step,
+and before anything was published. The first run's totals are in
+`docs/layoff-filings-results.md`, so the effect of each change is visible.
+
+1. **California comes from the EDD reports, not the compilation.** Verification showed that
+   for most California rows, the compilation's `notice_date` is the date EDD *received* the
+   notice, not the notice date. The lag is a median of 5 to 30 days, depending on the year,
+   and sometimes months (Grand Hyatt San Diego: notice dated Jun 29, 2020, received Oct 2,
+   2020). Since timing is the point of this finding, California notices now come from the five
+   EDD yearly WARN reports (Jul 2020 to Jun 2025, `etl/ca_warn.py`) and use their Notice Date
+   column. The compilation's California rows are not used. EDD lists one row per affected
+   site, so in California one notice letter can be several rows. Rows that repeat every field
+   (15 rows) are dropped once. California's report for Jul 2025 to Jun 2026 is not
+   published as a data file, so a California notice dated before Jul 1, 2025 that EDD
+   received after that date is missed.
+2. **One notice is dropped.** HyAxiom (CT, Nov 14, 2024) shows 4,918 workers. Press reports
+   of the same notice give 67 (49 and 18 at two sites). The CT DOL site blocks automated
+   requests, so we could not check it there. We drop the notice. We do not correct it.
+3. **California matching uses the raw company name only.** The EDD reports have no
+   canonical name column.
+4. **Some states give a received date.** Washington ESD publishes only the date it received
+   each notice, and the compilation uses it as the notice date. We keep those notices. The
+   limits on the page say that some states give the date the state received the notice.

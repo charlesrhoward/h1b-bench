@@ -27,7 +27,7 @@ export default function LayoffFilingsSection({
       index={index}
       title="Companies laid off workers, then filed for new H-1B workers."
       takeaway={`After ${fmtPct(summary.notices_followed, summary.notices_matched)} of the layoff notices we matched, the same company filed for a new H-1B worker within 12 months. The records do not show that one group replaced the other.`}
-      limits="An H-1B filing (LCA) is a step before a visa petition. It is not a hire. WARN notices do not list jobs, so the new H-1B jobs can be in different roles, sites, or business units than the layoff. Large employers file for H-1B workers all year, so we also show the year before each notice. WARN applies only to large layoffs, generally 50 or more workers at one site. Some states do not publish a notice date, and we drop those notices. California lists each site of a layoff as its own notice. Company names must match exactly, so these counts are lower than the true totals."
+      limits="An H-1B filing (LCA) is a step before a visa petition. It is not a hire. WARN notices do not list jobs, so the new H-1B jobs can be in different roles, sites, or business units than the layoff. Large employers file for H-1B workers all year, so we also show the year before each notice. WARN applies only to large layoffs, generally 50 or more workers at one site. Some states do not publish a notice date, and we drop those notices. Some states give the date the state received the notice instead. California lists each site of a layoff as its own notice. Company names must match exactly, so these counts are lower than the true totals."
       source={
         <>
           DOL OFLC LCA disclosure data, certified H-1B filings, FY2020 to FY2026 Q3. WARN notices,{" "}
