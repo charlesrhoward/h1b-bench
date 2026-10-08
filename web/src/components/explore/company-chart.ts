@@ -38,7 +38,7 @@ export function describeEmployer(e: ExploreEmployer): string {
     ...optional("Median gap", e.medianGap == null ? null : m.medianGap.format(e.medianGap)),
     ...optional("Workforce (approx.)", e.workforcePct == null ? null : m.workforcePct.format(e.workforcePct)),
     ...optional("Back wages owed (WHD)", e.backWages == null ? null : fmtMoney(e.backWages)),
-    ...optional("Laid off (WARN)", e.laidOff == null ? null : `${fmtInt(e.laidOff)} in ${e.warnStates}`),
+    ...optional("Laid off, then filed (WARN)", e.laidOff == null ? null : `${fmtInt(e.laidOff)} laid off in ${e.warnStates}; ${fmtInt(e.filingsAfterLayoff)} new H-1B filings in the next 12 months`),
     "Click to compare",
   ].join("\n");
 }

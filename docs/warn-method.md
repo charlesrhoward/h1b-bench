@@ -3,6 +3,10 @@
 **Status: fixed before any results were computed.** This file is committed on its own,
 ahead of the code and output that use it.
 
+**Superseded, 2026-10-07.** The site no longer shows numbers from this method. Finding 6 and
+`/explore` use `docs/layoff-filings-method.md`. Its company key (`company_key` in `etl/warn.py`)
+is still used there.
+
 ## Question
 
 Which employers filed mass-layoff (WARN) notices in the same period in which they had

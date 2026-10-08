@@ -114,36 +114,18 @@ export const SOURCE_GROUPS: SourceGroup[] = [
           "Hugging Face APProjects/us-warn-act-layoffs-notices-daily, CC BY 4.0, rebuilt Sep 25, 2026 · notices from Oct 1, 2020 to Jun 30, 2025",
         summary:
           "Mass-layoff notices from the WARN pages of 48 state and D.C. labor agencies, collected with the open-source Big Local News WARN scraper. This file is a compilation, not a government file. We use it for every state except California. We checked notices of the companies in our results table against the state sites.",
-        usedOn: [EMPLOYERS, PAY_VS_MARKET],
+        usedOn: [EMPLOYERS, PAY_VS_MARKET, EXPLORE],
         dataUrl: "https://huggingface.co/datasets/APProjects/us-warn-act-layoffs-notices-daily",
         methods: ["layoff-filings-method.md"],
-      },
-      {
-        name: "Texas WARN notices",
-        coverage: "Texas Workforce Commission · notices from Oct 1, 2024 to Sep 30, 2025",
-        summary: "Mass-layoff notices that employers filed in Texas.",
-        usedOn: [EXPLORE],
-        dataUrl: "https://data.texas.gov/dataset/WARN-Notices/8w53-c4f6",
-        methods: ["warn-method.md"],
       },
       {
         name: "California WARN reports, Jul 2020 to Jun 2025",
         coverage: "California EDD · five yearly reports · notices from Oct 1, 2020 to Jun 30, 2025",
         summary:
           "Mass-layoff notices that employers filed in California, one row per affected site. We read the notice date from these reports because the compilation above gives the date EDD received each notice instead.",
-        usedOn: [EMPLOYERS, PAY_VS_MARKET],
+        usedOn: [EMPLOYERS, PAY_VS_MARKET, EXPLORE],
         dataUrl: "https://edd.ca.gov/en/jobs_and_training/Layoff_Services_WARN",
         methods: ["layoff-filings-method.md"],
-      },
-      {
-        name: "California WARN report",
-        coverage: "California EDD · notices from Oct 1, 2024 to Jun 30, 2025",
-        summary:
-          "Mass-layoff notices that employers filed in California. California does not publish July to September 2025 as a data file, so the window ends in June.",
-        usedOn: [EXPLORE],
-        dataUrl:
-          "https://edd.ca.gov/siteassets/files/jobs_and_training/warn/warn-report-for-7-1-2024-to-06-30-2025.pdf",
-        methods: ["warn-method.md"],
       },
     ],
   },
