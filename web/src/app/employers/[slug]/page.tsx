@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import {
-  getEmployer,
   getEmployerHeadcount,
   getEmployerStats,
   getEmployerTopJobs,
@@ -25,32 +23,14 @@ import { getEmployerLayoffFilings, getEmployerMarketGap, getEmployerPerm, getEmp
 import { pageMetadata } from "@/lib/site";
 import { employerJsonLd } from "@/lib/json-ld";
 import JsonLd from "@/components/json-ld";
+import Breadcrumbs from "@/components/breadcrumbs";
 import { EmployerFlagCards, EmployerFlagPills } from "@/components/employer-flags";
 import { employerFlags } from "@/lib/employer-flags";
-import { employerSegment, parseEmployerParam } from "@/lib/employer-path";
-import { getTickerMap } from "@/lib/employer-tickers";
+import { loadEmployer } from "@/lib/employer-page";
 
 export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ slug: string }> };
-
-/** Employer id from the URL segment: a trailing id, or a ticker from employer_tickers. */
-async function resolveEmployerId(slug: string): Promise<number | null> {
-  const param = parseEmployerParam(slug);
-  if (param.kind === "id") return param.id;
-  if (param.kind === "invalid") return null;
-  const { byTicker } = await getTickerMap();
-  return byTicker.get(param.ticker) ?? null;
-}
-
-/** The employer and its canonical URL segment, or null when the URL matches no employer. */
-async function loadEmployer(slug: string) {
-  const employerId = await resolveEmployerId(slug);
-  if (employerId == null) return null;
-  const [employer, { byId }] = await Promise.all([getEmployer(employerId), getTickerMap()]);
-  if (!employer) return null;
-  return { employer, segment: employerSegment({ ...employer, ticker: byId.get(employer.id) }) };
-}
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
@@ -94,10 +74,13 @@ export default async function EmployerDetail({ params }: Params) {
     <div className="space-y-14">
       <JsonLd data={employerJsonLd(employer, `/employers/${segment}`)} />
       <div>
-        <Link href="/employers" className="text-sm text-neutral-secondary hover:text-neutral-secondary-hover">
-          ← Leaderboard
-        </Link>
-        <h1 className="type-title mt-3 text-balance [overflow-wrap:anywhere]">{employer.name}</h1>
+        <Breadcrumbs
+          trail={[
+            { name: "Employers", href: "/employers" },
+            { name: employer.name, href: `/employers/${segment}` },
+          ]}
+        />
+        <h1 className="type-title mt-4 text-balance [overflow-wrap:anywhere]">{employer.name}</h1>
         <div className="mt-3">
           <EmployerFlagPills flags={flags} />
         </div>
