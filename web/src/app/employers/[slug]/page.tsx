@@ -20,7 +20,14 @@ import EmployerMarketGapNote from "@/components/cheap-labor/employer-market-gap-
 import { EmployerBackWagesNote } from "@/components/cheap-labor/back-wages";
 import { EmployerPermNote } from "@/components/cheap-labor/perm-tables";
 import { EmployerLayoffFilingsNote } from "@/components/cheap-labor/layoff-filings-tables";
-import { getEmployerLayoffFilings, getEmployerMarketGap, getEmployerPerm, getEmployerWhd } from "@/lib/cheap-labor";
+import {
+  getEmployerLayoffFilings,
+  getEmployerLayoffTimeline,
+  getEmployerMarketGap,
+  getEmployerPerm,
+  getEmployerWhd,
+} from "@/lib/cheap-labor";
+import LayoffTimeline from "@/components/cheap-labor/layoff-timeline";
 import { pageMetadata } from "@/lib/site";
 import { employerJsonLd } from "@/lib/json-ld";
 import JsonLd from "@/components/json-ld";
@@ -86,7 +93,7 @@ export default async function EmployerDetail({ params }: Params) {
   if (slug !== segment) permanentRedirect(`/employers/${segment}`);
   const employerId = employer.id;
 
-  const [stats, topJobs, headcount, marketGap, whd, layoffFilings, perm] = await Promise.all([
+  const [stats, topJobs, headcount, marketGap, whd, layoffFilings, perm, layoffTimeline] = await Promise.all([
     getEmployerStats(employerId),
     getEmployerTopJobs(employerId),
     getEmployerHeadcount(employerId),
@@ -94,6 +101,7 @@ export default async function EmployerDetail({ params }: Params) {
     getEmployerWhd(employerId),
     getEmployerLayoffFilings(employerId),
     getEmployerPerm(employerId),
+    getEmployerLayoffTimeline(employerId),
   ]);
 
   const flags = employerFlags(marketGap, layoffFilings);
@@ -140,6 +148,8 @@ export default async function EmployerDetail({ params }: Params) {
       </div>
 
       <EmployerFlagCards flags={flags} />
+
+      <LayoffTimeline timeline={flags.layoffs ? layoffTimeline : null} employer={employer.name} />
 
       <section className="space-y-6">
         <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
