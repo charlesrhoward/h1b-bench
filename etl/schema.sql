@@ -468,7 +468,7 @@ from employer_year_stats
 group by fiscal_year
 order by fiscal_year;
 
--- Per-year profile of certified H-1B LCAs: skill level, new hires, occupation concentration.
+-- Per-year profile of certified H-1B LCAs: skill level, new-employment filings, occupation concentration.
 -- Refresh after each LCA load: refresh materialized view concurrently lca_year_profile;
 create materialized view lca_year_profile as
 with c as (

@@ -22,7 +22,7 @@ occupation; 0.04% of filings could not be mapped).
 
 Under the pre-set rule (lower bound of qualified unemployed ≥ new H-1B positions), about one
 in five FY2025 H-1B filings is in an occupation where unemployed U.S. workers with a
-bachelor's degree outnumber new H-1B hires.
+bachelor's degree outnumber new H-1B positions.
 
 ## What drives it
 
@@ -30,7 +30,7 @@ Software developers are 31.7% of all filings. Their qualified unemployed pool is
 56,247 ± 5,577, against 77,096 new H-1B positions. Even the pool's 90% upper bound falls
 short. The next largest computer, math, and engineering groups fall short too.
 
-The pool *is* large enough in **227 of 318** occupation groups that hire H-1B workers, but
+The pool *is* large enough in **227 of 318** occupation groups that have H-1B filings, but
 those groups hold only 21.9% of the filings. Note that this is a count of occupation
 groups, not the pre-set headline measure.
 
