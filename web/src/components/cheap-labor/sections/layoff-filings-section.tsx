@@ -64,8 +64,9 @@ export default function LayoffFilingsSection({
       </p>
       <LayoffFilingsStats summary={summary} />
       <p>
-        The layoffs did not stop the H-1B filings. In the year after the notices, these companies filed{" "}
-        {fmtPct(summary.filings_after, summary.filings_before)} as many new-worker filings as in the year before.{" "}
+        The layoffs did not stop the H-1B filings. In the 12 months after any of their layoff notices, these
+        companies filed {fmtPct(summary.filings_after, summary.filings_before)} as many new-worker filings as in the
+        12 months before any of them.{" "}
         {fmtPct(summary.filings_after_same_state, summary.filings_after)} of the filings after a notice were for a
         job in the same state as the layoff.
       </p>

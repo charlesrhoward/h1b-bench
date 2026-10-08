@@ -193,6 +193,7 @@ def log_single_year_names(countries):
     for name, row in single.iterrows():
         approved = countries.loc[countries["country"] == name, "approved"].iloc[0]
         log.info(f"only in FY{row['first']}: {name} ({approved:,}); check the PDF if the name looks wrong")
+    log.info(f"{len(single)} place names seen in one fiscal year only")
 
 
 def share_table(countries, years, top=8):

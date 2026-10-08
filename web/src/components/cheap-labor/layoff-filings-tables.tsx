@@ -20,7 +20,7 @@ export function LayoffFilingsTable({ rows }: { rows: LayoffFilingsCompany[] }) {
             <th className="text-right">First notice</th>
             <th className="text-right">New-worker H-1B filings, 12 months after</th>
             <th className="text-right">Of those, within 90 days</th>
-            <th className="text-right">Same filings, 12 months before</th>
+            <th className="text-right">Same filings, 12 months before any notice</th>
           </tr>
         </thead>
         <tbody>
@@ -57,7 +57,7 @@ export function EmployerLayoffFilingsNote({ row }: { row: EmployerLayoffFilings 
     <p className="type-meta">
       WARN layoff notices ({row.states.replaceAll(",", ", ")}): {notices} for {fmtInt(row.workers_laid_off)} workers. In
       the 12 months after them, this company filed {fmtInt(row.filings_after)} certified H-1B filings for new
-      workers. In the 12 months before, it filed {fmtInt(row.filings_before)}. Counted across all names of this
+      workers. In the 12 months before any of its layoff notices, it filed {fmtInt(row.filings_before)}. Counted across all names of this
       company.{" "}
       <Link href="/pay-vs-market#finding-6" className="link">
         Source

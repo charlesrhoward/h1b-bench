@@ -38,13 +38,15 @@ export function LayoffFilingsStats({ summary }: { summary: LayoffFilingsSummary 
 }
 
 /**
- * New-worker filings in the year before the notices and the year after, on one scale.
+ * New-worker filings in the 12 months before and after any of the companies' matched layoff notices, on
+ * one scale. "Before" covers every matched notice, not only followed ones; a notice no filing followed
+ * has no "after" filings by definition, so both sides cover the same notices.
  * Same bar rows as ComparisonChart, but raw counts on a shared max instead of shares of a total.
  */
 export function LayoffFilingsBeforeAfter({ summary }: { summary: LayoffFilingsSummary }) {
   const rows = [
-    { label: "12 months before the notices", count: summary.filings_before, tone: "bg-chart-neutral-primary" },
-    { label: "12 months after the notices", count: summary.filings_after, tone: "bg-chart-accent-primary" },
+    { label: "12 months before any of their layoff notices", count: summary.filings_before, tone: "bg-chart-neutral-primary" },
+    { label: "12 months after any of their layoff notices", count: summary.filings_after, tone: "bg-chart-accent-primary" },
   ];
   const max = Math.max(...rows.map((r) => r.count), 1);
   return (
@@ -82,7 +84,7 @@ export function LayoffFilingsExample({ companies }: { companies: LayoffFilingsCo
       layoff notices that a new filing followed ({example.states.replaceAll(",", ", ")}, the first in{" "}
       {fmtMonth(example.first_notice)}) were for {fmtInt(example.workers_laid_off)} workers. In the 12 months after them, it filed{" "}
       {fmtInt(example.filings_after)} H-1B filings for new workers, {fmtInt(example.filings_after_90)} of them within
-      90 days. In the 12 months before, it filed {fmtInt(example.filings_before)}.
+      90 days. In the 12 months before any of its layoff notices, it filed {fmtInt(example.filings_before)}.
     </p>
   );
 }
