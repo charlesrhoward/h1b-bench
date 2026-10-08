@@ -13,7 +13,11 @@
 -- -> drop_uscis_birth_country_insert_policies -> employer_tickers (sec_companies,
 --    employer_tickers + temporary insert policies) -> drop_employer_tickers_insert_policies
 -- -> employer_parents (sec_subsidiary_exhibits, sec_subsidiaries, employer_parents + temporary
---    insert policies, incl. sec_companies) -> drop_employer_parents_insert_policies.
+--    insert policies, incl. sec_companies) -> drop_employer_parents_insert_policies
+-- -> layoff_filings_breakdown (truncate layoff_filings_summary, layoff_filings_companies,
+--    employer_layoff_filings; add filings_after_new_employment, filings_after_change_employer,
+--    filings_after_not_counted; temporary insert policies; reload, docs/layoff-filings-method.md
+--    measure 7) -> drop_layoff_filings_breakdown_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
