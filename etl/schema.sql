@@ -19,7 +19,10 @@
 --    filings_after_not_counted; temporary insert policies; reload, docs/layoff-filings-method.md
 --    measure 7) -> drop_layoff_filings_breakdown_insert_policies
 -- -> lca_cases_employer_recent_certified_idx (2026-10-08: approved concurrent covering
---    index for recent certified roles; no data, normalization, or materialized-view reload).
+--    index for recent certified roles; no data, normalization, or materialized-view reload)
+-- -> layoff_timeline (create employer_layoff_notices, employer_layoff_months + public read and
+--    temporary insert policies; layoff_filings.py --load-timeline, docs/layoff-filings-method.md
+--    measure 8) -> drop_layoff_timeline_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
