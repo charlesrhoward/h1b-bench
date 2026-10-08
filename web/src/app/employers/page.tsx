@@ -2,20 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getTopEmployers, searchEmployerHits } from "@/lib/queries";
 import { fmtInt, fmtPct } from "@/lib/format";
+import { PAGES } from "@/lib/pages";
+import { collectionPageJsonLd } from "@/lib/json-ld";
+import JsonLd from "@/components/json-ld";
 import { pageMetadata } from "@/lib/site";
 import { WORKFORCE_SHARE_METHOD } from "@/lib/workforce";
+import officeTower from "@/assets/art/office-tower.webp";
+import HeaderArt from "@/components/header-art";
 import { FiscalYearTag } from "@/components/title-tags";
 import WorkforceShareCell from "@/components/workforce-share-cell";
 import YearTabs, { FISCAL_YEARS } from "@/components/year-tabs";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = pageMetadata({
-  title: "Employer leaderboard — H1B Bench",
-  description:
-    "Every U.S. employer's H-1B Labor Condition Applications by fiscal year: filings, certification rate, workers, share of workforce, median wage, and top role. Source: DOL OFLC.",
-  path: "/employers",
-});
+export const metadata: Metadata = pageMetadata(PAGES.employers);
+
+const JSON_LD = collectionPageJsonLd(PAGES.employers);
 
 export default async function EmployersPage({
   searchParams,
@@ -77,15 +79,18 @@ export default async function EmployersPage({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="type-title">Employer leaderboard</h1>
-        <p className="mt-2 text-neutral-secondary">
-          H-1B Labor Condition Applications by employer ·{" "}
-          <FiscalYearTag fy={fy} ytd={fy === FISCAL_YEARS[0]} />
-        </p>
+      <JsonLd data={JSON_LD} />
+      <div className="relative flex flex-col justify-end gap-8 sm:min-h-48 lg:min-h-60">
+        <HeaderArt src={officeTower} className="right-0 bottom-0 w-44 lg:w-56" />
+        <div>
+          <h1 className="type-title">Employer leaderboard</h1>
+          <p className="mt-2 text-neutral-secondary">
+            H-1B Labor Condition Applications by employer ·{" "}
+            <FiscalYearTag fy={fy} ytd={fy === FISCAL_YEARS[0]} />
+          </p>
+        </div>
+        <YearTabs active={fy} hrefFor={(y) => `/employers?year=${y}`} />
       </div>
-
-      <YearTabs active={fy} hrefFor={(y) => `/employers?year=${y}`} />
 
       <div className="overflow-x-auto">
         <table className="w-full" data-hide="3 5 6 7 9 10" data-hide-md="6 10">

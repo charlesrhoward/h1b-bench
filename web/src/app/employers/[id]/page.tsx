@@ -23,6 +23,8 @@ import { EmployerPermNote } from "@/components/cheap-labor/perm-tables";
 import { EmployerWarnNote } from "@/components/cheap-labor/warn-tables";
 import { getEmployerMarketGap, getEmployerPerm, getEmployerWarn, getEmployerWhd } from "@/lib/cheap-labor";
 import { pageMetadata } from "@/lib/site";
+import { employerJsonLd } from "@/lib/json-ld";
+import JsonLd from "@/components/json-ld";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +67,7 @@ export default async function EmployerDetail({ params }: Params) {
 
   return (
     <div className="space-y-14">
+      <JsonLd data={employerJsonLd(employer)} />
       <div>
         <Link href="/employers" className="text-sm text-neutral-secondary hover:text-neutral-secondary-hover">
           ← Leaderboard

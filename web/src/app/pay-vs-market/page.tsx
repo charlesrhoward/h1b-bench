@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowUpRight } from "@/components/arrow-up-right";
 import ComparisonChart from "@/components/cheap-labor/comparison-chart";
 import DependencyTable from "@/components/cheap-labor/dependency-table";
 import EvidenceDetails from "@/components/cheap-labor/evidence-details";
@@ -39,16 +40,23 @@ import {
 } from "@/lib/cheap-labor";
 import { fmtInt, fmtPct } from "@/lib/format";
 import { REPO_URL, pageMetadata } from "@/lib/site";
+import { PAGES } from "@/lib/pages";
+import { analysisJsonLd } from "@/lib/json-ld";
+import JsonLd from "@/components/json-ld";
 import "./investigation.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = pageMetadata({
-  title: "H-1B pay vs. the local market — H1B Bench",
-  description:
-    "Federal data on H-1B pay and use: wage levels, pay below the local median, back wages, layoffs, lottery registrations, and green card filings.",
-  path: "/pay-vs-market",
-});
+export const metadata: Metadata = pageMetadata(PAGES.payVsMarket);
+
+const JSON_LD = analysisJsonLd(PAGES.payVsMarket, [
+  "market-gap-method.md",
+  "pw-source-method.md",
+  "back-wages-method.md",
+  "warn-method.md",
+  "lottery-method.md",
+  "perm-lockin-method.md",
+]);
 
 const DOL_SOURCE = `DOL OFLC LCA disclosure data, certified H-1B filings, FY${CHEAP_LABOR_FY}.`;
 
@@ -73,7 +81,8 @@ export default async function CheapLaborPage() {
   }
 
   return (
-    <article className="investigation mx-auto max-w-3xl space-y-12">
+    <article className="investigation space-y-12">
+      <JsonLd data={JSON_LD} />
       <InvestigationIntro summary={marketGap.find((row) => row.dependency === "all")} />
       <div className="space-y-12">
         <InvestigationNav chapters={[
@@ -115,7 +124,7 @@ export default async function CheapLaborPage() {
           </section>
           <aside className="space-y-3 rounded-xl bg-article-footer-subtle p-6 text-article-footer-subtle sm:p-8">
             <p className="text-[13px] font-medium text-neutral-secondary">Read next</p>
-            <Link className="type-promo block text-[1.375rem] hover:text-accent-primary" href="/labor-pool">Who is available to do this work? <span aria-hidden="true">↗</span></Link>
+            <Link className="type-promo block text-[1.375rem] hover:text-accent-primary" href="/labor-pool">Who is available to do this work?<ArrowUpRight className="ml-1 inline-block size-[0.9em] align-[-0.08em]" /></Link>
             <p className="text-[15px] text-neutral-secondary">Compare H-1B demand with the U.S. labor pool.</p>
             <Link className="link inline-block text-sm" href="/employers">Look up an employer <span aria-hidden="true">→</span></Link>
           </aside>

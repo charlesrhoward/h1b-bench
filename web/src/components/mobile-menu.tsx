@@ -35,7 +35,7 @@ export default function MobileMenu({ links }: { links: NavLink[] }) {
   const close = () => setOpen(false);
 
   return (
-    <div ref={rootRef} className="order-2 ml-auto sm:order-3 sm:ml-0 lg:hidden">
+    <div ref={rootRef} className="lg:hidden">
       <button
         ref={buttonRef}
         type="button"

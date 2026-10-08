@@ -12,7 +12,8 @@ corporations abuse the program. The data makes that case. The point of view neve
 a number.
 
 - Every claim cites its source: a public government file and the `docs/*-method.md` that
-  explains how the number was made.
+  explains how the number was made. Each file is also listed on `/sources`
+  (`web/src/lib/sources.ts`).
 - If the data does not support a claim, do not make the claim. Do not overstate a finding
   to fit the case.
 - Every `/pay-vs-market` finding states what the data cannot tell us (`EvidenceSection`

@@ -1,11 +1,14 @@
 import { CHEAP_LABOR_FY, type MarketGapSummary } from "@/lib/cheap-labor";
 import { fmtInt, fmtPct } from "@/lib/format";
+import balanceScale from "@/assets/art/balance-scale.webp";
+import HeaderArt from "@/components/header-art";
 import { Eyebrow } from "@/components/title-tags";
 
 export default function InvestigationIntro({ summary }: { summary?: MarketGapSummary }) {
   const hasComparison = summary && summary.filings_matched > 0;
   return (
-    <header className="space-y-6" id="top">
+    <header className="relative space-y-6" id="top">
+      <HeaderArt src={balanceScale} className="-top-6 right-0 w-56 opacity-50 lg:w-72 lg:opacity-100 xl:w-80" />
       <Eyebrow parts={[`FY${CHEAP_LABOR_FY}`, "the evidence on pay"]} />
       <h1 className="type-title text-balance">H-1B pay vs. the local market</h1>
       {hasComparison ? <LeadFinding summary={summary} /> : (

@@ -1,3 +1,8 @@
+/* The article spans the site container; prose keeps a reading measure while tables and charts use the full width. */
+.investigation :is(p, h1, h2, aside, blockquote) {
+  max-width: 48rem;
+}
+
 /* Full tables remain available inside disclosures, including on phones. */
 .investigation .evidence-details table :is(th, td):nth-child(n) {
   display: table-cell;
