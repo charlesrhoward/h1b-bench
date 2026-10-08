@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { displayFont } from "@/lib/display-font";
 import { notFound, permanentRedirect } from "next/navigation";
 import {
   getEmployerHeadcount,
@@ -35,7 +36,12 @@ import { employerFlags } from "@/lib/employer-flags";
 import { loadEmployer } from "@/lib/employer-page";
 import { EMPLOYER_OG_ALT, EMPLOYER_OG_SIZE } from "@/lib/employer-og";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+
+// Build employer pages on first visit, then reuse them until revalidation.
+export function generateStaticParams() {
+  return [];
+}
 
 /** Header art: the worker with a box after layoffs, the ironworkers' lunch otherwise. The lunch scene is wide (4:3). */
 const HEADER_ART = {
@@ -100,7 +106,7 @@ export default async function EmployerDetail({ params }: Params) {
   const art = flags.layoffs ? HEADER_ART.layoffs : HEADER_ART.default;
 
   return (
-    <div className="space-y-14">
+    <div className={`${displayFont.variable} space-y-14`}>
       <JsonLd data={employerJsonLd(employer, `/employers/${segment}`)} />
       <div className={`relative ${art.header}`}>
         <HeaderFigure light={art.light} dark={art.dark} sizes={art.sizes} className={art.figure} />

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/intent-link";
 import { fmtInt, fmtPct } from "@/lib/format";
 import { PERM_FY, type EmployerPerm, type PermLayoffEmployer } from "@/lib/cheap-labor";
 import { getEmployerLinker } from "@/lib/employer-tickers";

@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "@/components/intent-link";
+import { useCallback, useMemo, useState } from "react";
 import { employerPath } from "@/lib/employer-path";
-import type { EmployerHistoryRow, ExploreEmployer } from "@/lib/explore-model";
+import type { ExploreEmployer } from "@/lib/explore-model";
 import { EMPLOYER_METRICS, type EmployerMetric } from "@/lib/explore-stats";
 import { buildHistoryChart, buildStrip } from "./compare-charts";
 import { COMPARE_SWATCHES } from "./compare-colors";
@@ -11,6 +11,7 @@ import CompareTable from "./compare-table";
 import { SearchBox } from "./controls";
 import ExploreFigure from "./explore-figure";
 import PlotFigure from "./plot-figure";
+import { useEmployerHistory } from "./use-employer-history";
 import type { Palette } from "./use-palette";
 
 const STRIP_METRICS: EmployerMetric[] = [
@@ -21,26 +22,6 @@ const STRIP_METRICS: EmployerMetric[] = [
   EMPLOYER_METRICS.workforcePct,
 ];
 const MAX_SUGGESTIONS = 6;
-
-/** Fetches FY2020–FY2026 filings for the compared employers. Rows stay empty until the response arrives. */
-function useHistory(ids: number[]) {
-  const key = ids.join(",");
-  const [state, setState] = useState<{ key: string; rows: EmployerHistoryRow[]; failed: boolean }>({ key: "", rows: [], failed: false });
-  useEffect(() => {
-    if (!key) return;
-    const controller = new AbortController();
-    fetch(`/api/employer-history?ids=${key}`, { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
-      .then((body: { rows: EmployerHistoryRow[] }) => setState({ key, rows: body.rows, failed: false }))
-      .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        console.error(error);
-        setState({ key, rows: [], failed: true });
-      });
-    return () => controller.abort();
-  }, [key]);
-  return { rows: state.key === key ? state.rows : [], failed: state.key === key && state.failed, loading: state.key !== key };
-}
 
 function AddEmployer({ employers, compared, onAdd }: { employers: ExploreEmployer[]; compared: ExploreEmployer[]; onAdd: (e: ExploreEmployer) => void }) {
   const [term, setTerm] = useState("");
@@ -86,7 +67,7 @@ export default function CompareSection({
   onRemove: (id: number) => void;
 }) {
   const ids = useMemo(() => compared.map((e) => e.id), [compared]);
-  const history = useHistory(ids);
+  const history = useEmployerHistory(ids);
   const historyChart = useCallback(
     (width: number, palette: Palette) => buildHistoryChart({ rows: history.rows, compared, colors: colors.length ? colors : [palette.accent] }, width, palette),
     [history.rows, compared, colors],

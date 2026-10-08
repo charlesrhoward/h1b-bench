@@ -40,7 +40,7 @@ export async function getLaborPoolSummary(fy = LABOR_POOL_FY) {
   const { data } = await supabase
     .from("labor_pool_summary")
     .select("tier, acs_year, filings_covered, filings_total")
-    .eq("lca_fiscal_year", fy);
+    .eq("lca_fiscal_year", fy).throwOnError();
   const order: LaborPoolTier[] = ["national", "recent", "same_state"];
   return ((data ?? []) as LaborPoolSummary[]).sort(
     (a, b) => order.indexOf(a.tier) - order.indexOf(b.tier),
@@ -55,7 +55,7 @@ export async function getLaborPoolOccupations(fy = LABOR_POOL_FY, limit = 20) {
     .eq("lca_fiscal_year", fy)
     .eq("state", "US")
     .order("filings", { ascending: false })
-    .limit(limit);
+    .limit(limit).throwOnError();
   return (data ?? []) as LaborPoolOccupation[];
 }
 
@@ -67,7 +67,7 @@ export async function getLaborPoolGroupCounts(fy = LABOR_POOL_FY) {
       .select("occ_code", { count: "exact", head: true })
       .eq("lca_fiscal_year", fy)
       .eq("state", "US");
-  const [all, covered] = await Promise.all([base(), base().eq("covered", true)]);
+  const [all, covered] = await Promise.all([base().throwOnError(), base().eq("covered", true).throwOnError()]);
   return { total: all.count ?? 0, covered: covered.count ?? 0 };
 }
 
@@ -76,7 +76,7 @@ export async function getLcaYearProfile(fy = LABOR_POOL_FY) {
     .from("lca_year_profile")
     .select("*")
     .eq("fiscal_year", fy)
-    .maybeSingle();
+    .maybeSingle().throwOnError();
   return data as LcaYearProfile | null;
 }
 
@@ -91,7 +91,7 @@ export async function getLaborPoolFillable(fy = LABOR_POOL_FY) {
   const { data } = await supabase
     .from("labor_pool_fillable")
     .select("tier, positions_total, positions_fillable")
-    .eq("lca_fiscal_year", fy);
+    .eq("lca_fiscal_year", fy).throwOnError();
   const order: LaborPoolTier[] = ["national", "recent", "same_state"];
   return ((data ?? []) as LaborPoolFillable[]).sort(
     (a, b) => order.indexOf(a.tier) - order.indexOf(b.tier),

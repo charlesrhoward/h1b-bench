@@ -14,17 +14,27 @@ import { headcountDoubt, type Headcount } from "./workforce";
 
 const PAGE_SIZE = 1000;
 
-type PageResult<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
+type PageResult<T> = PromiseLike<{ data: T[] | null; count: number | null; error: { message: string } | null }>;
 
-/** Reads every row of a query, PAGE_SIZE at a time (the API caps each response at 1,000 rows). */
+/** Count once, then read remaining pages in bounded parallel batches without sampling rows. */
 async function fetchAll<T>(label: string, page: (from: number, to: number) => PageResult<T>): Promise<T[]> {
-  const rows: T[] = [];
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await page(from, from + PAGE_SIZE - 1);
-    if (error) throw new Error(`${label}: ${error.message}`);
-    rows.push(...(data ?? []));
-    if (!data || data.length < PAGE_SIZE) return rows;
+  const first = await page(0, PAGE_SIZE - 1);
+  if (first.error) throw new Error(`${label}: ${first.error.message}`);
+  if (first.count == null) throw new Error(`${label}: missing row count`);
+  const total = first.count;
+  const rows = first.data ?? [];
+  for (let from = PAGE_SIZE; from < total; from += PAGE_SIZE * 3) {
+    const starts = [from, from + PAGE_SIZE, from + PAGE_SIZE * 2].filter((offset) => offset < total);
+    const pages = await Promise.all(starts.map((offset) => page(offset, offset + PAGE_SIZE - 1)));
+    for (const result of pages) rows.push(...pageRows(label, result));
   }
+  if (rows.length !== total) throw new Error(`${label}: row count changed during pagination`);
+  return rows;
+}
+
+function pageRows<T>(label: string, result: Awaited<PageResult<T>>): T[] {
+  if (result.error) throw new Error(`${label}: ${result.error.message}`);
+  return result.data ?? [];
 }
 
 type MarketGapRow = { filings_matched: number; below_median: number; median_gap: number };
@@ -40,7 +50,6 @@ type EmployerRow = {
   top_worksite_state: string | null;
   employers: {
     name: string;
-    state: string | null;
     employer_headcounts: Headcount | null;
     employer_whd_h1b: { back_wages: number; cases: number } | null;
     employer_market_gap: MarketGapRow[];
@@ -50,7 +59,7 @@ type EmployerRow = {
 
 const EMPLOYER_SELECT = `employer_id, filings, certified, worker_positions, median_wage_annual,
   top_soc_code, top_job_title, top_worksite_state,
-  employers(name, state,
+  employers(name,
     employer_headcounts(employee_count, agreeing_filings, perm_filings, latest_received, match_method),
     employer_whd_h1b(back_wages, cases),
     employer_market_gap(filings_matched, below_median, median_gap),
@@ -101,12 +110,11 @@ function layoffFacts(layoffs: EmployerFacts["employer_layoff_filings"] | undefin
   };
 }
 
-/** Name, home state, and the PERM-based workforce share. */
+/** Name and the PERM-based workforce share. */
 function profileFacts(row: EmployerRow) {
   const e = row.employers;
   return {
     name: e?.name ?? `Employer ${row.employer_id}`,
-    hqState: e?.state ?? null,
     workforcePct: reliableWorkforcePct(row.certified, e?.employer_headcounts ?? null),
   };
 }
@@ -134,14 +142,14 @@ async function getExploreEmployers(): Promise<ExploreEmployer[]> {
   const rows = await fetchAll<EmployerRow>("explore employers", (from, to) =>
     supabase
       .from("employer_year_stats")
-      .select(EMPLOYER_SELECT)
+      .select(EMPLOYER_SELECT, { count: from === 0 ? "exact" : undefined })
       .eq("visa_class", "H-1B")
       .eq("fiscal_year", EXPLORE_FY)
       .gte("filings", EXPLORE_MIN_FILINGS)
       .eq("employers.employer_market_gap.lca_fiscal_year", EXPLORE_FY)
       .order("employer_id")
       .range(from, to)
-      .overrideTypes<EmployerRow[], { merge: false }>(),
+      .overrideTypes<EmployerRow[], { merge: false }>().throwOnError(),
   );
   return rows.map(toExploreEmployer);
 }
@@ -163,11 +171,11 @@ async function getExploreLaborPool() {
   const rows = await fetchAll<LaborPoolRow>("explore labor pool", (from, to) =>
     supabase
       .from("labor_pool")
-      .select("occ_code, occ_title, state, filings, new_positions, supply_est, supply_moe, covered, acs_year")
+      .select("occ_code, occ_title, state, filings, new_positions, supply_est, supply_moe, covered, acs_year", { count: from === 0 ? "exact" : undefined })
       .eq("lca_fiscal_year", EXPLORE_FY)
       .order("state")
       .order("occ_code")
-      .range(from, to),
+      .range(from, to).throwOnError(),
   );
   const occupations: Record<string, string> = {};
   const cells = rows.map((r): ExploreLaborCell => {
@@ -194,13 +202,12 @@ export async function getExploreData(): Promise<ExploreWire> {
 
 /** H-1B filings by fiscal year for up to a few employers (the comparison chart). */
 export async function getEmployerHistory(ids: number[]): Promise<EmployerHistoryRow[]> {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("employer_year_stats")
     .select("employer_id, fiscal_year, filings, certified, median_wage_annual")
     .eq("visa_class", "H-1B")
     .in("employer_id", ids)
-    .order("fiscal_year");
-  if (error) throw new Error(`employer history: ${error.message}`);
+    .order("fiscal_year").throwOnError();
   return (data ?? []).map((r) => ({
     ...r,
     employer_id: Number(r.employer_id),

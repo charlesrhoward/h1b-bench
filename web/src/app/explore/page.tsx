@@ -5,14 +5,18 @@ import JsonLd from "@/components/json-ld";
 import Explorer from "@/components/explore/explorer";
 import { Eyebrow } from "@/components/title-tags";
 import { getExploreData } from "@/lib/explore";
-import { EXPLORE_FY } from "@/lib/explore-model";
+import { EXPLORE_FY, unpack, type ExploreEmployer, type ExploreLaborCell } from "@/lib/explore-model";
+import { summarizeStates } from "@/lib/explore-stats";
+import { MAX_COMPARED } from "@/components/explore/compare-colors";
 import { fmtInt } from "@/lib/format";
 import { analysisJsonLd } from "@/lib/json-ld";
 import { PAGES } from "@/lib/pages";
 import { pageMetadata } from "@/lib/site";
+import { bodyFont } from "@/lib/body-font";
+import { dropcapFont } from "@/lib/dropcap-font";
 
-// The data changes only when a new government file is loaded, so the page is rebuilt daily.
-export const revalidate = 86400;
+// Public government data is refreshed hourly after an ETL load.
+export const revalidate = 3600;
 
 export const metadata: Metadata = pageMetadata(PAGES.explore);
 
@@ -20,8 +24,11 @@ const JSON_LD = analysisJsonLd(PAGES.explore, ["labor-pool-method.md", "market-g
 
 export default async function ExplorePage() {
   const data = await getExploreData();
+  const initialSummaries = [...summarizeStates(unpack<ExploreLaborCell>(data.cells), null).values()];
+  const initialCompared = unpack<ExploreEmployer>(data.employers)
+    .sort((a, b) => b.filings - a.filings).slice(0, MAX_COMPARED).map((row) => row.id);
   return (
-    <div className="space-y-14">
+    <div className={`${bodyFont.variable} ${dropcapFont.variable} space-y-14`}>
       <JsonLd data={JSON_LD} />
       <header className="relative max-w-3xl space-y-6 lg:max-w-none">
         <HeaderArt src={surveyInstruments} className="top-1/2 right-0 w-72 -translate-y-1/2 opacity-50 lg:w-[26rem] lg:opacity-100" />
@@ -37,7 +44,7 @@ export default async function ExplorePage() {
           groups, and every state. Each chart names its source files and method.
         </p>
       </header>
-      <Explorer wire={data} />
+      <Explorer initialSummaries={initialSummaries} initialCompared={initialCompared} />
     </div>
   );
 }

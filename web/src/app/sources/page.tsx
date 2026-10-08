@@ -9,6 +9,8 @@ import { sourcesJsonLd } from "@/lib/json-ld";
 import JsonLd from "@/components/json-ld";
 import { REPO_URL, pageMetadata } from "@/lib/site";
 import { SOURCE_GROUPS, type DataSource } from "@/lib/sources";
+import { bodyFont } from "@/lib/body-font";
+import { dropcapFont } from "@/lib/dropcap-font";
 
 export const metadata: Metadata = pageMetadata(PAGES.sources);
 
@@ -16,7 +18,7 @@ const JSON_LD = sourcesJsonLd();
 
 export default function SourcesPage() {
   return (
-    <div className="space-y-16">
+    <div className={`${bodyFont.variable} ${dropcapFont.variable} space-y-16`}>
       <JsonLd data={JSON_LD} />
       <header className="relative max-w-3xl space-y-6 lg:max-w-none">
         <HeaderArt src={publicRecords} className="top-1/2 right-0 w-64 -translate-y-1/2 opacity-50 lg:w-[22rem] lg:opacity-100" />

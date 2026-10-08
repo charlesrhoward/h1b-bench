@@ -49,10 +49,10 @@ export type JobYearStat = {
 const HEADCOUNT_COLUMNS = "employee_count, agreeing_filings, perm_filings, latest_received, match_method";
 
 export async function getOverviewStats() {
-  const { data: yearRows } = await supabase
-    .from("fy_overview")
-    .select("fiscal_year, filings, certified")
-    .order("fiscal_year");
+  const [{ data: yearRows }, { count: employerCount }] = await Promise.all([
+    supabase.from("fy_overview").select("fiscal_year, filings, certified").order("fiscal_year").throwOnError(),
+    supabase.from("employers").select("id", { count: "exact", head: true }).throwOnError(),
+  ]);
 
   const years = (yearRows ?? []).map((r) => [
     r.fiscal_year,
@@ -60,10 +60,6 @@ export async function getOverviewStats() {
   ]) as [number, { filings: number; certified: number }][];
   const totalFilings = years.reduce((s, [, v]) => s + v.filings, 0);
   const totalCertified = years.reduce((s, [, v]) => s + v.certified, 0);
-
-  const { count: employerCount } = await supabase
-    .from("employers")
-    .select("id", { count: "exact", head: true });
 
   return { years, totalFilings, totalCertified, employerCount: employerCount ?? 0 };
 }
@@ -77,7 +73,7 @@ export async function getTopEmployers(year?: number, limit = 50) {
     .limit(limit);
   if (year) q = q.eq("fiscal_year", year);
   else q = q.eq("fiscal_year", 2026);
-  const { data } = await q;
+  const { data } = await q.throwOnError();
   return (data ?? []) as EmployerYearStat[];
 }
 
@@ -87,7 +83,7 @@ export async function searchEmployers(term: string, limit = 25) {
     .select("id, name, city, state, country")
     .ilike("name", `%${term}%`)
     .order("name")
-    .limit(limit);
+    .limit(limit).throwOnError();
   return (data ?? []) as Employer[];
 }
 
@@ -100,13 +96,13 @@ export type EmployerHit = {
 };
 
 export async function searchEmployerHits(term: string, limit = 100) {
-  const { data } = await supabase.rpc("search_employers", { q: term, lim: limit });
+  const { data } = await supabase.rpc("search_employers", { q: term, lim: limit }, { get: true }).throwOnError();
   return (data ?? []) as EmployerHit[];
 }
 
 /** One employer by id. Cached per request: the page and its metadata both call it. */
 export const getEmployer = cache(async (id: number) => {
-  const { data } = await supabase.from("employers").select("*").eq("id", id).single();
+  const { data } = await supabase.from("employers").select("*").eq("id", id).maybeSingle().throwOnError();
   return data as Employer | null;
 });
 
@@ -115,7 +111,7 @@ export async function getEmployerHeadcount(id: number) {
     .from("employer_headcounts")
     .select(HEADCOUNT_COLUMNS)
     .eq("employer_id", id)
-    .maybeSingle();
+    .maybeSingle().throwOnError();
   return data as Headcount | null;
 }
 
@@ -125,19 +121,19 @@ export async function getEmployerStats(id: number) {
     .select("*")
     .eq("employer_id", id)
     .order("fiscal_year")
-    .order("visa_class");
+    .order("visa_class").throwOnError();
   return (data ?? []) as EmployerYearStat[];
 }
 
 export async function getEmployerTopJobs(id: number, limit = 15) {
   const { data } = await supabase
     .from("lca_cases")
-    .select("job_title, soc_code, wage_from_annual, case_status")
+    .select("job_title, soc_code, wage_from_annual")
     .eq("employer_id", id)
     .eq("case_status", "Certified")
     .not("wage_from_annual", "is", null)
     .order("decision_date", { ascending: false })
-    .limit(1000);
+    .limit(1000).throwOnError();
   if (!data) return [];
   const byTitle = new Map<string, { count: number; wages: number[]; soc: string | null }>();
   for (const r of data) {
@@ -169,7 +165,7 @@ export async function getJobStats(year = 2026, limit = 50, q?: string) {
     const safe = q.replace(/[(),."\\]/g, " ").trim();
     if (safe) query = query.or(`soc_title.ilike.%${safe}%,soc_code.ilike.${safe}%`);
   }
-  const { data } = await query;
+  const { data } = await query.throwOnError();
   return (data ?? []) as JobYearStat[];
 }
 
@@ -183,15 +179,14 @@ const SITEMAP_PAGE_SIZE = 1000;
 export async function getSitemapEmployers(fiscalYear: number, minFilings: number) {
   const employers: { id: number; name: string }[] = [];
   for (let from = 0; ; from += SITEMAP_PAGE_SIZE) {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("employer_year_stats")
       .select("employer_id, employers(name)")
       .eq("visa_class", "H-1B")
       .eq("fiscal_year", fiscalYear)
       .gte("filings", minFilings)
       .order("employer_id")
-      .range(from, from + SITEMAP_PAGE_SIZE - 1);
-    if (error) throw new Error(`sitemap employers: ${error.message}`);
+      .range(from, from + SITEMAP_PAGE_SIZE - 1).throwOnError();
     // PostgREST returns the many-to-one join as an object; the untyped client infers an array.
     const rows = data as unknown as { employer_id: number; employers: { name: string } | null }[];
     employers.push(...rows.map((row) => ({ id: Number(row.employer_id), name: row.employers?.name ?? "" })));
@@ -211,14 +206,14 @@ export type BirthCountryRow = { country: string; approved: Record<number, number
  */
 export async function getBirthCountryShares(limit = 6) {
   const [{ data: yearRows }, { data: leaderRows }] = await Promise.all([
-    supabase.from("uscis_birth_country_years").select("fiscal_year, approved").order("fiscal_year"),
+    supabase.from("uscis_birth_country_years").select("fiscal_year, approved").order("fiscal_year").throwOnError(),
     supabase
       .from("uscis_birth_country")
       .select("country")
       .neq("country", "Unknown")
       .order("fiscal_year", { ascending: false })
       .order("approved", { ascending: false })
-      .limit(limit),
+      .limit(limit).throwOnError(),
   ]);
   const years = (yearRows ?? []) as BirthCountryYear[];
   const leaders = ((leaderRows ?? []) as { country: string }[]).map((r) => r.country);
@@ -227,7 +222,7 @@ export async function getBirthCountryShares(limit = 6) {
   const { data } = await supabase
     .from("uscis_birth_country")
     .select("fiscal_year, country, approved")
-    .in("country", leaders);
+    .in("country", leaders).throwOnError();
   const rows = (data ?? []) as { fiscal_year: number; country: string; approved: number }[];
   return { years, countries: groupByCountry(leaders, rows) };
 }

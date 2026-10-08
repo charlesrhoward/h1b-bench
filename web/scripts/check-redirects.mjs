@@ -3,6 +3,10 @@ import { randomUUID } from "node:crypto";
 import { get as getHttp } from "node:http";
 import { get as getHttps } from "node:https";
 
+// The pinned Next.js patch backports https://github.com/vercel/next.js/pull/95913
+// for https://github.com/vercel/next.js/issues/82117 (duplicate ISR Location headers).
+// Remove patchedDependencies and the patch after upgrading to a fixed release;
+// keep this cold-cache check to guard both alias and canonical page caching.
 const base = new URL(process.env.BENCH_BASE_URL ?? "http://localhost:3100");
 
 function readResponse(path) {

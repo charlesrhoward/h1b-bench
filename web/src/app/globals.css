@@ -7,14 +7,17 @@
  * as `text-zinc-500` generates nothing.
  */
 
-/* Font roles (DESIGN.md §4). Families load and self-host through next/font in layout.tsx. */
+/* Font roles (DESIGN.md §4). next/font supplies global chrome and page-specific font roles. */
 @theme {
+  --font-body: "Source Serif 4", Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-display: "Fraunces", Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-dropcap: "IM Fell Double Pica", Georgia, serif;
+}
+
+@theme inline {
   --font-ui: var(--font-inter), "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-body: var(--font-source-serif), "Source Serif 4", Georgia, Cambria, "Times New Roman", Times, serif;
   --font-code: var(--font-source-code), "Source Code Pro", Menlo, Monaco, "Courier New", Courier, monospace;
-  --font-display: var(--font-fraunces), "Fraunces", Georgia, Cambria, "Times New Roman", Times, serif;
   --font-brand: var(--font-playfair), "Playfair Display", Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-dropcap: var(--font-im-fell), "IM Fell Double Pica", Georgia, serif;
   --font-alt-serif: "Spectral", Georgia, Cambria, "Times New Roman", Times, serif;
   --font-accessible: "Lexend", Arial, sans-serif;
 

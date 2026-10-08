@@ -6,8 +6,7 @@ import { fmtInt } from "@/lib/format";
 import { Segmented, type Choice } from "./controls";
 import ExploreFigure from "./explore-figure";
 import PlotFigure from "./plot-figure";
-import { buildStateBars } from "./state-bars-chart";
-import { STATE_METRICS, buildStateMap } from "./state-map-chart";
+import { STATE_METRICS } from "./state-metrics";
 import type { Palette } from "./use-palette";
 
 const METRIC_CHOICES: Choice<StateMetric>[] = (Object.keys(STATE_METRICS) as StateMetric[]).map((value) => ({
@@ -52,11 +51,17 @@ export default function MapSection({
 }) {
   const [metric, setMetric] = useState<StateMetric>("perPosition");
   const map = useCallback(
-    (width: number, palette: Palette) => buildStateMap({ summaries, metric, selected, onSelect }, width, palette),
+    async (width: number, palette: Palette) => {
+      const { buildStateMap } = await import("./state-map-chart");
+      return buildStateMap({ summaries, metric, selected, onSelect }, width, palette);
+    },
     [summaries, metric, selected, onSelect],
   );
   const bars = useCallback(
-    (width: number, palette: Palette) => buildStateBars({ summaries, metric, selected, onSelect }, width, palette),
+    async (width: number, palette: Palette) => {
+      const { buildStateBars } = await import("./state-bars-chart");
+      return buildStateBars({ summaries, metric, selected, onSelect }, width, palette);
+    },
     [summaries, metric, selected, onSelect],
   );
 

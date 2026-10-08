@@ -3,6 +3,8 @@ import type { Feature, FeatureCollection, Geometry } from "geojson";
 import { feature, mesh } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 import usAtlas from "us-atlas/states-albers-10m.json";
+import { STATE_METRICS } from "./state-metrics";
+export { STATE_METRICS } from "./state-metrics";
 import { fmtInt } from "@/lib/format";
 import { stateMetricValue, type StateMetric, type StateSummary } from "@/lib/explore-stats";
 import { STATE_BY_FIPS } from "@/lib/us-states";
@@ -20,28 +22,6 @@ const BORDERS = mesh(topology, topology.objects.states, (a, b) => a !== b);
 const MAP_STATES = new Set(STATES.map((f) => STATE_BY_FIPS.get(f.id)?.code));
 /** The pre-projected Albers USA frame is 975 × 610. */
 const ASPECT = 610 / 975;
-
-export type MetricSpec = {
-  label: string;
-  legend: string;
-  format: (n: number) => string;
-};
-
-export const STATE_METRICS: Record<StateMetric, MetricSpec> = {
-  filings: { label: "H-1B filings", legend: "Certified H-1B LCA filings", format: fmtInt },
-  positions: { label: "New H-1B positions", legend: "New-employment positions on certified filings", format: fmtInt },
-  supply: { label: "Unemployed", legend: "Unemployed with a degree, last job in these occupations", format: fmtInt },
-  perPosition: {
-    label: "Unemployed per position",
-    legend: "Unemployed workers per new H-1B position",
-    format: (n) => `${n.toFixed(n < 10 ? 1 : 0)}×`,
-  },
-  coveredShare: {
-    label: "Filings the unemployed could cover",
-    legend: "Share of filings in occupations where the unemployed outnumber new positions",
-    format: (n) => `${n.toFixed(0)}%`,
-  },
-};
 
 /** Min and max over the states the map draws (50 states and DC), so the map and bars share one domain. */
 function mapDomain(summaries: Map<string, StateSummary>, metric: StateMetric): [number, number] | undefined {

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getEmployer } from "./queries";
 import { employerSegment, parseEmployerParam } from "./employer-path";
 import { getTickerMap } from "./employer-tickers";
@@ -12,7 +13,7 @@ async function resolveEmployerId(slug: string): Promise<number | null> {
 }
 
 /** The employer and its canonical URL segment, or null when the URL matches no employer. */
-export async function loadEmployer(slug: string) {
+export const loadEmployer = cache(async (slug: string) => {
   const employerId = await resolveEmployerId(slug);
   if (employerId == null) return null;
   const [employer, { byId, parentById }] = await Promise.all([getEmployer(employerId), getTickerMap()]);
@@ -20,4 +21,4 @@ export async function loadEmployer(slug: string) {
   const ticker = byId.get(employer.id) ?? null;
   const parent = parentById.get(employer.id) ?? null;
   return { employer, ticker, parent, segment: employerSegment({ ...employer, ticker }) };
-}
+});

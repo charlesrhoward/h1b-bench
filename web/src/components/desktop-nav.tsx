@@ -14,7 +14,7 @@ export default function DesktopNav({ items }: { items: NavItem[] }) {
         isNavGroup(item) ? (
           <NavDropdown key={item.label} group={item} />
         ) : (
-          <Link key={item.href} href={item.href} className={LINK_CLASS}>
+          <Link key={item.href} href={item.href} prefetch={item.href === "/explore" ? false : undefined} className={LINK_CLASS}>
             {item.label}
           </Link>
         ),
@@ -74,7 +74,7 @@ function NavDropdown({ group }: { group: NavGroup }) {
         <ul>
           {group.links.map((link) => (
             <li key={link.href}>
-              <Link href={link.href} onClick={() => setOpen(false)} className="block rounded-md px-3 py-2.5 hover:bg-neutral-secondary">
+              <Link href={link.href} prefetch={link.href === "/explore" ? false : undefined} onClick={() => setOpen(false)} className="block rounded-md px-3 py-2.5 hover:bg-neutral-secondary">
                 <span className="block font-medium text-neutral-primary">{link.label}</span>
                 {link.description ? <span className="mt-0.5 block text-[13px] leading-snug text-neutral-secondary">{link.description}</span> : null}
               </Link>

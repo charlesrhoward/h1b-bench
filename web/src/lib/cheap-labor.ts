@@ -29,7 +29,7 @@ export async function getDependencyProfile(fy = CHEAP_LABOR_FY) {
     .select(
       "dependency, filings, wage_level_known, wage_level_1, wage_level_2, wage_level_3, wage_level_4, yearly_with_floor, paid_at_floor, median_wage",
     )
-    .eq("fiscal_year", fy);
+    .eq("fiscal_year", fy).throwOnError();
   return (data ?? []) as DependencyProfile[];
 }
 
@@ -74,7 +74,7 @@ export async function getMarketGapSummary(fy = CHEAP_LABOR_FY) {
   const { data } = await supabase
     .from("market_gap_summary")
     .select("dependency, filings_certified, filings_eligible, filings_matched, below_median, median_gap, median_gap_below")
-    .eq("lca_fiscal_year", fy);
+    .eq("lca_fiscal_year", fy).throwOnError();
   return (data ?? []) as MarketGapSummary[];
 }
 
@@ -84,7 +84,7 @@ export async function getBelowMedianLeaders(fy = CHEAP_LABOR_FY, limit = 15) {
     .from("employer_market_gap")
     .select("employer_id, filings_matched, below_median, median_gap, employers(name)")
     .eq("lca_fiscal_year", fy)
-    .gte("filings_matched", MIN_RANKED_FILINGS);
+    .gte("filings_matched", MIN_RANKED_FILINGS).throwOnError();
   const rows: EmployerMarketGap[] = (data ?? []).map((r) => ({
     ...r,
     // PostgREST returns the many-to-one embed as an object; supabase-js types it as an array.
@@ -102,7 +102,7 @@ export async function getEmployerMarketGap(employerId: number, fy = CHEAP_LABOR_
     .select("employer_id, filings_matched, below_median, median_gap")
     .eq("lca_fiscal_year", fy)
     .eq("employer_id", employerId)
-    .maybeSingle();
+    .maybeSingle().throwOnError();
   return data as EmployerMarketGap | null;
 }
 
@@ -129,7 +129,7 @@ export async function getPwSourceSummary(fy = CHEAP_LABOR_FY) {
     .select("source, filings, gap_matched, below_median")
     .eq("lca_fiscal_year", fy)
     .eq("dependency", "all")
-    .order("filings", { ascending: false });
+    .order("filings", { ascending: false }).throwOnError();
   return (data ?? []) as PwSourceSummary[];
 }
 
@@ -140,7 +140,7 @@ export async function getPwSurveyPublishers(fy = CHEAP_LABOR_FY, limit = 8) {
     .select("publisher, filings, gap_matched, below_median")
     .eq("lca_fiscal_year", fy)
     .order("filings", { ascending: false })
-    .limit(limit);
+    .limit(limit).throwOnError();
   return (data ?? []) as PwSurveyPublisher[];
 }
 
@@ -175,7 +175,7 @@ export async function getWhdYears() {
   const { data } = await supabase
     .from("whd_h1b_years")
     .select("fiscal_year, cases, back_wages, employees, penalties")
-    .order("fiscal_year");
+    .order("fiscal_year").throwOnError();
   return (data ?? []) as WhdYear[];
 }
 
@@ -185,7 +185,7 @@ export async function getWhdTopEmployers(limit = 10) {
     .from("whd_h1b_top_employers")
     .select("name_key, name, state, employer_id, cases, back_wages, employees")
     .order("back_wages", { ascending: false })
-    .limit(limit);
+    .limit(limit).throwOnError();
   return (data ?? []) as WhdTopEmployer[];
 }
 
@@ -195,7 +195,7 @@ export async function getEmployerWhd(employerId: number) {
     .from("employer_whd_h1b")
     .select("cases, back_wages, employees, penalties, latest_fiscal_year")
     .eq("employer_id", employerId)
-    .maybeSingle();
+    .maybeSingle().throwOnError();
   return data as EmployerWhd | null;
 }
 
@@ -270,7 +270,7 @@ export async function getLayoffFilingsSummary() {
     )
     .order("notice_start", { ascending: false })
     .limit(1)
-    .maybeSingle();
+    .maybeSingle().throwOnError();
   return data as LayoffFilingsSummary | null;
 }
 
@@ -281,7 +281,7 @@ export async function getLayoffFilingsCompanies() {
     .select(
       "key, company, states, notices_followed, workers_laid_off, first_notice, filings_after, positions_after, filings_after_90, filings_before, employer_id, filings_after_new_employment, filings_after_change_employer, filings_after_not_counted",
     )
-    .order("workers_laid_off", { ascending: false });
+    .order("workers_laid_off", { ascending: false }).throwOnError();
   return (data ?? []) as LayoffFilingsCompany[];
 }
 
@@ -293,7 +293,7 @@ export async function getEmployerLayoffFilings(employerId: number) {
       "notices_followed, workers_laid_off, states, filings_after, positions_after, filings_before, filings_after_new_employment, filings_after_change_employer, filings_after_not_counted",
     )
     .eq("employer_id", employerId)
-    .maybeSingle();
+    .maybeSingle().throwOnError();
   return data as EmployerLayoffFilings | null;
 }
 
@@ -316,7 +316,7 @@ export async function getUscisRegistrations() {
     .select(
       "cap_fiscal_year, total_registrations, eligible_registrations, eligible_single, eligible_multiple, selected_registrations",
     )
-    .order("cap_fiscal_year");
+    .order("cap_fiscal_year").throwOnError();
   return (data ?? []) as UscisRegistrationYear[];
 }
 
@@ -356,7 +356,7 @@ export async function getPermLockinSummary() {
       "certified, fw_working, professional_certified, professional_fw_working, layoff_certified, layoff_employers, median_days, p90_days",
     )
     .eq("perm_fiscal_year", PERM_FY)
-    .maybeSingle();
+    .maybeSingle().throwOnError();
   return data as PermLockinSummary | null;
 }
 
@@ -366,7 +366,7 @@ export async function getPermLayoffEmployers() {
     .from("perm_layoff_employers")
     .select("name_key, name, employer_id, certified, layoff_certified")
     .eq("perm_fiscal_year", PERM_FY)
-    .order("layoff_certified", { ascending: false });
+    .order("layoff_certified", { ascending: false }).throwOnError();
   return (data ?? []) as PermLayoffEmployer[];
 }
 
@@ -377,6 +377,6 @@ export async function getEmployerPerm(employerId: number) {
     .select("certified, fw_working, layoff_certified")
     .eq("perm_fiscal_year", PERM_FY)
     .eq("employer_id", employerId)
-    .maybeSingle();
+    .maybeSingle().throwOnError();
   return data as EmployerPerm | null;
 }

@@ -113,6 +113,7 @@ export default function SiteSearch() {
         });
         if (!res.ok) return;
         const data = (await res.json()) as SearchResponse;
+        if (controller.signal.aborted) return;
         setItems(toItems(data));
         setCounts({ employers: data.employers.length, occupations: data.occupations.length });
         setActive(0);
@@ -120,7 +121,7 @@ export default function SiteSearch() {
       } catch {
         // aborted or offline — keep previous state
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }, 180);
     return () => {

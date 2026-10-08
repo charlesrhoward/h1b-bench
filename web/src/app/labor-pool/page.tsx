@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { bodyFont } from "@/lib/body-font";
+import { displayFont } from "@/lib/display-font";
+import { dropcapFont } from "@/lib/dropcap-font";
 import cardCatalog from "@/assets/art/card-catalog.webp";
 import HeaderArt from "@/components/header-art";
 import FindingCards from "@/components/labor-pool/finding-cards";
@@ -24,7 +27,7 @@ import {
 } from "@/lib/labor-pool";
 import { REPO_URL, pageMetadata } from "@/lib/site";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export const metadata: Metadata = pageMetadata(PAGES.laborPool);
 
@@ -55,7 +58,7 @@ export default async function LaborPoolPage() {
   }
 
   return (
-    <div className="space-y-16">
+    <div className={`${bodyFont.variable} ${displayFont.variable} ${dropcapFont.variable} space-y-16`}>
       <JsonLd data={JSON_LD} />
       <header className="relative max-w-3xl space-y-6 lg:max-w-none">
         <HeaderArt src={cardCatalog} className="top-1/2 right-0 w-72 -translate-y-1/2 opacity-50 lg:w-[26rem] lg:opacity-100" />

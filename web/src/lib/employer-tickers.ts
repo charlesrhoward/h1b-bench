@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { supabase } from "./supabase";
 import { employerPath, type EmployerRef } from "./employer-path";
 
@@ -26,26 +27,17 @@ export type TickerMap = {
   byParentTicker: Map<string, number[]>;
 };
 
-/** Tickers change only when the loaders run, so one fetch per hour per server is enough. */
-const TICKER_TTL_MS = 60 * 60 * 1000;
 const PAGE_SIZE = 1000;
 
-let cached: { at: number; map: Promise<TickerMap> } | null = null;
-
-/** Every row of a small table, paged. On error (for example, before the table exists) returns what it has. */
+/** Every row of a small table, paged. Failed reads must not cache a partial map. */
 async function fetchAllRows<T>(table: string, columns: string): Promise<T[]> {
   const rows: T[] = [];
   for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from(table)
       .select(columns)
       .order("employer_id")
-      .range(from, from + PAGE_SIZE - 1);
-    if (error) {
-      // Before a table is loaded, employers fall back to name-and-id URLs and no parent chip.
-      console.error(`${table}:`, error.message);
-      return rows;
-    }
+      .range(from, from + PAGE_SIZE - 1).throwOnError();
     rows.push(...(data as T[]));
     if (data.length < PAGE_SIZE) return rows;
   }
@@ -81,15 +73,8 @@ async function buildTickerMap(): Promise<TickerMap> {
   };
 }
 
-export function getTickerMap(): Promise<TickerMap> {
-  if (cached && Date.now() - cached.at < TICKER_TTL_MS) return cached.map;
-  const map = buildTickerMap();
-  cached = { at: Date.now(), map };
-  map.catch(() => {
-    cached = null;
-  });
-  return map;
-}
+/** Request deduplication; the shared Supabase fetch cache owns the one-hour lifetime. */
+export const getTickerMap = cache(buildTickerMap);
 
 /** Canonical path builder that knows tickers. Use it in server components that link to employers. */
 export async function getEmployerLinker(): Promise<(ref: EmployerRef) => string> {

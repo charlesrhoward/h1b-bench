@@ -55,6 +55,8 @@ export type CompanyInputs = {
   onPick: (employer: ExploreEmployer) => void;
 };
 
+type CompanyBase = Pick<CompanyInputs, "points" | "xKey" | "yKey" | "showBackWages" | "showLayoffs">;
+type CompanySelection = Pick<CompanyInputs, "matches" | "compared" | "compareColors" | "onPick">;
 type Frame = { width: number; height: number; top: number; right: number; bottom: number; left: number };
 
 function frameFor(width: number): Frame {
@@ -111,24 +113,49 @@ function referenceMarks(metric: EmployerMetric, palette: Palette) {
   ];
 }
 
-/** One dot per employer: x and y are the chosen metrics, area is worker positions. */
-export function buildCompanyChart(inputs: CompanyInputs, width: number, palette: Palette) {
+function dimensions(f: Frame) {
+  return { width: f.width, height: f.height, marginTop: f.top, marginRight: f.right, marginBottom: f.bottom, marginLeft: f.left };
+}
+
+type Geometry = { f: Frame; s: ReturnType<typeof scales>; palette: Palette };
+
+function highlightMarks(inputs: CompanyInputs, { f, s, palette }: Geometry) {
   const { points, compared, compareColors } = inputs;
-  const xm: EmployerMetric = EMPLOYER_METRICS[inputs.xKey];
-  const ym: EmployerMetric = EMPLOYER_METRICS[inputs.yKey];
-  if (points.length === 0) return null;
-  const f = frameFor(width);
-  const s = scales(points, xm, ym, f);
   const { placed, radius } = labels(inputs, s, f);
   const colorOf = new Map(compared.map((e, i) => [e.id, compareColors[i]]));
   const xy = { x: "x", y: "y", r: size };
+  return [
+    Plot.dot(points.filter((p) => inputs.matches.has(p.e.id)), { ...xy, stroke: palette.ink, strokeWidth: 1 }),
+    Plot.dot(points.filter((p) => colorOf.has(p.e.id)), { ...xy, fill: (p: CompanyPoint) => colorOf.get(p.e.id), stroke: palette.ink, strokeWidth: 2 }),
+    ...labelMarks(placed, { x: (p) => p.x, y: (p) => p.y, radius }, { fill: palette.ink, halo: palette.surface }),
+  ];
+}
+
+/** Replace only selection marks. The full set of employer dots keeps its DOM identity. */
+function updateHighlights(layer: SVGGElement, inputs: CompanyInputs, geometry: Geometry) {
+  const { f, s, palette } = geometry;
+  const overlay = Plot.plot({
+    ...dimensions(f),
+    x: { ...s.x, axis: null },
+    y: { ...s.y, axis: null },
+    r: s.r,
+    style: chartStyle(palette),
+    marks: highlightMarks(inputs, geometry),
+  });
+  layer.setAttribute("class", overlay.getAttribute("class") ?? "");
+  layer.replaceChildren(...overlay.childNodes);
+}
+
+/** One dot per employer: x and y are the chosen metrics, area is worker positions. */
+function buildCompanyChart(inputs: CompanyBase, width: number, palette: Palette) {
+  const { points } = inputs;
+  const xm: EmployerMetric = EMPLOYER_METRICS[inputs.xKey];
+  const ym: EmployerMetric = EMPLOYER_METRICS[inputs.yKey];
+  const f = frameFor(width);
+  const s = scales(points, xm, ym, f);
+  const xy = { x: "x", y: "y", r: size };
   const plot = Plot.plot({
-    width,
-    height: f.height,
-    marginTop: f.top,
-    marginRight: f.right,
-    marginBottom: f.bottom,
-    marginLeft: f.left,
+    ...dimensions(f),
     x: { ...s.x, label: `${xm.axis} →`, tickFormat: xm.tick ?? xm.format, ticks: 6, grid: true },
     y: { ...s.y, label: `↑ ${ym.axis}`, tickFormat: ym.tick ?? ym.format, ticks: 5, grid: true },
     r: s.r,
@@ -138,15 +165,36 @@ export function buildCompanyChart(inputs: CompanyInputs, width: number, palette:
       Plot.dot(points, { ...xy, fill: palette.neutral, fillOpacity: 0.35 }),
       Plot.dot(points.filter((p) => inputs.showBackWages && p.e.backWages != null), { ...xy, fill: palette.yellow, fillOpacity: 0.9 }),
       Plot.dot(points.filter((p) => inputs.showLayoffs && p.e.laidOff != null), { ...xy, stroke: palette.blue, strokeWidth: 2 }),
-      Plot.dot(points.filter((p) => inputs.matches.has(p.e.id)), { ...xy, stroke: palette.ink, strokeWidth: 1 }),
-      Plot.dot(points.filter((p) => colorOf.has(p.e.id)), { ...xy, fill: (p: CompanyPoint) => colorOf.get(p.e.id), stroke: palette.ink, strokeWidth: 2 }),
-      ...labelMarks(placed, { x: (p) => p.x, y: (p) => p.y, radius }, { fill: palette.ink, halo: palette.surface }),
       Plot.tip(points, Plot.pointer({ x: "x", y: "y", title: (p: CompanyPoint) => describeEmployer(p.e), ...tipStyle(palette) })),
     ],
   });
+  const layer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  layer.dataset.companyHighlights = "true";
+  const tip = plot.querySelector('g[aria-label="tip"]');
+  plot.insertBefore(layer, tip?.parentElement === plot ? tip : null);
+  let onPick: CompanySelection["onPick"] = () => undefined;
   plot.addEventListener("click", () => {
     const point = plot.value as CompanyPoint | null;
-    if (point) inputs.onPick(point.e);
+    if (point) onPick(point.e);
   });
-  return plot;
+  return {
+    plot,
+    update(selection: CompanySelection) {
+      onPick = selection.onPick;
+      updateHighlights(layer, { ...inputs, ...selection }, { f, s, palette });
+    },
+  };
+}
+
+/** Reuse the base plot during search and comparison changes; resize and theme changes rebuild it. */
+export function createCompanyRenderer(inputs: CompanyBase) {
+  let cached: { width: number; palette: Palette; chart: ReturnType<typeof buildCompanyChart> } | undefined;
+  return (selection: CompanySelection, width: number, palette: Palette) => {
+    if (inputs.points.length === 0) return null;
+    if (!cached || cached.width !== width || cached.palette !== palette) {
+      cached = { width, palette, chart: buildCompanyChart(inputs, width, palette) };
+    }
+    cached.chart.update(selection);
+    return cached.chart.plot;
+  };
 }
