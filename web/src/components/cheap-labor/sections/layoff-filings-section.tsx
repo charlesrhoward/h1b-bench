@@ -1,6 +1,12 @@
 import EvidenceSection from "@/components/cheap-labor/evidence-section";
 import EvidenceDetails from "@/components/cheap-labor/evidence-details";
 import { LayoffFilingsTable, fmtMonth } from "@/components/cheap-labor/layoff-filings-tables";
+import {
+  LayoffFilingsBeforeAfter,
+  LayoffFilingsExample,
+  LayoffFilingsStats,
+  LayoffFilingsSteps,
+} from "@/components/cheap-labor/layoff-filings-figures";
 import type { LayoffFilingsCompany, LayoffFilingsSummary } from "@/lib/cheap-labor";
 import { fmtInt, fmtPct } from "@/lib/format";
 import { REPO_URL } from "@/lib/site";
@@ -21,12 +27,11 @@ export default function LayoffFilingsSection({
 }) {
   if (!summary) return null;
   const noticeRange = `${fmtMonth(summary.notice_start)} to ${fmtMonth(summary.notice_end)}`;
-  const trend = summary.filings_after < summary.filings_before ? "fewer filings than" : "at least as many filings as";
   return (
     <EvidenceSection
       index={index}
       title="Companies laid off workers, then filed for new H-1B workers."
-      takeaway={`After ${fmtPct(summary.notices_followed, summary.notices_matched)} of the layoff notices we matched, the same company filed for a new H-1B worker within 12 months. The records do not show that one group replaced the other.`}
+      takeaway={`${fmtInt(summary.companies_followed)} companies filed layoff notices for ${fmtInt(summary.workers_laid_off)} workers. In the next 12 months, the same companies filed ${fmtInt(summary.filings_after)} H-1B filings for workers new to the company.`}
       limits="An H-1B filing (LCA) is a step before a visa petition. It is not a hire. WARN notices do not list jobs, so the new H-1B jobs can be in different roles, sites, or business units than the layoff. Large employers file for H-1B workers all year, so we also show the year before each notice. WARN applies only to large layoffs, generally 50 or more workers at one site. Some states do not publish a notice date, and we drop those notices. Some states give the date the state received the notice instead. California lists each site of a layoff as its own notice. Company names must match exactly, so these counts are lower than the true totals."
       source={
         <>
@@ -51,26 +56,22 @@ export default function LayoffFilingsSection({
         </>
       }
     >
+      <LayoffFilingsSteps summary={summary} noticeRange={noticeRange} />
       <p>
-        A WARN notice tells the state about a large layoff before it occurs. We matched notices from{" "}
-        {summary.states} states, dated {noticeRange}, to companies with certified H-1B filings. Then we counted
-        each company&apos;s H-1B filings for workers who were new to the company. Extensions for current
-        workers do not count.
+        After {fmtPct(summary.notices_followed, summary.notices_matched)} of the matched notices (
+        {fmtInt(summary.notices_followed)} of {fmtInt(summary.notices_matched)}), the company filed for at least
+        one new H-1B worker within 12 months. Those notices are the ones we count below.
       </p>
+      <LayoffFilingsStats summary={summary} />
       <p>
-        <span className="font-semibold text-neutral-primary">{fmtInt(summary.companies_followed)}</span>{" "}
-        companies filed {fmtInt(summary.notices_followed)} layoff notices for{" "}
-        {fmtInt(summary.workers_laid_off)} workers. In the 12 months after those notices, the same
-        companies filed {fmtInt(summary.filings_after)} certified H-1B filings for new workers. These
-        filings ask for up to {fmtInt(summary.positions_after)} positions. After{" "}
-        {fmtInt(summary.notices_followed_90)} of the notices, the first new filing came within 90 days.
+        The layoffs did not stop the H-1B filings. In the year after the notices, these companies filed{" "}
+        {fmtPct(summary.filings_after, summary.filings_before)} as many new-worker filings as in the year before.{" "}
+        {fmtPct(summary.filings_after_same_state, summary.filings_after)} of the filings after a notice were for a
+        job in the same state as the layoff.
       </p>
-      <p>
-        The filings did not stop after the layoffs. In the 12 months before the notices, the same companies
-        filed {fmtInt(summary.filings_before)} of these filings, so the year after had {trend} the year
-        before. {fmtPct(summary.filings_after_same_state, summary.filings_after)} of the filings after a
-        notice were for a job in the same state as the layoff.
-      </p>
+      <LayoffFilingsBeforeAfter summary={summary} />
+      <LayoffFilingsExample companies={companies} />
+      <p>The records do not show that the new H-1B workers replaced the workers who were laid off.</p>
       {companies.length > 0 ? (
         <EvidenceDetails title="View the companies with the most workers in these layoff notices">
           <p>Select a company name to see its employer page.</p>
