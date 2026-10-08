@@ -21,8 +21,9 @@ Read the root `AGENTS.md` first. It holds the purpose, data-accuracy, lint, and 
 - `src/lib/supabase.ts` creates the one client with `NEXT_PUBLIC_SUPABASE_URL` and
   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Never put a secret or service-role key in `web/`.
 - `src/lib/site.ts` holds `REPO_URL` and the navigation. `NAV_ITEMS` drives the desktop header
-  (`DesktopNav`); a `NavGroup` opens a dropdown, so add analysis pages to the "Findings"
-  group instead of widening the header. `NAV_LINKS` is the same list flattened for the
+  (`DesktopNav`): Explore first, then the "Benchmarks" (employers, occupations) and
+  "Findings" (analysis pages) dropdowns, then Sources. Add a page to a group instead of
+  widening the header. `NAV_LINKS` is the same list flattened for the
   mobile menu.
 - `src/lib/pages.ts` holds each top-level page's title and description. Page metadata
   (`pageMetadata(PAGES.x)`), `sitemap.xml`, `llms.txt`, and JSON-LD all read from it. A new
