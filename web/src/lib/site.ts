@@ -45,7 +45,9 @@ export const NAV_LINKS: NavLink[] = NAV_ITEMS.flatMap((item) => (isNavGroup(item
 export const SITE_NAME = "H1B Bench";
 
 /** Share card from app/opengraph-image.png. Keep the alt text in step with opengraph-image.alt.txt. */
-const SHARE_IMAGE = {
+export type ShareImage = { url: string; width: number; height: number; alt: string };
+
+const SHARE_IMAGE: ShareImage = {
   url: "/opengraph-image.png",
   width: 1200,
   height: 630,
@@ -62,16 +64,19 @@ export function pageMetadata({
   title,
   description,
   path,
+  image = SHARE_IMAGE,
 }: {
   title: string;
   description: string;
   path: string;
+  /** A page's own share card, such as an employer's generated opengraph-image. */
+  image?: ShareImage;
 }): Metadata {
   return {
     title,
     description,
     alternates: { canonical: path },
-    openGraph: { type: "website", siteName: SITE_NAME, url: path, title, description, images: [SHARE_IMAGE] },
-    twitter: { card: "summary_large_image", title, description, images: [SHARE_IMAGE] },
+    openGraph: { type: "website", siteName: SITE_NAME, url: path, title, description, images: [image] },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
