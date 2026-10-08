@@ -185,6 +185,17 @@ def parse_all():
     return pd.concat(frames, ignore_index=True), pd.DataFrame(years)
 
 
+def log_single_year_names(countries):
+    """List names seen in one fiscal year only. A wrong fragment join changes a name but not
+    the sums, so check_total cannot catch it; a one-year name is where it would show."""
+    seen = countries.groupby("country")["fiscal_year"].agg(["nunique", "first"])
+    single = seen[seen["nunique"] == 1]
+    for name, row in single.iterrows():
+        approved = countries.loc[countries["country"] == name, "approved"].iloc[0]
+        log.info(f"only in FY{row['first']}: {name} ({approved:,}); check the PDF if the name looks wrong")
+    log.info(f"{len(single)} place names seen in one fiscal year only")
+
+
 def share_table(countries, years, top=8):
     latest = countries[countries["fiscal_year"] == max(YEARS)]
     leaders = latest[latest["country"] != "Unknown"].nlargest(top, "approved")["country"]
@@ -195,6 +206,7 @@ def share_table(countries, years, top=8):
 
 def main():
     countries, years = parse_all()
+    log_single_year_names(countries)
     with pd.option_context("display.width", 200):
         log.info(years.to_string(index=False))
         log.info("share of approved petitions (%):\n" + share_table(countries, years).to_string())

@@ -17,6 +17,13 @@ function yearlyShares(years: BirthCountryYear[], place: BirthCountryRow) {
   return shares.length === years.length ? shares : null;
 }
 
+/** How the lead country's share moved; "held at" when the rounded shares are equal. */
+function leadTrendSentence(country: string, first: number, latest: number) {
+  const [from, to] = [fmtPct(first, 1), fmtPct(latest, 1)];
+  if (from === to) return `The share for ${country} held at ${to}.`;
+  return `The share for ${country} ${latest < first ? "fell" : "rose"} from ${from} to ${to}.`;
+}
+
 /** The numbers the copy states, or null when the data is missing or covers one year only. */
 function summarize(years: BirthCountryYear[], countries: BirthCountryRow[]) {
   const [lead, second] = countries;
@@ -64,8 +71,7 @@ export default function BirthCountrySection({
         </p>
         <p>
           From {span}, these two countries got between {fmtPct(topTwoMin, 1)} and {fmtPct(topTwoMax, 1)} of
-          approvals each year. The share for {lead.country} {leadLatest < leadFirst ? "fell" : "rose"} from{" "}
-          {fmtPct(leadFirst, 1)} to {fmtPct(leadLatest, 1)}.
+          approvals each year. {leadTrendSentence(lead.country, leadFirst, leadLatest)}
         </p>
       </div>
       <BirthCountryBars years={years} countries={countries} />

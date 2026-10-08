@@ -2,7 +2,10 @@ import { fmtInt, fmtPct } from "@/lib/format";
 import type { BirthCountryRow, BirthCountryYear } from "@/lib/queries";
 
 const SEGMENT_TONES = ["bg-chart-accent-primary", "bg-chart-accent-secondary", "bg-chart-neutral-primary"];
+/** Table remainder: everyone after the listed places. */
 const OTHER_LABEL = "All other places and unknown";
+/** Bar remainder: everyone after the two leading places, so a different number than the table row. */
+const BAR_OTHER_LABEL = "Born elsewhere or unknown";
 
 /** Approvals left after the listed places, or null if a listed place has no count that year. */
 function otherApproved(year: BirthCountryYear, places: readonly BirthCountryRow[]) {
@@ -18,7 +21,7 @@ function otherApproved(year: BirthCountryYear, places: readonly BirthCountryRow[
 /** One full-width bar per fiscal year: the two leading places of birth, then everyone else. */
 export function BirthCountryBars({ years, countries }: { years: BirthCountryYear[]; countries: BirthCountryRow[] }) {
   const leaders = countries.slice(0, 2);
-  const labels = [...leaders.map((c) => c.country), OTHER_LABEL];
+  const labels = [...leaders.map((c) => c.country), BAR_OTHER_LABEL];
   return (
     <div className="space-y-2 font-ui" role="list" aria-label="Approved H-1B petitions by country of birth, by fiscal year">
       {years.map((y) => {
