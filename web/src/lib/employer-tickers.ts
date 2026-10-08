@@ -51,6 +51,13 @@ async function fetchAllRows<T>(table: string, columns: string): Promise<T[]> {
   }
 }
 
+/** SEC company names carry state tags ("APPLIED MATERIALS INC /DE", "QUALCOMM INC/DE"). Drop them for display. */
+const SEC_STATE_TAG = /\s*\/[A-Z]{2,3}\/?\s*$/;
+
+function displaySecName(name: string): string {
+  return name.replace(SEC_STATE_TAG, "");
+}
+
 function groupByParentTicker(parents: EmployerParent[]): Map<string, number[]> {
   const groups = new Map<string, number[]>();
   for (const p of parents) {
@@ -69,7 +76,7 @@ async function buildTickerMap(): Promise<TickerMap> {
   return {
     byId: new Map(tickers.map((r) => [Number(r.employer_id), r.ticker])),
     byTicker: new Map(tickers.map((r) => [r.ticker.toUpperCase(), Number(r.employer_id)])),
-    parentById: new Map(parents.map((p) => [Number(p.employer_id), p])),
+    parentById: new Map(parents.map((p) => [Number(p.employer_id), { ...p, parent_name: displaySecName(p.parent_name) }])),
     byParentTicker: groupByParentTicker(parents),
   };
 }
