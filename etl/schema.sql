@@ -10,7 +10,8 @@
 --    pw_source_summary, pw_survey_publishers + temporary insert policies; reload after the
 --    yearly-wage fix in docs/market-gap-method.md) -> drop_market_gap_reload_insert_policies
 -- -> layoff_filings -> drop_layoff_filings_insert_policies -> uscis_birth_country
--- -> drop_uscis_birth_country_insert_policies.
+-- -> drop_uscis_birth_country_insert_policies -> employer_tickers (sec_companies,
+--    employer_tickers + temporary insert policies) -> drop_employer_tickers_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
