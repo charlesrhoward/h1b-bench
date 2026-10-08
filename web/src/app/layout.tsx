@@ -8,13 +8,14 @@ import {
   Source_Code_Pro,
   Source_Serif_4,
 } from "next/font/google";
+import DesktopNav from "@/components/desktop-nav";
 import GitHubLink from "@/components/github-link";
 import JsonLd from "@/components/json-ld";
 import { websiteJsonLd } from "@/lib/json-ld";
 import MobileMenu from "@/components/mobile-menu";
 import SiteSearch from "@/components/site-search";
 import { PAGES } from "@/lib/pages";
-import { NAV_LINKS, REPO_URL, SITE_URL, pageMetadata } from "@/lib/site";
+import { NAV_ITEMS, NAV_LINKS, REPO_URL, SITE_URL, pageMetadata } from "@/lib/site";
 import "./globals.css";
 
 // Font roles from DESIGN.md: next/font self-hosts each family with swap and a metric fallback.
@@ -64,25 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <SiteSearch />
               </div>
             </div>
-            <nav aria-label="Main" className="order-3 hidden gap-x-6 whitespace-nowrap text-sm lg:flex">
-              {NAV_LINKS.map((l) =>
-                l.external ? (
-                  <a
-                    key={l.href}
-                    href={l.href}
-                    className="text-neutral-secondary hover:text-neutral-secondary-hover"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {l.label}
-                  </a>
-                ) : (
-                  <Link key={l.href} href={l.href} className="text-neutral-secondary hover:text-neutral-primary-hover">
-                    {l.label}
-                  </Link>
-                ),
-              )}
-            </nav>
+            <DesktopNav items={NAV_ITEMS} />
             <div className="order-2 ml-auto flex items-center gap-1 sm:order-3 sm:ml-0 lg:-ml-3">
               <GitHubLink />
               <MobileMenu links={NAV_LINKS} />

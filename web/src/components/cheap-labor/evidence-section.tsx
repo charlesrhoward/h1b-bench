@@ -18,9 +18,12 @@ export default function EvidenceSection({
     <section className="evidence-section scroll-mt-8 space-y-6 border-t border-neutral-tertiary pt-12" id={`finding-${index}`} aria-labelledby={`finding-title-${index}`}>
       <p className="text-[13px] font-medium text-accent-primary tabular-nums">Finding {String(index).padStart(2, "0")}</p>
       <h2 className="type-heading text-balance" id={`finding-title-${index}`}>{title}</h2>
-      {takeaway ? <p className="font-display text-[1.375rem] leading-snug tracking-[-0.01em] text-neutral-primary">{takeaway}</p> : null}
-      <div className="type-body space-y-6 text-neutral-primary">{children}</div>
-      <aside className="space-y-1 rounded-lg bg-neutral-secondary px-5 py-4 text-sm leading-relaxed text-neutral-primary">
+      <div className="type-body space-y-6 text-neutral-primary">
+        {/* The takeaway opens the body at body size; weight, not a third size, sets it apart. */}
+        {takeaway ? <p className="font-semibold">{takeaway}</p> : null}
+        {children}
+      </div>
+      <aside className="type-small space-y-1 rounded-lg bg-neutral-secondary px-5 py-4 text-neutral-primary">
         <strong className="font-semibold">What this can’t tell us</strong>
         <p>{limits}</p>
       </aside>

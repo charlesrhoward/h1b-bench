@@ -10,16 +10,32 @@ export function absoluteUrl(path: string) {
   return new URL(path, SITE_URL).toString();
 }
 
-export type NavLink = { href: string; label: string; external?: boolean };
+export type NavLink = { href: string; label: string; external?: boolean; description?: string };
+/** Links that share one header dropdown. */
+export type NavGroup = { label: string; links: NavLink[] };
+export type NavItem = NavLink | NavGroup;
 
-/** Site navigation, shared by the desktop nav and the mobile menu. */
-export const NAV_LINKS: NavLink[] = [
+export function isNavGroup(item: NavItem): item is NavGroup {
+  return "links" in item;
+}
+
+/** Desktop header navigation. The analysis pages share a dropdown so the search box keeps its width. */
+export const NAV_ITEMS: NavItem[] = [
   { href: "/employers", label: "Employers" },
   { href: "/jobs", label: "Occupations" },
-  { href: "/labor-pool", label: "Labor pool" },
-  { href: "/pay-vs-market", label: "Pay vs. market" },
+  {
+    label: "Findings",
+    links: [
+      { href: "/pay-vs-market", label: "Pay vs. market", description: "H-1B offers against local pay, enforcement, and layoffs." },
+      { href: "/labor-pool", label: "Labor pool", description: "New H-1B positions against unemployed U.S. workers." },
+    ],
+  },
+  { href: "/explore", label: "Explore" },
   { href: "/sources", label: "Sources" },
 ];
+
+/** The same links as one flat list, for the mobile menu. */
+export const NAV_LINKS: NavLink[] = NAV_ITEMS.flatMap((item) => (isNavGroup(item) ? item.links : [item]));
 
 export const SITE_NAME = "H1B Bench";
 

@@ -8,7 +8,7 @@ export default function EvidenceDetails({
 }) {
   return (
     <details className="evidence-details border-y border-neutral-tertiary font-ui">
-      <summary className="cursor-pointer py-4 text-[15px] font-medium text-neutral-primary hover:text-accent-primary">{title}</summary>
+      <summary className="cursor-pointer type-small py-4 font-medium text-neutral-primary hover:text-accent-primary">{title}</summary>
       <p className="type-meta pb-3 sm:hidden">Scroll across the table to see all columns.</p>
       <div className="evidence-details-body space-y-4 overflow-x-auto overscroll-contain pb-4 text-sm leading-relaxed [&_table]:min-w-[580px]" role="region" aria-label={title} tabIndex={0}>{children}</div>
     </details>
