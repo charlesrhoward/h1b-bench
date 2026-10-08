@@ -105,5 +105,10 @@ The root `DESIGN.md` (Unbound) is the source. The app applies it like this:
   (`src/app/opengraph-image.png`, `twitter-image.png`) and the sub-page engravings
   (`src/assets/art/`) were made with vmotif (webrenew workspace, canvas
   `b5c45e0d-2606-4eaf-803a-470061bf234b`). Make new art there, with the Capitol engraving as
-  the style reference.
+  the style reference. Engravings of people (`worker-box.webp`, `ironworkers-lunch.webp`) use
+  `HeaderFigure` with a separate white-line dark version (`*-dark.webp`, transparent background),
+  because `ink-art` inversion turns a face into a photo negative. Employer pages show the worker
+  with a box when the employer has the Layoffs flag, and the ironworkers' lunch on a beam
+  otherwise (`HEADER_ART` in `src/app/employers/[slug]/page.tsx`). The lunch scene is an
+  original drawing, not a copy of the 1932 photograph.
 
