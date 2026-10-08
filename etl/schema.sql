@@ -5,7 +5,10 @@
 -- -> lca_dependency_profile -> lca_dependency_profile_yearly_floor -> lca_dependency_profile_exact_floor
 -- -> market_gap -> drop_market_gap_insert_policies -> pw_source -> drop_pw_source_insert_policies
 -- -> whd_h1b -> drop_whd_h1b_insert_policies -> warn_h1b -> drop_warn_h1b_insert_policies
--- -> uscis_registrations -> perm_lockin -> drop_perm_lockin_insert_policies.
+-- -> uscis_registrations -> perm_lockin -> drop_perm_lockin_insert_policies
+-- -> market_gap_annual_wage_reload (truncate market_gap_summary, employer_market_gap,
+--    pw_source_summary, pw_survey_publishers + temporary insert policies; reload after the
+--    yearly-wage fix in docs/market-gap-method.md) -> drop_market_gap_reload_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;

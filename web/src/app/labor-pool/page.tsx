@@ -126,7 +126,7 @@ function ScopeNotice() {
   return (
     <div className="rounded-xl bg-neutral-secondary p-5 sm:p-6">
       <p className="font-semibold text-neutral-primary">This page counts only the unemployed.</p>
-      <p className="mt-2 text-[15px] leading-relaxed text-neutral-primary">
+      <p className="type-small mt-2 text-neutral-primary">
         It does not count the underemployed. Underemployed means two groups. Some are degree holders
         in jobs below their skills. Others work part time but want full-time work. The page also
         does not count people who gave up the search for work, or employed workers who could change
@@ -154,7 +154,7 @@ function PositionMeasure({
       <TierBars
         bars={fillable.map((f) => ({ tier: f.tier, part: f.positions_fillable, whole: f.positions_total }))}
       />
-      <p className="text-[15px] leading-relaxed text-neutral-secondary">
+      <p className="type-small text-neutral-secondary">
         Example: {largest.occ_title?.toLowerCase()}. There were {fmtInt(largest.new_positions)} new
         H-1B positions. At least {fmtInt(largestFill)} unemployed Americans had this job. So the
         unemployed alone could fill {fmtPct(largestFill, largest.new_positions)} of these positions.
@@ -187,7 +187,7 @@ function OccupationMeasure({
       <TierBars
         bars={tiers.map((t) => ({ tier: t.tier, part: t.filings_covered, whole: t.filings_total }))}
       />
-      <p className="text-[15px] leading-relaxed text-neutral-secondary">
+      <p className="type-small text-neutral-secondary">
         An occupation counts only if the unemployed can fill all of its new H-1B positions. So{" "}
         {largest.occ_title?.toLowerCase()} count as zero, although the unemployed could fill{" "}
         {fmtPct(fillablePositions(largest), largest.new_positions)} of them.

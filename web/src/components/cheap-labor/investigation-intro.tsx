@@ -14,7 +14,7 @@ export default function InvestigationIntro({ summary }: { summary?: MarketGapSum
       {hasComparison ? <LeadFinding summary={summary} /> : (
         <p className="type-body text-neutral-secondary">The local pay comparison is unavailable. Other available evidence appears below.</p>
       )}
-      <div className="space-y-3 border-l-2 border-accent-primary pl-5 text-[15px] leading-relaxed text-neutral-primary">
+      <div className="space-y-3 border-l-2 border-accent-primary type-small pl-5 text-neutral-primary">
         <p>
           <strong className="text-neutral-primary">Why it matters.</strong>{" "}
           A six-figure salary can still fall below local pay. The useful comparison is the same occupation in the same area.

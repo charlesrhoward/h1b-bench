@@ -27,7 +27,7 @@ export default function SourcesPage() {
           file, what the site uses it for, and the method that explains each number. You can
           download the same files and check our work.
         </p>
-        <p className="max-w-2xl text-[15px] leading-relaxed text-neutral-secondary">
+        <p className="type-small max-w-2xl text-neutral-secondary">
           The code that reads these files is open source.{" "}
           <a href={REPO_URL} className="link">
             See the code on GitHub
@@ -58,7 +58,7 @@ function SourceEntry({ source }: { source: DataSource }) {
         <p className="type-meta">{source.coverage}</p>
       </div>
       <div className="space-y-4">
-        <p className="font-body text-[17px] leading-relaxed text-neutral-primary">{source.summary}</p>
+        <p className="type-body text-neutral-primary">{source.summary}</p>
         <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
           <dt className="text-neutral-secondary">Used on</dt>
           <dd className="flex flex-wrap gap-x-3 gap-y-1">

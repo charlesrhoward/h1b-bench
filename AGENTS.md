@@ -45,6 +45,9 @@ a number.
 `/labor-pool` uses `docs/labor-pool-method.md` (written before the first run) and
 `docs/labor-pool-results.md`.
 
+`/explore` adds no new numbers. Its linked charts (state map, occupations, employers,
+comparison) read the labor-pool, market-gap, headcount, WHD, and WARN tables above.
+
 ## Commands
 
 ```sh

@@ -15,7 +15,7 @@ export default function MeasureCard({
       <p className="text-xs font-medium uppercase tracking-wider text-neutral-secondary">{label}</p>
       <div>
         <div className="type-figure text-[3.5rem]">{value}</div>
-        <p className="mt-3 font-body text-lg leading-snug text-neutral-primary">{statement}</p>
+        <p className="type-body mt-3 text-neutral-primary">{statement}</p>
       </div>
       {children}
     </div>

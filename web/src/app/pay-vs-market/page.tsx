@@ -125,7 +125,7 @@ export default async function CheapLaborPage() {
           <aside className="space-y-3 rounded-xl bg-article-footer-subtle p-6 text-article-footer-subtle sm:p-8">
             <p className="text-[13px] font-medium text-neutral-secondary">Read next</p>
             <Link className="type-promo block text-[1.375rem] hover:text-accent-primary" href="/labor-pool">Who is available to do this work?<ArrowUpRight className="ml-1 inline-block size-[0.9em] align-[-0.08em]" /></Link>
-            <p className="text-[15px] text-neutral-secondary">Compare H-1B demand with the U.S. labor pool.</p>
+            <p className="type-small text-neutral-secondary">Compare H-1B demand with the U.S. labor pool.</p>
             <Link className="link inline-block text-sm" href="/employers">Look up an employer <span aria-hidden="true">→</span></Link>
           </aside>
         </div>

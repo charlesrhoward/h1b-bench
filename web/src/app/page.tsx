@@ -46,6 +46,12 @@ export default async function Home() {
             >
               Read the pay evidence
             </Link>
+            <Link
+              href="/explore"
+              className="rounded-full border border-neutral-secondary px-5 py-2.5 font-medium text-neutral-primary hover:border-brand-primary"
+            >
+              Explore the data
+            </Link>
           </div>
         </div>
         <Image

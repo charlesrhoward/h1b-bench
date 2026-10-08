@@ -60,6 +60,15 @@ export const PAGES = {
     changeFrequency: "yearly",
     priority: 0.8,
   },
+  explore: {
+    path: "/explore",
+    name: "Explore the data",
+    title: "Explore the data — H1B Bench",
+    description:
+      "Interactive, linked charts of FY2025 H-1B filings: a state map of demand against unemployed workers, occupation groups, and employer pay against the local median.",
+    changeFrequency: "monthly",
+    priority: 0.8,
+  },
   sources: {
     path: "/sources",
     name: "Data sources",

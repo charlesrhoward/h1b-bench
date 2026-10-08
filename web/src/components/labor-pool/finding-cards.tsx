@@ -23,7 +23,7 @@ export default function FindingCards({ profile }: { profile: LcaYearProfile }) {
       {findings.map((f) => (
         <div key={f.text} className="border-t border-neutral-secondary pt-4">
           <div className="type-figure text-[2.5rem] text-accent-primary">{f.value}</div>
-          <p className="mt-3 text-[15px] leading-relaxed text-neutral-secondary">{f.text}</p>
+          <p className="type-small mt-3 text-neutral-secondary">{f.text}</p>
         </div>
       ))}
     </div>
