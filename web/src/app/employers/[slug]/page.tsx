@@ -24,6 +24,11 @@ import { pageMetadata } from "@/lib/site";
 import { employerJsonLd } from "@/lib/json-ld";
 import JsonLd from "@/components/json-ld";
 import Breadcrumbs from "@/components/breadcrumbs";
+import HeaderFigure from "@/components/header-figure";
+import workerBox from "@/assets/art/worker-box.webp";
+import workerBoxDark from "@/assets/art/worker-box-dark.webp";
+import workerLaptop from "@/assets/art/worker-laptop.webp";
+import workerLaptopDark from "@/assets/art/worker-laptop-dark.webp";
 import { ParentChip, ParentNote } from "@/components/employer-parent";
 import { EmployerFlagCards, EmployerFlagPills } from "@/components/employer-flags";
 import { employerFlags } from "@/lib/employer-flags";
@@ -76,7 +81,12 @@ export default async function EmployerDetail({ params }: Params) {
   return (
     <div className="space-y-14">
       <JsonLd data={employerJsonLd(employer, `/employers/${segment}`)} />
-      <div>
+      <div className="relative sm:min-h-60 sm:pr-48 lg:min-h-80 lg:pr-64">
+        <HeaderFigure
+          light={flags.layoffs ? workerBox : workerLaptop}
+          dark={flags.layoffs ? workerBoxDark : workerLaptopDark}
+          className="right-0 bottom-0 w-44 lg:w-60"
+        />
         <Breadcrumbs
           trail={[
             { name: "Employers", href: "/employers" },
