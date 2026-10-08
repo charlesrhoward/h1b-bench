@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { bodyFont } from "@/lib/body-font";
+import { displayFont } from "@/lib/display-font";
+import { dropcapFont } from "@/lib/dropcap-font";
 import Link from "next/link";
 import { ArrowUpRight } from "@/components/arrow-up-right";
 import ComparisonChart from "@/components/cheap-labor/comparison-chart";
@@ -43,9 +46,10 @@ import { REPO_URL, pageMetadata } from "@/lib/site";
 import { PAGES } from "@/lib/pages";
 import { analysisJsonLd } from "@/lib/json-ld";
 import JsonLd from "@/components/json-ld";
+import { getTickerMap } from "@/lib/employer-tickers";
 import "./investigation.css";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export const metadata: Metadata = pageMetadata(PAGES.payVsMarket);
 
@@ -75,13 +79,14 @@ export default async function CheapLaborPage() {
     getUscisRegistrations(),
     getPermLockinSummary(),
     getPermLayoffEmployers(),
+    getTickerMap(),
   ]);
   if (profile.length === 0) {
     return <p className="type-meta">Results for FY{CHEAP_LABOR_FY} are not loaded yet.</p>;
   }
 
   return (
-    <article className="investigation space-y-12">
+    <article className={`${bodyFont.variable} ${displayFont.variable} ${dropcapFont.variable} investigation space-y-12`}>
       <JsonLd data={JSON_LD} />
       <InvestigationIntro summary={marketGap.find((row) => row.dependency === "all")} />
       <div className="space-y-12">

@@ -10,7 +10,6 @@ export default function HeaderArt({ src, className = "" }: { src: StaticImageDat
     <Image
       src={src}
       alt=""
-      priority
       sizes="(min-width: 1024px) 26rem, 18rem"
       className={`ink-art pointer-events-none absolute -z-10 hidden h-auto select-none sm:block ${className}`}
     />

@@ -14,7 +14,11 @@ Read the root `AGENTS.md` first. It holds the purpose, data-accuracy, lint, and 
 
 ## Layout
 
-- `src/app/` holds routes. Pages render on the server (`export const dynamic = "force-dynamic"`).
+- `src/app/` holds server-rendered routes. Public data reads use a one-hour Next.js
+  fetch cache. Home and analysis pages use `revalidate = 3600`; employer details use
+  on-demand ISR (`generateStaticParams` returns `[]`). Search-parameter pages stay
+  dynamic and reuse cached reads. Do not add `force-dynamic`: it bypasses that cache.
+  Query failures must throw, so a failed revalidation keeps the last valid page.
 - `src/lib/queries.ts`, `src/lib/cheap-labor.ts`, and `src/lib/labor-pool.ts` hold the
   Supabase queries for pages. Pages and components get data from these modules, not from
   the client directly. The search API (`src/app/api/search/route.ts`) runs its own query.
@@ -28,10 +32,13 @@ Read the root `AGENTS.md` first. It holds the purpose, data-accuracy, lint, and 
 - `src/lib/pages.ts` holds each top-level page's title and description. Page metadata
   (`pageMetadata(PAGES.x)`), `sitemap.xml`, `llms.txt`, and JSON-LD all read from it. A new
   page gets an entry there, plus a `<JsonLd>` node from `src/lib/json-ld.ts`.
-- `/explore` is the exception to `force-dynamic`: it reads about 2,800 employers and 6,600
-  labor-pool cells (`src/lib/explore.ts`), so it rebuilds once a day (`revalidate = 86400`)
-  and sends the rows packed (`pack`/`unpack` in `src/lib/explore-model.ts`). Client
-  components import types and constants from `explore-model.ts`, never from `explore.ts`.
+- `/explore` sends state totals in its initial HTML. `/api/explore` serves the full
+  packed employer and labor-pool dataset when a lower chart approaches the viewport.
+  Both revalidate hourly. `pack`/`unpack` live in `src/lib/explore-model.ts`; client
+  components import types and constants from that module, never from `explore.ts`.
+  Paginated reads use exact counts and bounded parallel batches; never sample rows.
+- Employer table links use `IntentLink` so scrolling does not prefetch every detail
+  page. Pointing at or focusing a link starts its prefetch.
 - `robots.ts`, `sitemap.ts`, and `llms.txt/route.ts` in `src/app/` build those files. The
   sitemap lists employers with at least 10 H-1B filings in FY2025, not all 180,000.
 - Employer URLs: `/employers/<ticker>` for EIN-confirmed public companies, otherwise
@@ -76,7 +83,11 @@ The root `DESIGN.md` (Unbound) is the source. The app applies it like this:
   `bg-emerald-400` generates nothing. Never use raw hex values or arbitrary colors.
 - **Chart tokens are for data only** (bars, legends, reference lines). UI chrome uses the
   `bg`/`text`/`border` tokens.
-- **Fonts.** `layout.tsx` loads the families with `next/font`. Bind to roles: `font-ui`,
+- **Fonts.** `layout.tsx` loads the shared chrome fonts with `next/font`. The
+  `src/lib/body-font.ts`, `display-font.ts`, and `dropcap-font.ts` modules load page fonts.
+  Apply their `.variable` classes on the page container only when the page uses that role.
+  Do not preload these faces from the root layout. Page WOFF2 subsets and
+  supported weights are documented in `src/assets/fonts/README.md`. Bind to roles: `font-ui`,
   `font-body`, `font-display`, `font-brand` (wordmark only), `font-code` (codes such as SOC
   and `⌘K`), `font-dropcap`.
 - **Type scale** (`globals.css` utilities): `type-hero` (home only), `type-title` (page h1),
@@ -95,6 +106,8 @@ The root `DESIGN.md` (Unbound) is the source. The app applies it like this:
   `PlotFigure` rebuilds a chart when its width, the color scheme, or its memoized builder
   changes. Each chart sits in an `ExploreFigure`: controls, a readout sentence, the chart,
   then notes, source, and method. Labels go through `placeLabels` so they do not overlap.
+  `PlotFigure` rebuilds near the viewport and keeps the last chart's size while offscreen.
+  Its paint-containment wrapper has padding so SVG labels and shadows are not clipped.
   The dev server serves charts only on `localhost`; Next blocks dev assets on `127.0.0.1`.
 - **Light and dark** follow the OS. Lightning CSS compiles `light-dark()` into
   `--lightningcss-light`/`--lightningcss-dark` toggles driven by `prefers-color-scheme`, so

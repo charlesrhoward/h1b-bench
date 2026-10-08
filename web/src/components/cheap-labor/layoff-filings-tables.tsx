@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/intent-link";
 import { fmtInt } from "@/lib/format";
 import type { EmployerLayoffFilings, LayoffFilingsCompany } from "@/lib/cheap-labor";
 import { getEmployerLinker } from "@/lib/employer-tickers";

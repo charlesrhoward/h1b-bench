@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/intent-link";
 import { getTopEmployers, type EmployerYearStat } from "@/lib/queries";
 import { searchEmployersWithTickers, type TickerEmployerHit } from "@/lib/employer-search";
 import { fmtInt, fmtPct } from "@/lib/format";
@@ -18,7 +18,7 @@ import { getEmployerFlags, type EmployerFlags } from "@/lib/employer-flags";
 import type { EmployerRef } from "@/lib/employer-path";
 import { getEmployerLinker } from "@/lib/employer-tickers";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 /** Own ticker, or the parent's ticker marked as a subsidiary. */
 function SearchTickerTag({ hit }: { hit: TickerEmployerHit }) {
@@ -62,12 +62,13 @@ export default async function EmployersPage({
 }: {
   searchParams: Promise<{ year?: string; q?: string }>;
 }) {
+  const employerHrefPromise = getEmployerLinker();
   const { year, q } = await searchParams;
   const term = q?.trim() ?? "";
 
   if (term) {
     const hits = await searchEmployersWithTickers(term, 100);
-    const [flags, employerHref] = await Promise.all([getEmployerFlags(hits.map((h) => h.id)), getEmployerLinker()]);
+    const [flags, employerHref] = await Promise.all([getEmployerFlags(hits.map((h) => h.id)), employerHrefPromise]);
     return (
       <div className="space-y-8">
         <div>
@@ -115,11 +116,11 @@ export default async function EmployersPage({
     );
   }
 
-  const fy = year ? Number(year) : 2026;
+  const fy = FISCAL_YEARS.includes(Number(year)) ? Number(year) : FISCAL_YEARS[0];
   const rows = await getTopEmployers(fy, 100);
   const [flags, employerHref] = await Promise.all([
     getEmployerFlags(rows.map((r) => r.employer_id)),
-    getEmployerLinker(),
+    employerHrefPromise,
   ]);
 
   return (

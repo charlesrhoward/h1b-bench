@@ -11,7 +11,7 @@ import { collectionPageJsonLd } from "@/lib/json-ld";
 import JsonLd from "@/components/json-ld";
 import { pageMetadata } from "@/lib/site";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export const metadata: Metadata = pageMetadata(PAGES.jobs);
 
@@ -23,7 +23,7 @@ export default async function JobsPage({
   searchParams: Promise<{ year?: string; q?: string }>;
 }) {
   const { year, q } = await searchParams;
-  const fy = year ? Number(year) : 2026;
+  const fy = FISCAL_YEARS.includes(Number(year)) ? Number(year) : FISCAL_YEARS[0];
   const term = q?.trim() ?? "";
   const rows = await getJobStats(fy, 50, term || undefined);
 

@@ -36,26 +36,24 @@ type LayoffRow = EmployerLayoffFilings & { employer_id: number };
 
 /** FY rows that can meet the "Underpaid" rule, for the given employers. */
 async function fetchUnderpaid(ids: number[]): Promise<EmployerMarketGap[]> {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("employer_market_gap")
     .select("employer_id, filings_matched, below_median, median_gap")
     .eq("lca_fiscal_year", CHEAP_LABOR_FY)
     .gte("filings_matched", UNDERPAID_MIN_FILINGS)
     .lt("median_gap", 0)
-    .in("employer_id", ids);
-  if (error) console.error("employer flags (market gap):", error.message);
+    .in("employer_id", ids).throwOnError();
   return ((data ?? []) as EmployerMarketGap[]).filter(isUnderpaid);
 }
 
 /** Layoff-then-filings rows for the given employers. */
 async function fetchLayoffs(ids: number[]): Promise<LayoffRow[]> {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("employer_layoff_filings")
     .select(
       "employer_id, notices_followed, workers_laid_off, states, filings_after, positions_after, filings_before, filings_after_new_employment, filings_after_change_employer, filings_after_not_counted",
     )
-    .in("employer_id", ids);
-  if (error) console.error("employer flags (layoffs):", error.message);
+    .in("employer_id", ids).throwOnError();
   return (data ?? []) as LayoffRow[];
 }
 

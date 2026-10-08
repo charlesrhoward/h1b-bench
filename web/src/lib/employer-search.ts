@@ -28,8 +28,8 @@ function tickerEmployerIds(ticker: string | null, tickers: TickerMap): number[] 
 async function hitsForIds(ids: number[]): Promise<EmployerHit[]> {
   if (ids.length === 0) return [];
   const [employers, stats] = await Promise.all([
-    supabase.from("employers").select("id, name, city, state").in("id", ids),
-    supabase.from("employer_year_stats").select("employer_id, filings").eq("visa_class", "H-1B").in("employer_id", ids),
+    supabase.from("employers").select("id, name, city, state").in("id", ids).throwOnError(),
+    supabase.from("employer_year_stats").select("employer_id, filings").eq("visa_class", "H-1B").in("employer_id", ids).throwOnError(),
   ]);
   const filings = new Map<number, number>();
   for (const row of stats.data ?? []) {
@@ -45,17 +45,22 @@ async function hitsForIds(ids: number[]): Promise<EmployerHit[]> {
   }));
 }
 
+/** Resolve ticker hits while name search runs, rather than waiting for its response. */
+async function searchTickerHits(term: string) {
+  const tickers = await getTickerMap();
+  const ticker = asTicker(term);
+  const ids = tickerEmployerIds(ticker, tickers);
+  return { tickers, hits: await hitsForIds(ids), owner: tickers.byTicker.get(ticker ?? "") };
+}
+
 /** Ticker hits first (the ticker's owner, then subsidiaries by filings), then name matches. */
-async function orderHits(term: string, nameHits: EmployerHit[], tickers: TickerMap, limit: number) {
-  const ids = tickerEmployerIds(asTicker(term), tickers);
-  if (ids.length === 0) return nameHits;
-  const owner = tickers.byTicker.get(asTicker(term) ?? "");
-  const tickerHits = (await hitsForIds(ids)).sort((a, b) => {
+function orderHits(tickerHits: EmployerHit[], nameHits: EmployerHit[], owner: number | undefined, limit: number) {
+  tickerHits.sort((a, b) => {
     if (a.id === owner) return -1;
     if (b.id === owner) return 1;
     return b.filings - a.filings;
   });
-  const shown = new Set(ids);
+  const shown = new Set(tickerHits.map((hit) => hit.id));
   return [...tickerHits, ...nameHits.filter((hit) => !shown.has(hit.id))].slice(0, limit);
 }
 
@@ -64,8 +69,9 @@ async function orderHits(term: string, nameHits: EmployerHit[], tickers: TickerM
  * that owns it and its listed subsidiaries come first; the name matches follow.
  */
 export async function searchEmployersWithTickers(term: string, limit: number): Promise<TickerEmployerHit[]> {
-  const [nameHits, tickers] = await Promise.all([searchEmployerHits(term, limit), getTickerMap()]);
-  const hits = await orderHits(term, nameHits, tickers, limit);
+  const [nameHits, tickerSearch] = await Promise.all([searchEmployerHits(term, limit), searchTickerHits(term)]);
+  const { tickers } = tickerSearch;
+  const hits = orderHits(tickerSearch.hits, nameHits, tickerSearch.owner, limit);
   return hits.map((hit) => {
     const parent = tickers.parentById.get(hit.id);
     return {

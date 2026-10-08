@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/intent-link";
 import Image from "next/image";
 import { getBirthCountryShares, getOverviewStats, getTopEmployers } from "@/lib/queries";
 import { fmtCompact, fmtInt, fmtPct } from "@/lib/format";
@@ -12,21 +12,26 @@ import BirthCountrySection from "@/components/birth-country-section";
 import { EmployerFlagPills } from "@/components/employer-flags";
 import { getEmployerFlags } from "@/lib/employer-flags";
 import { getEmployerLinker } from "@/lib/employer-tickers";
+import { bodyFont } from "@/lib/body-font";
+import { displayFont } from "@/lib/display-font";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 const JSON_LD = lcaDatasetJsonLd();
 
 export default async function Home() {
-  const birthCountriesPromise = getBirthCountryShares();
-  const { years, totalFilings, totalCertified, employerCount } = await getOverviewStats();
+  const overviewPromise = getOverviewStats();
+  const topPromise = overviewPromise.then(({ years }) => getTopEmployers(years.at(-1)?.[0] ?? 2025, 10));
+  const flagsPromise = topPromise.then((top) => getEmployerFlags(top.map((row) => row.employer_id)));
+  const [overview, top, birthCountries, flags, employerHref] = await Promise.all([
+    overviewPromise, topPromise, getBirthCountryShares(), flagsPromise, getEmployerLinker(),
+  ]);
+  const { years, totalFilings, totalCertified, employerCount } = overview;
   const latestYear = years.at(-1)?.[0] ?? 2025;
-  const [top, birthCountries] = await Promise.all([getTopEmployers(latestYear, 10), birthCountriesPromise]);
-  const [flags, employerHref] = await Promise.all([getEmployerFlags(top.map((r) => r.employer_id)), getEmployerLinker()]);
   const maxFilings = Math.max(...years.map(([, v]) => v.filings), 1);
 
   return (
-    <div className="space-y-16 sm:space-y-20">
+    <div className={`${bodyFont.variable} ${displayFont.variable} space-y-16 sm:space-y-20`}>
       <JsonLd data={JSON_LD} />
       <section className="grid items-center gap-10 md:grid-cols-[minmax(0,1fr)_16rem] md:gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_26rem]">
         <div className="space-y-6">
@@ -54,6 +59,7 @@ export default async function Home() {
             </Link>
             <Link
               href="/explore"
+              prefetch={false}
               className="rounded-full border border-neutral-secondary px-5 py-2.5 font-medium text-neutral-primary hover:border-brand-primary"
             >
               Explore the data
@@ -65,7 +71,8 @@ export default async function Home() {
           alt=""
           width={870}
           height={980}
-          priority
+          loading="eager"
+          fetchPriority="high"
           sizes="(min-width: 1280px) 26rem, (min-width: 1024px) 22rem, (min-width: 768px) 16rem, 18rem"
           className="ink-art mx-auto h-auto w-full max-w-72 md:max-w-none"
         />

@@ -16,7 +16,6 @@ export const NO_ACS_STATES = new Set(["GU", "MP", "PR", "VI"]);
 export type ExploreEmployer = {
   id: number;
   name: string;
-  hqState: string | null;
   topState: string | null;
   topSoc: string | null;
   topJob: string | null;

@@ -13,7 +13,9 @@ export async function GET(request: NextRequest) {
     .slice(0, MAX_IDS);
   if (ids.length === 0) return Response.json({ rows: [] });
   try {
-    return Response.json({ rows: await getEmployerHistory(ids) });
+    return Response.json({ rows: await getEmployerHistory([...new Set(ids)].sort((a, b) => a - b)) }, {
+      headers: { "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=300" },
+    });
   } catch (error) {
     console.error(error);
     return Response.json({ error: "Could not read employer history." }, { status: 502 });

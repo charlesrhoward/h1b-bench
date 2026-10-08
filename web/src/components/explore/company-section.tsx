@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import type { ExploreEmployer } from "@/lib/explore-model";
 import { EMPLOYER_METRICS, median, type EmployerMetricKey } from "@/lib/explore-stats";
 import { fmtInt, fmtPct } from "@/lib/format";
 import { SOC_MAJOR_GROUPS, socMajorGroup } from "@/lib/soc-groups";
 import { stateName } from "@/lib/us-states";
-import { buildCompanyChart, companyPoints } from "./company-chart";
+import { createCompanyRenderer, companyPoints } from "./company-chart";
 import { FilterChip, Range, SearchBox, Segmented, Toggle, type Choice } from "./controls";
 import ExploreFigure from "./explore-figure";
 import PlotFigure from "./plot-figure";
@@ -75,6 +75,7 @@ export default function CompanySection({ employers, state, compared, compareColo
   const [group, setGroup] = useState("all");
   const [minStep, setMinStep] = useState(0);
   const [term, setTerm] = useState("");
+  const deferredTerm = useDeferredValue(term);
   const [showBackWages, setShowBackWages] = useState(true);
   const [showLayoffs, setShowLayoffs] = useState(true);
   const groups = useMemo(() => groupChoices(employers), [employers]);
@@ -84,13 +85,17 @@ export default function CompanySection({ employers, state, compared, compareColo
   );
   const points = useMemo(() => companyPoints(filtered, xKey, yKey), [filtered, xKey, yKey]);
   const matches = useMemo(() => {
-    const needle = term.trim().toLowerCase();
+    const needle = deferredTerm.trim().toLowerCase();
     return new Set(needle.length < 2 ? [] : filtered.filter((e) => e.name.toLowerCase().includes(needle)).map((e) => e.id));
-  }, [filtered, term]);
+  }, [filtered, deferredTerm]);
+  const renderChart = useMemo(
+    () => createCompanyRenderer({ points, xKey, yKey, showBackWages, showLayoffs }),
+    [points, xKey, yKey, showBackWages, showLayoffs],
+  );
   const build = useCallback(
     (width: number, palette: Palette) =>
-      buildCompanyChart({ points, xKey, yKey, showBackWages, showLayoffs, matches, compared, compareColors, onPick }, width, palette),
-    [points, xKey, yKey, showBackWages, showLayoffs, matches, compared, compareColors, onPick],
+      renderChart({ matches, compared, compareColors, onPick }, width, palette),
+    [renderChart, matches, compared, compareColors, onPick],
   );
 
   return (

@@ -70,7 +70,7 @@ export default function MobileMenu({ links }: { links: NavLink[] }) {
                   {l.label}
                 </a>
               ) : (
-                <Link href={l.href} onClick={close} className="block py-3.5 text-base text-neutral-primary hover:text-neutral-primary-hover">
+                <Link href={l.href} prefetch={l.href === "/explore" ? false : undefined} onClick={close} className="block py-3.5 text-base text-neutral-primary hover:text-neutral-primary-hover">
                   {l.label}
                 </Link>
               )}

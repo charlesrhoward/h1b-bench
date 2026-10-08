@@ -1,0 +1,73 @@
+{
+  "baselineCommit": "8c68e34",
+  "environment": "Local Next.js production build; Lighthouse mobile defaults; Chrome; public live data; no production deployment",
+  "routes": {
+    "home": {
+      "before": {
+        "score": 76,
+        "lighthouse": "13.5.0",
+        "timestamp": "2026-10-08T21:34:44.348Z",
+        "first-contentful-paint": 914.377,
+        "largest-contentful-paint": 7993.131,
+        "total-blocking-time": 33,
+        "cumulative-layout-shift": 0,
+        "total-byte-weight": 1200391
+      },
+      "after": {
+        "score": 92,
+        "lighthouse": "13.5.0",
+        "timestamp": "2026-10-08T22:47:55.622Z",
+        "first-contentful-paint": 1054.8306,
+        "largest-contentful-paint": 3372.6612,
+        "total-blocking-time": 13,
+        "cumulative-layout-shift": 0,
+        "total-byte-weight": 384058
+      }
+    },
+    "explore": {
+      "before": {
+        "score": 63,
+        "lighthouse": "13.5.0",
+        "timestamp": "2026-10-08T21:34:55.687Z",
+        "first-contentful-paint": 1655.766,
+        "largest-contentful-paint": 5855.7660000000005,
+        "total-blocking-time": 597,
+        "cumulative-layout-shift": 0,
+        "total-byte-weight": 1153265
+      },
+      "after": {
+        "score": 94,
+        "lighthouse": "13.5.0",
+        "timestamp": "2026-10-08T22:48:05.601Z",
+        "first-contentful-paint": 1203.8586,
+        "largest-contentful-paint": 3003.8586,
+        "total-blocking-time": 15,
+        "cumulative-layout-shift": 0,
+        "total-byte-weight": 350574
+      }
+    }
+  },
+  "productionIndex": {
+    "applied": "2026-10-08",
+    "name": "lca_cases_employer_recent_certified_idx",
+    "valid": true,
+    "ready": true,
+    "size": "272 MB",
+    "plan": "Index Only Scan",
+    "databaseExecutionMs": 7.511,
+    "publicApiRows": 1000,
+    "publicApiMs": [
+      162,
+      179
+    ],
+    "localEmployerPageMs": {
+      "first": 451,
+      "cached": 2
+    },
+    "productionEmployerPage": {
+      "status": 200,
+      "roleRows": 15
+    }
+  },
+  "rebasedOnto": "36b2b212cf6a2405857900412ee74f4fd1e2e1a4"
+}

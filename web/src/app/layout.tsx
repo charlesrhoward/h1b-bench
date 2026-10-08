@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import IntentLink from "@/components/intent-link";
 import {
-  Fraunces,
-  IM_Fell_Double_Pica,
   Inter,
-  Playfair_Display,
   Source_Code_Pro,
-  Source_Serif_4,
 } from "next/font/google";
+import localFont from "next/font/local";
 import DesktopNav from "@/components/desktop-nav";
 import GitHubLink from "@/components/github-link";
 import JsonLd from "@/components/json-ld";
@@ -19,24 +17,17 @@ import { NAV_ITEMS, NAV_LINKS, REPO_URL, SITE_URL, pageMetadata } from "@/lib/si
 import "./globals.css";
 
 // Font roles from DESIGN.md: next/font self-hosts each family with swap and a metric fallback.
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"], style: ["normal", "italic"] });
-const sourceSerif = Source_Serif_4({
-  variable: "--font-source-serif",
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  axes: ["opsz"],
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"], style: "normal" });
+const sourceCode = Source_Code_Pro({ variable: "--font-source-code", weight: "400", subsets: ["latin"], preload: false });
+const wordmark = localFont({
+  src: "../assets/fonts/h1b-bench-wordmark.woff2",
+  variable: "--font-playfair",
+  weight: "500",
+  display: "swap",
+  adjustFontFallback: "Times New Roman",
 });
-const sourceCode = Source_Code_Pro({ variable: "--font-source-code", subsets: ["latin"] });
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  axes: ["opsz"],
-});
-const playfair = Playfair_Display({ variable: "--font-playfair", subsets: ["latin"], weight: ["500", "700"] });
-const imFell = IM_Fell_Double_Pica({ variable: "--font-im-fell", subsets: ["latin"], weight: "400" });
 
-const FONT_VARIABLES = [inter, sourceSerif, sourceCode, fraunces, playfair, imFell]
+const FONT_VARIABLES = [inter, sourceCode, wordmark]
   .map((font) => font.variable)
   .join(" ");
 
@@ -54,12 +45,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JsonLd data={SITE_JSON_LD} />
         <header className="relative z-40 border-b border-neutral-primary bg-neutral-primary">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3.5 sm:px-6">
-            <Link
+            <IntentLink
               href="/"
               className="font-brand text-[1.65rem] font-medium leading-none tracking-tight text-neutral-primary"
             >
               H1B Bench
-            </Link>
+            </IntentLink>
             <div className="order-3 w-full sm:order-2 sm:w-auto sm:min-w-0 sm:flex-1 sm:px-4">
               <div className="sm:max-w-sm">
                 <SiteSearch />
