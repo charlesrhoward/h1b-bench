@@ -80,23 +80,23 @@ function scales(points: CompanyPoint[], xm: EmployerMetric, ym: EmployerMetric, 
 /** Dot area: worker positions, or filings when positions are missing. */
 const size = (p: CompanyPoint) => p.e.workers ?? p.e.filings;
 
-/** The largest employers by filings get a label so the reader has landmarks. */
-const LANDMARKS = 8;
+const FORCED_MATCHES = 3;
 
+/** Labels for search matches, placed so they do not overlap. */
 function labels(inputs: CompanyInputs, s: ReturnType<typeof scales>, f: Frame) {
   const x = Plot.scale({ x: s.x });
   const y = Plot.scale({ y: s.y });
   const r = Plot.scale({ r: s.r });
-  const comparedIds = new Set(inputs.compared.map((e) => e.id));
-  const forced = inputs.points.filter((p) => comparedIds.has(p.e.id) || inputs.matches.has(p.e.id));
-  const largest = [...inputs.points].sort((a, b) => b.e.filings - a.e.filings).slice(0, LANDMARKS);
-  const candidates: LabelCandidate<CompanyPoint>[] = [...new Set([...forced, ...largest])].map((p) => ({
+  // Names show on hover. Only employers that match the search box keep a label on the chart.
+  const matched = inputs.points.filter((p) => inputs.matches.has(p.e.id));
+  const candidates: LabelCandidate<CompanyPoint>[] = matched.map((p) => ({
     datum: p,
     text: shorten(p.e.name),
     px: x.apply(p.x),
     py: y.apply(p.y),
     radius: r.apply(size(p)),
-    force: forced.includes(p),
+    // A narrow search (a few matches) always labels them; a broad one labels what fits.
+    force: matched.length <= FORCED_MATCHES,
   }));
   const placed = placeLabels(candidates, { x0: 0, x1: f.width, y0: 0, y1: f.height - f.bottom });
   return { placed, radius: (p: CompanyPoint) => r.apply(size(p)) };

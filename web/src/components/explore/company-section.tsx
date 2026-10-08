@@ -116,7 +116,7 @@ export default function CompanySection({ employers, state, compared, compareColo
       }
       readout={<Readout employers={filtered} />}
       notes={[
-        `Each dot is one employer with at least ${fmtInt(MIN_FILINGS_STEPS[minStep])} H-1B LCA filings in FY2025. Dot size shows worker positions. Click a dot to add it to the comparison below.`,
+        `Each dot is one employer with at least ${fmtInt(MIN_FILINGS_STEPS[minStep])} H-1B LCA filings in FY2025. Dot size shows worker positions. Point at a dot to see the employer. Click it to add it to the comparison below.`,
         "The local median is DOL's Level III wage for the job and area. Offered pay is the bottom of the offered range. An employer can pay more.",
         "An employer's share below the local median shows only when at least 10 of its filings matched a local wage.",
         "Yellow: H-1B back wages that employers agreed to pay after a WHD case, all years since FY2005. Ring: WARN layoff notices in Texas or California, FY2025 window.",

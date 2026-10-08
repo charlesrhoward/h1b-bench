@@ -19,10 +19,16 @@ export function isNavGroup(item: NavItem): item is NavGroup {
   return "links" in item;
 }
 
-/** Desktop header navigation. The analysis pages share a dropdown so the search box keeps its width. */
+/** Desktop header navigation: Explore first, then grouped dropdowns so the search box keeps its width. */
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/employers", label: "Employers" },
-  { href: "/jobs", label: "Occupations" },
+  { href: "/explore", label: "Explore" },
+  {
+    label: "Benchmarks",
+    links: [
+      { href: "/employers", label: "Employers", description: "Every sponsor's H-1B filings, pay, and certification rate by year." },
+      { href: "/jobs", label: "Occupations", description: "H-1B filings and median pay for each job code." },
+    ],
+  },
   {
     label: "Findings",
     links: [
@@ -30,7 +36,6 @@ export const NAV_ITEMS: NavItem[] = [
       { href: "/labor-pool", label: "Labor pool", description: "New H-1B positions against unemployed U.S. workers." },
     ],
   },
-  { href: "/explore", label: "Explore" },
   { href: "/sources", label: "Sources" },
 ];
 
