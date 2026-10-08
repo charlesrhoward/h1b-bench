@@ -8,7 +8,8 @@
 -- -> uscis_registrations -> perm_lockin -> drop_perm_lockin_insert_policies
 -- -> market_gap_annual_wage_reload (truncate market_gap_summary, employer_market_gap,
 --    pw_source_summary, pw_survey_publishers + temporary insert policies; reload after the
---    yearly-wage fix in docs/market-gap-method.md) -> drop_market_gap_reload_insert_policies.
+--    yearly-wage fix in docs/market-gap-method.md) -> drop_market_gap_reload_insert_policies
+-- -> layoff_filings -> drop_layoff_filings_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -257,6 +258,51 @@ create table employer_warn (
   primary key (lca_fiscal_year, employer_id)
 );
 
+-- WARN notices (48-state compilation) followed within 365 days by certified H-1B LCAs for
+-- workers new to the company (docs/layoff-filings-method.md), loaded by
+-- etl/layoff_filings.py --load. One summary row per run of the method.
+create table layoff_filings_summary (
+  notice_start date primary key,
+  notice_end date not null,
+  follow_days smallint not null,
+  warn_revision text not null,             -- Hugging Face dataset revision used
+  states smallint not null,
+  notices_in_window integer not null,
+  notices_matched integer not null,
+  notices_followed integer not null,
+  notices_followed_90 integer not null,
+  companies_followed integer not null,
+  workers_laid_off integer not null,       -- workers in notices that were followed
+  filings_after integer not null,          -- new-worker LCAs received 1-365 days after a notice
+  positions_after integer not null,
+  filings_before integer not null,         -- new-worker LCAs received 1-365 days before a notice
+  filings_after_same_state integer not null
+);
+
+create table layoff_filings_companies (
+  key text primary key,                    -- company key (etl/warn.py company_key)
+  company text not null,                   -- as named in the WARN notices
+  states text not null,
+  notices_followed integer not null,
+  workers_laid_off integer not null,
+  first_notice date not null,
+  filings_after integer not null,
+  positions_after integer not null,
+  filings_after_90 integer not null,
+  filings_before integer not null,
+  employer_id bigint references employers(id)  -- name variant with the most counted filings
+);
+
+create table employer_layoff_filings (
+  employer_id bigint primary key references employers(id),
+  notices_followed integer not null,       -- totals for the employer's whole company key
+  workers_laid_off integer not null,
+  states text not null,
+  filings_after integer not null,
+  positions_after integer not null,
+  filings_before integer not null
+);
+
 -- USCIS H-1B cap registration Historical Data table (docs/lottery-method.md), copied by
 -- hand from the USCIS "H-1B Electronic Registration Process" page, updated 09/21/2026.
 create table uscis_registrations (
@@ -331,6 +377,9 @@ alter table uscis_registrations enable row level security;
 alter table perm_lockin_summary enable row level security;
 alter table perm_layoff_employers enable row level security;
 alter table employer_perm enable row level security;
+alter table layoff_filings_summary enable row level security;
+alter table layoff_filings_companies enable row level security;
+alter table employer_layoff_filings enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
@@ -353,6 +402,9 @@ create policy "public read uscis_registrations" on uscis_registrations for selec
 create policy "public read perm_lockin_summary" on perm_lockin_summary for select using (true);
 create policy "public read perm_layoff_employers" on perm_layoff_employers for select using (true);
 create policy "public read employer_perm" on employer_perm for select using (true);
+create policy "public read layoff_filings_summary" on layoff_filings_summary for select using (true);
+create policy "public read layoff_filings_companies" on layoff_filings_companies for select using (true);
+create policy "public read employer_layoff_filings" on employer_layoff_filings for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
@@ -377,6 +429,9 @@ create policy "public read employer_perm" on employer_perm for select using (tru
 --   create policy "bulk insert perm_lockin_summary" on perm_lockin_summary for insert with check (true);
 --   create policy "bulk insert perm_layoff_employers" on perm_layoff_employers for insert with check (true);
 --   create policy "bulk insert employer_perm" on employer_perm for insert with check (true);
+--   create policy "bulk insert layoff_filings_summary" on layoff_filings_summary for insert with check (true);
+--   create policy "bulk insert layoff_filings_companies" on layoff_filings_companies for insert with check (true);
+--   create policy "bulk insert employer_layoff_filings" on employer_layoff_filings for insert with check (true);
 
 -- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
 create view fy_overview with (security_invoker = true) as

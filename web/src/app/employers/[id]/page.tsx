@@ -20,8 +20,8 @@ import WorkforceShareCell from "@/components/workforce-share-cell";
 import EmployerMarketGapNote from "@/components/cheap-labor/employer-market-gap-note";
 import { EmployerBackWagesNote } from "@/components/cheap-labor/back-wages";
 import { EmployerPermNote } from "@/components/cheap-labor/perm-tables";
-import { EmployerWarnNote } from "@/components/cheap-labor/warn-tables";
-import { getEmployerMarketGap, getEmployerPerm, getEmployerWarn, getEmployerWhd } from "@/lib/cheap-labor";
+import { EmployerLayoffFilingsNote } from "@/components/cheap-labor/layoff-filings-tables";
+import { getEmployerLayoffFilings, getEmployerMarketGap, getEmployerPerm, getEmployerWhd } from "@/lib/cheap-labor";
 import { pageMetadata } from "@/lib/site";
 import { employerJsonLd } from "@/lib/json-ld";
 import JsonLd from "@/components/json-ld";
@@ -47,14 +47,14 @@ export default async function EmployerDetail({ params }: Params) {
   const employerId = Number(id);
   if (!Number.isFinite(employerId)) notFound();
 
-  const [employer, stats, topJobs, headcount, marketGap, whd, warn, perm] = await Promise.all([
+  const [employer, stats, topJobs, headcount, marketGap, whd, layoffFilings, perm] = await Promise.all([
     getEmployer(employerId),
     getEmployerStats(employerId),
     getEmployerTopJobs(employerId),
     getEmployerHeadcount(employerId),
     getEmployerMarketGap(employerId),
     getEmployerWhd(employerId),
-    getEmployerWarn(employerId),
+    getEmployerLayoffFilings(employerId),
     getEmployerPerm(employerId),
   ]);
   if (!employer) notFound();
@@ -108,7 +108,7 @@ export default async function EmployerDetail({ params }: Params) {
           </p>
           <EmployerMarketGapNote gap={marketGap} />
           <EmployerBackWagesNote whd={whd} />
-          <EmployerWarnNote warn={warn} />
+          <EmployerLayoffFilingsNote row={layoffFilings} />
           <EmployerPermNote perm={perm} />
         </div>
       </section>

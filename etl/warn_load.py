@@ -20,11 +20,11 @@ def top_filer_ids(lca, id_map):
     return best.set_index("key")["employer_id"].astype(int)
 
 
-def employer_rows(companies, id_map):
-    """Every employer name variant whose company key matched, with that company's WARN totals."""
+def employer_rows(companies, id_map, cols=("notices", "workers_laid_off", "states")):
+    """Every employer name variant whose company key matched, with that company's totals."""
     keyed = pd.DataFrame({"name_normalized": list(id_map.keys()), "employer_id": list(id_map.values())})
     keyed["key"] = keyed["name_normalized"].map(company_key)
-    rows = keyed.merge(companies[["key", "notices", "workers_laid_off", "states"]], on="key")
+    rows = keyed.merge(companies[["key", *cols]], on="key")
     return rows.drop_duplicates("employer_id")
 
 

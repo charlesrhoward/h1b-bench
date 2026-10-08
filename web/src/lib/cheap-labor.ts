@@ -212,59 +212,77 @@ export function totalWhd(years: WhdYear[]) {
   );
 }
 
-export type WarnSummary = {
+export type LayoffFilingsSummary = {
+  notice_start: string;
+  notice_end: string;
+  states: number;
   notices_in_window: number;
-  companies_matched: number;
   notices_matched: number;
+  notices_followed: number;
+  notices_followed_90: number;
+  companies_followed: number;
   workers_laid_off: number;
-  h1b_filings: number;
+  filings_after: number;
+  positions_after: number;
+  filings_before: number;
+  filings_after_same_state: number;
 };
 
-export type WarnCompany = {
+export type LayoffFilingsCompany = {
   key: string;
   company: string;
   states: string;
-  notices: number;
+  notices_followed: number;
   workers_laid_off: number;
-  h1b_filings: number;
+  first_notice: string;
+  filings_after: number;
+  positions_after: number;
+  filings_after_90: number;
+  filings_before: number;
   employer_id: number | null;
 };
 
-export type EmployerWarn = {
-  notices: number;
+export type EmployerLayoffFilings = {
+  notices_followed: number;
   workers_laid_off: number;
   states: string;
+  filings_after: number;
+  positions_after: number;
+  filings_before: number;
 };
 
-/** WARN notices matched to H-1B employers for the fiscal year, or null when not loaded. */
-export async function getWarnSummary() {
+/** WARN notices followed by new-worker H-1B filings (docs/layoff-filings-method.md), or null when not loaded. */
+export async function getLayoffFilingsSummary() {
   const { data } = await supabase
-    .from("warn_h1b_summary")
-    .select("notices_in_window, companies_matched, notices_matched, workers_laid_off, h1b_filings")
-    .eq("lca_fiscal_year", CHEAP_LABOR_FY)
+    .from("layoff_filings_summary")
+    .select(
+      "notice_start, notice_end, states, notices_in_window, notices_matched, notices_followed, notices_followed_90, companies_followed, workers_laid_off, filings_after, positions_after, filings_before, filings_after_same_state",
+    )
+    .order("notice_start", { ascending: false })
+    .limit(1)
     .maybeSingle();
-  return data as WarnSummary | null;
+  return data as LayoffFilingsSummary | null;
 }
 
-/** The matched companies with the most workers in WARN notices. */
-export async function getWarnCompanies() {
+/** The companies with the most workers in WARN notices that new-worker H-1B filings followed. */
+export async function getLayoffFilingsCompanies() {
   const { data } = await supabase
-    .from("warn_h1b_companies")
-    .select("key, company, states, notices, workers_laid_off, h1b_filings, employer_id")
-    .eq("lca_fiscal_year", CHEAP_LABOR_FY)
+    .from("layoff_filings_companies")
+    .select(
+      "key, company, states, notices_followed, workers_laid_off, first_notice, filings_after, positions_after, filings_after_90, filings_before, employer_id",
+    )
     .order("workers_laid_off", { ascending: false });
-  return (data ?? []) as WarnCompany[];
+  return (data ?? []) as LayoffFilingsCompany[];
 }
 
-/** One employer's company-level WARN totals for the fiscal year, or null when none matched. */
-export async function getEmployerWarn(employerId: number) {
+/** One employer's company-level layoff-then-filings totals, or null when none matched. */
+export async function getEmployerLayoffFilings(employerId: number) {
   const { data } = await supabase
-    .from("employer_warn")
-    .select("notices, workers_laid_off, states")
-    .eq("lca_fiscal_year", CHEAP_LABOR_FY)
+    .from("employer_layoff_filings")
+    .select("notices_followed, workers_laid_off, states, filings_after, positions_after, filings_before")
     .eq("employer_id", employerId)
     .maybeSingle();
-  return data as EmployerWarn | null;
+  return data as EmployerLayoffFilings | null;
 }
 
 export type UscisRegistrationYear = {
