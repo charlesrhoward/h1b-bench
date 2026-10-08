@@ -327,6 +327,31 @@ create table employer_layoff_filings (
   filings_after_not_counted integer not null
 );
 
+-- Timeline on employer pages (docs/layoff-filings-method.md, measure 8). Each company's rows
+-- are copied to every employer name variant with its company key, like employer_layoff_filings.
+create table employer_layoff_notices (
+  id bigint generated always as identity primary key,
+  employer_id bigint not null references employers(id),
+  notice_date date not null,
+  state text not null,
+  company text not null,                 -- company name as written in the notice
+  location text,                         -- site as written in the notice; free text
+  workers integer,                       -- null when the notice does not give a number
+  followed boolean not null,             -- measure 2: a counted filing 1 to 365 days after
+  filings_after integer not null,        -- counted filings 1 to 365 days after this notice
+  filings_before integer not null        -- counted filings 1 to 365 days before this notice
+);
+create index employer_layoff_notices_employer on employer_layoff_notices (employer_id, notice_date);
+
+create table employer_layoff_months (
+  employer_id bigint not null references employers(id),
+  month date not null,                   -- first day of the month received; Oct 2019 to May 2026
+  new_employment integer not null,       -- measure 7 split, all certified H-1B filings that month
+  change_employer integer not null,
+  not_counted integer not null,
+  primary key (employer_id, month)
+);
+
 -- USCIS H-1B cap registration Historical Data table (docs/lottery-method.md), copied by
 -- hand from the USCIS "H-1B Electronic Registration Process" page, updated 09/21/2026.
 create table uscis_registrations (
@@ -467,6 +492,8 @@ alter table employer_perm enable row level security;
 alter table layoff_filings_summary enable row level security;
 alter table layoff_filings_companies enable row level security;
 alter table employer_layoff_filings enable row level security;
+alter table employer_layoff_notices enable row level security;
+alter table employer_layoff_months enable row level security;
 alter table uscis_birth_country_years enable row level security;
 alter table uscis_birth_country enable row level security;
 alter table employer_tickers enable row level security;
@@ -499,6 +526,8 @@ create policy "public read employer_perm" on employer_perm for select using (tru
 create policy "public read layoff_filings_summary" on layoff_filings_summary for select using (true);
 create policy "public read layoff_filings_companies" on layoff_filings_companies for select using (true);
 create policy "public read employer_layoff_filings" on employer_layoff_filings for select using (true);
+create policy "public read employer_layoff_notices" on employer_layoff_notices for select using (true);
+create policy "public read employer_layoff_months" on employer_layoff_months for select using (true);
 create policy "public read uscis_birth_country_years" on uscis_birth_country_years for select using (true);
 create policy "public read uscis_birth_country" on uscis_birth_country for select using (true);
 create policy "public read employer_tickers" on employer_tickers for select using (true);
@@ -533,6 +562,8 @@ create policy "public read employer_parents" on employer_parents for select usin
 --   create policy "bulk insert layoff_filings_summary" on layoff_filings_summary for insert with check (true);
 --   create policy "bulk insert layoff_filings_companies" on layoff_filings_companies for insert with check (true);
 --   create policy "bulk insert employer_layoff_filings" on employer_layoff_filings for insert with check (true);
+--   create policy "bulk insert employer_layoff_notices" on employer_layoff_notices for insert with check (true);
+--   create policy "bulk insert employer_layoff_months" on employer_layoff_months for insert with check (true);
 --   create policy "bulk insert uscis_birth_country_years" on uscis_birth_country_years for insert with check (true);
 --   create policy "bulk insert uscis_birth_country" on uscis_birth_country for insert with check (true);
 --   create policy "bulk insert employer_tickers" on employer_tickers for insert with check (true);
