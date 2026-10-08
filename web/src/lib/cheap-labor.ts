@@ -319,22 +319,25 @@ export type LayoffMonth = {
 
 export type EmployerLayoffTimeline = { notices: LayoffNotice[]; months: LayoffMonth[] };
 
-/** One employer's layoff timeline (company-level rows), or null when it has none. */
+/**
+ * One employer's layoff timeline (company-level rows), or null when it has none. Throws on a
+ * query failure, like the other reads, so the tables must exist before this code deploys.
+ */
 export async function getEmployerLayoffTimeline(employerId: number): Promise<EmployerLayoffTimeline | null> {
   const [notices, months] = await Promise.all([
     supabase
       .from("employer_layoff_notices")
       .select("notice_date, state, company, location, workers, followed, filings_after, filings_before")
       .eq("employer_id", employerId)
-      .order("notice_date"),
+      .order("notice_date")
+      .throwOnError(),
     supabase
       .from("employer_layoff_months")
       .select("month, new_employment, change_employer, not_counted")
       .eq("employer_id", employerId)
-      .order("month"),
+      .order("month")
+      .throwOnError(),
   ]);
-  const error = notices.error ?? months.error;
-  if (error) console.error("layoff timeline:", error.message);
   if (!notices.data?.length) return null;
   return { notices: notices.data as LayoffNotice[], months: (months.data ?? []) as LayoffMonth[] };
 }
