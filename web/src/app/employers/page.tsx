@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTopEmployers, type EmployerYearStat } from "@/lib/queries";
-import { searchEmployersWithTickers } from "@/lib/employer-search";
+import { searchEmployersWithTickers, type TickerEmployerHit } from "@/lib/employer-search";
 import { fmtInt, fmtPct } from "@/lib/format";
 import { PAGES } from "@/lib/pages";
 import { collectionPageJsonLd } from "@/lib/json-ld";
@@ -19,6 +19,18 @@ import type { EmployerRef } from "@/lib/employer-path";
 import { getEmployerLinker } from "@/lib/employer-tickers";
 
 export const dynamic = "force-dynamic";
+
+/** Own ticker, or the parent's ticker marked as a subsidiary. */
+function SearchTickerTag({ hit }: { hit: TickerEmployerHit }) {
+  const own = hit.ticker ?? (hit.parent_is_self ? hit.parent_ticker : null);
+  if (own) return <span className="font-code text-xs text-neutral-secondary">{own} </span>;
+  if (!hit.parent_ticker) return null;
+  return (
+    <span className="text-xs text-neutral-secondary" title={`Subsidiary of ${hit.parent_name ?? hit.parent_ticker}`}>
+      <span className="font-code">{hit.parent_ticker}</span> subsidiary{" "}
+    </span>
+  );
+}
 
 /** Leaderboard employer cell: the linked name, then any warning flags. */
 function EmployerNameCell({
@@ -82,7 +94,7 @@ export default async function EmployersPage({
                     <Link href={employerHref(h)} className="font-medium hover:text-accent-primary">
                       {h.name}
                     </Link>{" "}
-                    {h.ticker ? <span className="font-code text-xs text-neutral-secondary">{h.ticker} </span> : null}
+                    <SearchTickerTag hit={h} />
                     <EmployerFlagPills flags={flags.get(h.id)} />
                   </td>
                   <td className="text-neutral-secondary">

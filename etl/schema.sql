@@ -11,7 +11,9 @@
 --    yearly-wage fix in docs/market-gap-method.md) -> drop_market_gap_reload_insert_policies
 -- -> layoff_filings -> drop_layoff_filings_insert_policies -> uscis_birth_country
 -- -> drop_uscis_birth_country_insert_policies -> employer_tickers (sec_companies,
---    employer_tickers + temporary insert policies) -> drop_employer_tickers_insert_policies.
+--    employer_tickers + temporary insert policies) -> drop_employer_tickers_insert_policies
+-- -> employer_parents (sec_subsidiary_exhibits, sec_subsidiaries, employer_parents + temporary
+--    insert policies, incl. sec_companies) -> drop_employer_parents_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -349,6 +351,35 @@ create table sec_companies (
   fetched_at timestamptz not null default now()
 );
 
+-- Subsidiary list of each public parent's latest annual report (docs/employer-parents-method.md):
+-- 10-K Exhibit 21 or 20-F Exhibit 8, read by etl/parents.py. Stored so reruns only ask the SEC
+-- about newer reports.
+create table sec_subsidiary_exhibits (
+  cik integer primary key,               -- SEC Central Index Key of the parent
+  accession text not null,               -- annual report accession number
+  filed date not null,
+  form text not null check (form in ('10-K', '20-F')),
+  url text                               -- the exhibit; null when the report has none
+);
+
+create table sec_subsidiaries (
+  cik integer not null references sec_subsidiary_exhibits(cik),
+  name text not null,                    -- one text cell of the exhibit (names, jurisdictions, headings)
+  primary key (cik, name)
+);
+
+-- Employers that are subsidiaries of a public company, loaded by etl/parents.py --load.
+create table employer_parents (
+  employer_id bigint primary key references employers(id),
+  parent_cik integer not null,
+  parent_ticker text not null,
+  parent_name text not null,             -- company name as in company_tickers.json
+  relation text not null check (relation in ('subsidiary', 'same_company')),  -- same_company: FEIN = parent EIN
+  filed date not null,                   -- date of the annual report whose exhibit lists the employer
+  source_url text not null               -- that exhibit
+);
+create index employer_parents_ticker on employer_parents (parent_ticker);
+
 -- Stock tickers for employer page URLs (docs/employer-tickers-method.md), loaded by
 -- etl/tickers.py --load. Name match confirmed by FEIN = SEC EIN; one row per employer and ticker.
 create table employer_tickers (
@@ -420,6 +451,9 @@ alter table uscis_birth_country_years enable row level security;
 alter table uscis_birth_country enable row level security;
 alter table employer_tickers enable row level security;
 alter table sec_companies enable row level security;
+alter table sec_subsidiary_exhibits enable row level security;
+alter table sec_subsidiaries enable row level security;
+alter table employer_parents enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
@@ -449,6 +483,9 @@ create policy "public read uscis_birth_country_years" on uscis_birth_country_yea
 create policy "public read uscis_birth_country" on uscis_birth_country for select using (true);
 create policy "public read employer_tickers" on employer_tickers for select using (true);
 create policy "public read sec_companies" on sec_companies for select using (true);
+create policy "public read sec_subsidiary_exhibits" on sec_subsidiary_exhibits for select using (true);
+create policy "public read sec_subsidiaries" on sec_subsidiaries for select using (true);
+create policy "public read employer_parents" on employer_parents for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
@@ -480,6 +517,9 @@ create policy "public read sec_companies" on sec_companies for select using (tru
 --   create policy "bulk insert uscis_birth_country" on uscis_birth_country for insert with check (true);
 --   create policy "bulk insert employer_tickers" on employer_tickers for insert with check (true);
 --   create policy "bulk insert sec_companies" on sec_companies for insert with check (true);
+--   create policy "bulk insert sec_subsidiary_exhibits" on sec_subsidiary_exhibits for insert with check (true);
+--   create policy "bulk insert sec_subsidiaries" on sec_subsidiaries for insert with check (true);
+--   create policy "bulk insert employer_parents" on employer_parents for insert with check (true);
 
 -- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
 create view fy_overview with (security_invoker = true) as

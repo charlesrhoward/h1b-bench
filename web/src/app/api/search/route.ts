@@ -7,6 +7,9 @@ export type EmployerHit = {
   id: number;
   href: string;
   ticker: string | null;
+  parent_ticker: string | null;
+  parent_name: string | null;
+  parent_is_self: boolean;
   name: string;
   city: string | null;
   state: string | null;

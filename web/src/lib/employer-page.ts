@@ -15,8 +15,9 @@ async function resolveEmployerId(slug: string): Promise<number | null> {
 export async function loadEmployer(slug: string) {
   const employerId = await resolveEmployerId(slug);
   if (employerId == null) return null;
-  const [employer, { byId }] = await Promise.all([getEmployer(employerId), getTickerMap()]);
+  const [employer, { byId, parentById }] = await Promise.all([getEmployer(employerId), getTickerMap()]);
   if (!employer) return null;
   const ticker = byId.get(employer.id) ?? null;
-  return { employer, ticker, segment: employerSegment({ ...employer, ticker }) };
+  const parent = parentById.get(employer.id) ?? null;
+  return { employer, ticker, parent, segment: employerSegment({ ...employer, ticker }) };
 }
