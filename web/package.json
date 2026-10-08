@@ -9,6 +9,7 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "next typegen && tsc --noEmit",
     "preflight": "pnpm lint && pnpm typecheck && pnpm build && ../scripts/check-etl.sh",
+    "preflight:clean": "../scripts/preflight-clean.sh",
     "prepare": "cd .. && husky web/.husky || true"
   },
   "lint-staged": {

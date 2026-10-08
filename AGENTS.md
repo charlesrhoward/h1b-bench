@@ -48,7 +48,8 @@ a number.
 ## Commands
 
 ```sh
-cd web && pnpm preflight              # lint, typecheck, build, etl checks (pre-push runs this)
+cd web && pnpm preflight              # lint, typecheck, build, etl checks on the working tree
+cd web && pnpm preflight:clean        # the same on a clean checkout of HEAD (pre-push runs this)
 scripts/check-etl.sh                  # etl checks only, from the repo root
 ```
 
