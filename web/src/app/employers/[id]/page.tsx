@@ -25,6 +25,8 @@ import { getEmployerLayoffFilings, getEmployerMarketGap, getEmployerPerm, getEmp
 import { pageMetadata } from "@/lib/site";
 import { employerJsonLd } from "@/lib/json-ld";
 import JsonLd from "@/components/json-ld";
+import { EmployerFlagCards, EmployerFlagPills } from "@/components/employer-flags";
+import { employerFlags } from "@/lib/employer-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +61,7 @@ export default async function EmployerDetail({ params }: Params) {
   ]);
   if (!employer) notFound();
 
+  const flags = employerFlags(marketGap, layoffFilings);
   const h1b = stats.filter((s) => s.visa_class === "H-1B");
   const totalFilings = h1b.reduce((s, r) => s + r.filings, 0);
   const totalCertified = h1b.reduce((s, r) => s + r.certified, 0);
@@ -73,6 +76,9 @@ export default async function EmployerDetail({ params }: Params) {
           ← Leaderboard
         </Link>
         <h1 className="type-title mt-3 text-balance [overflow-wrap:anywhere]">{employer.name}</h1>
+        <div className="mt-3">
+          <EmployerFlagPills flags={flags} />
+        </div>
         <p className="mt-2 text-neutral-secondary">
           {[employer.city, employer.state, employer.country].filter(Boolean).join(", ")}
         </p>
@@ -90,6 +96,8 @@ export default async function EmployerDetail({ params }: Params) {
           </svg>
         </a>
       </div>
+
+      <EmployerFlagCards flags={flags} />
 
       <section className="space-y-6">
         <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">

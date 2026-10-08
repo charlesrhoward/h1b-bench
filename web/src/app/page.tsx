@@ -9,6 +9,8 @@ import JsonLd from "@/components/json-ld";
 import { lcaDatasetJsonLd } from "@/lib/json-ld";
 import WorkforceShareCell from "@/components/workforce-share-cell";
 import BirthCountrySection from "@/components/birth-country-section";
+import { EmployerFlagPills } from "@/components/employer-flags";
+import { getEmployerFlags } from "@/lib/employer-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,7 @@ export default async function Home() {
   const { years, totalFilings, totalCertified, employerCount } = await getOverviewStats();
   const latestYear = years.at(-1)?.[0] ?? 2025;
   const [top, birthCountries] = await Promise.all([getTopEmployers(latestYear, 10), birthCountriesPromise]);
+  const flags = await getEmployerFlags(top.map((r) => r.employer_id));
   const maxFilings = Math.max(...years.map(([, v]) => v.filings), 1);
 
   return (
@@ -131,7 +134,8 @@ export default async function Home() {
                   <td>
                     <Link href={`/employers/${r.employer_id}`} className="font-medium hover:text-accent-primary">
                       {r.employers?.name}
-                    </Link>
+                    </Link>{" "}
+                    <EmployerFlagPills flags={flags.get(r.employer_id)} />
                   </td>
                   <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
                   <td className="text-right tabular-nums text-accent-primary">{fmtPct(r.certified, r.filings)}</td>
