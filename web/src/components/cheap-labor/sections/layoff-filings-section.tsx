@@ -9,6 +9,7 @@ import {
 } from "@/components/cheap-labor/layoff-filings-figures";
 import type { LayoffFilingsCompany, LayoffFilingsSummary } from "@/lib/cheap-labor";
 import { fmtInt, fmtPct } from "@/lib/format";
+import LayoffBreakdown from "@/components/cheap-labor/layoff-breakdown";
 import { REPO_URL } from "@/lib/site";
 
 const WARN_DATA_URL = "https://huggingface.co/datasets/APProjects/us-warn-act-layoffs-notices-daily";
@@ -71,6 +72,14 @@ export default function LayoffFilingsSection({
         job in the same state as the layoff.
       </p>
       <LayoffFilingsBeforeAfter summary={summary} />
+      <p>
+        <strong>Are these extensions?</strong> No. Each counted filing asks for at least one worker who is new to the
+        company: {fmtInt(summary.filings_after_new_employment)} for new employment and{" "}
+        {fmtInt(summary.filings_after_change_employer)} for workers who moved from another H-1B employer. In the same
+        months, the companies also filed {fmtInt(summary.filings_after_not_counted)} H-1B filings that only extend or
+        amend the visas of current workers. We do not count those.
+      </p>
+      <LayoffBreakdown row={summary} />
       <LayoffFilingsExample companies={companies} />
       <p>The records do not show that the new H-1B workers replaced the workers who were laid off.</p>
       {companies.length > 0 ? (

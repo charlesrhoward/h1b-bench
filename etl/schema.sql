@@ -13,7 +13,11 @@
 -- -> drop_uscis_birth_country_insert_policies -> employer_tickers (sec_companies,
 --    employer_tickers + temporary insert policies) -> drop_employer_tickers_insert_policies
 -- -> employer_parents (sec_subsidiary_exhibits, sec_subsidiaries, employer_parents + temporary
---    insert policies, incl. sec_companies) -> drop_employer_parents_insert_policies.
+--    insert policies, incl. sec_companies) -> drop_employer_parents_insert_policies
+-- -> layoff_filings_breakdown (truncate layoff_filings_summary, layoff_filings_companies,
+--    employer_layoff_filings; add filings_after_new_employment, filings_after_change_employer,
+--    filings_after_not_counted; temporary insert policies; reload, docs/layoff-filings-method.md
+--    measure 7) -> drop_layoff_filings_breakdown_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -280,7 +284,10 @@ create table layoff_filings_summary (
   filings_after integer not null,          -- new-worker LCAs received 1-365 days after a notice
   positions_after integer not null,
   filings_before integer not null,         -- new-worker LCAs received 1-365 days before a notice
-  filings_after_same_state integer not null
+  filings_after_same_state integer not null,
+  filings_after_new_employment integer not null,   -- measure 7: counted, NEW_EMPLOYMENT >= 1
+  filings_after_change_employer integer not null,  -- measure 7: counted, transfers only
+  filings_after_not_counted integer not null       -- measure 7: extensions/amendments/concurrent, same windows
 );
 
 create table layoff_filings_companies (
@@ -294,7 +301,10 @@ create table layoff_filings_companies (
   positions_after integer not null,
   filings_after_90 integer not null,
   filings_before integer not null,
-  employer_id bigint references employers(id)  -- name variant with the most counted filings
+  employer_id bigint references employers(id),  -- name variant with the most counted filings
+  filings_after_new_employment integer not null,   -- measure 7
+  filings_after_change_employer integer not null,
+  filings_after_not_counted integer not null
 );
 
 create table employer_layoff_filings (
@@ -304,7 +314,10 @@ create table employer_layoff_filings (
   states text not null,
   filings_after integer not null,
   positions_after integer not null,
-  filings_before integer not null
+  filings_before integer not null,
+  filings_after_new_employment integer not null,   -- measure 7
+  filings_after_change_employer integer not null,
+  filings_after_not_counted integer not null
 );
 
 -- USCIS H-1B cap registration Historical Data table (docs/lottery-method.md), copied by
