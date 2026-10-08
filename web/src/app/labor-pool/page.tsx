@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
+import cardCatalog from "@/assets/art/card-catalog.webp";
+import HeaderArt from "@/components/header-art";
 import FindingCards from "@/components/labor-pool/finding-cards";
 import MeasureCard from "@/components/labor-pool/measure-card";
 import OccupationTable from "@/components/labor-pool/occupation-table";
 import TierBars from "@/components/labor-pool/tier-bars";
 import { Eyebrow } from "@/components/title-tags";
 import { fmtInt, fmtPct } from "@/lib/format";
+import { PAGES } from "@/lib/pages";
+import { analysisJsonLd } from "@/lib/json-ld";
+import JsonLd from "@/components/json-ld";
 import {
   LABOR_POOL_FY,
   fillablePositions,
@@ -21,12 +26,9 @@ import { REPO_URL, pageMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = pageMetadata({
-  title: "Could Americans fill these jobs? — H1B Bench",
-  description:
-    "H-1B filings against unemployed U.S. workers with matching job history, from DOL and Census data. It counts the unemployed only, not the underemployed.",
-  path: "/labor-pool",
-});
+export const metadata: Metadata = pageMetadata(PAGES.laborPool);
+
+const JSON_LD = analysisJsonLd(PAGES.laborPool, ["labor-pool-method.md", "labor-pool-results.md"]);
 
 const LIMITS = [
   "The test counts only the unemployed. It does not count the underemployed or people who gave up the search for work.",
@@ -53,15 +55,19 @@ export default async function LaborPoolPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-16">
-      <header className="max-w-3xl space-y-6">
+    <div className="space-y-16">
+      <JsonLd data={JSON_LD} />
+      <header className="relative max-w-3xl space-y-6 lg:max-w-none">
+        <HeaderArt src={cardCatalog} className="top-1/2 right-0 w-72 -translate-y-1/2 opacity-50 lg:w-[26rem] lg:opacity-100" />
         <Eyebrow parts={[`FY${LABOR_POOL_FY} H-1B filings`, `ACS ${national.acs_year}`, "unemployed only"]} />
         <h1 className="type-title text-balance">Could Americans fill these jobs?</h1>
         <p className="type-body dropcap max-w-2xl text-neutral-primary">
           Could unemployed Americans fill most H-1B jobs? We compare new H-1B positions with
           unemployed Americans who had the same job, from federal data.
         </p>
-        <ScopeNotice />
+        <div className="max-w-3xl">
+          <ScopeNotice />
+        </div>
       </header>
 
       <section className="space-y-4">

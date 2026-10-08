@@ -8,9 +8,13 @@ import {
   Source_Code_Pro,
   Source_Serif_4,
 } from "next/font/google";
+import GitHubLink from "@/components/github-link";
+import JsonLd from "@/components/json-ld";
+import { websiteJsonLd } from "@/lib/json-ld";
 import MobileMenu from "@/components/mobile-menu";
 import SiteSearch from "@/components/site-search";
-import { NAV_LINKS, REPO_URL, pageMetadata } from "@/lib/site";
+import { PAGES } from "@/lib/pages";
+import { NAV_LINKS, REPO_URL, SITE_URL, pageMetadata } from "@/lib/site";
 import "./globals.css";
 
 // Font roles from DESIGN.md: next/font self-hosts each family with swap and a metric fallback.
@@ -35,19 +39,18 @@ const FONT_VARIABLES = [inter, sourceSerif, sourceCode, fraunces, playfair, imFe
   .map((font) => font.variable)
   .join(" ");
 
-const TITLE = "H1B Bench — Who sponsors, what they pay, when they file";
-const DESCRIPTION =
-  "Benchmark every U.S. employer's H-1B / H-1B1 / E-3 visa filings from official DOL disclosure data: certification rates, wages, job titles, and trends since FY2020.";
-
 export const metadata: Metadata = {
-  metadataBase: new URL("https://h1b-webrenew.vercel.app"),
-  ...pageMetadata({ title: TITLE, description: DESCRIPTION, path: "/" }),
+  metadataBase: new URL(SITE_URL),
+  ...pageMetadata(PAGES.home),
 };
+
+const SITE_JSON_LD = websiteJsonLd();
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${FONT_VARIABLES} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-neutral-primary text-neutral-primary">
+        <JsonLd data={SITE_JSON_LD} />
         <header className="relative z-40 border-b border-neutral-primary bg-neutral-primary">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3.5 sm:px-6">
             <Link
@@ -80,7 +83,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 ),
               )}
             </nav>
-            <MobileMenu links={NAV_LINKS} />
+            <div className="order-2 ml-auto flex items-center gap-1 sm:order-3 sm:ml-0 lg:-ml-3">
+              <GitHubLink />
+              <MobileMenu links={NAV_LINKS} />
+            </div>
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6 sm:py-14">{children}</main>
@@ -89,11 +95,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="max-w-xl space-y-2">
               <p className="font-brand text-lg font-medium text-neutral-primary">H1B Bench</p>
               <p>
-                Data: U.S. Department of Labor, Office of Foreign Labor Certification — LCA disclosure
-                files FY2020–FY2026 Q3. LCA certification is a filing step, not a visa grant.
+                Data: public U.S. government files from the Department of Labor, USCIS, the Census
+                Bureau, and state workforce agencies. LCA certification is a filing step, not a visa grant.
               </p>
             </div>
             <nav aria-label="Project" className="flex gap-5">
+              <Link href="/sources" className="hover:text-neutral-secondary-hover">
+                Data sources
+              </Link>
               <a href={`${REPO_URL}/blob/main/CONTRIBUTING.md`} className="hover:text-neutral-secondary-hover">
                 Contributing
               </a>

@@ -2,6 +2,14 @@ import type { Metadata } from "next";
 
 export const REPO_URL = "https://github.com/charlesrhoward/h1b-bench";
 
+/** Production origin. Canonical URLs, the sitemap, llms.txt, and JSON-LD use it. */
+export const SITE_URL = "https://h1b-bench.com";
+
+/** Full URL for a site path, such as "/employers". */
+export function absoluteUrl(path: string) {
+  return new URL(path, SITE_URL).toString();
+}
+
 export type NavLink = { href: string; label: string; external?: boolean };
 
 /** Site navigation, shared by the desktop nav and the mobile menu. */
@@ -10,7 +18,7 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/jobs", label: "Occupations" },
   { href: "/labor-pool", label: "Labor pool" },
   { href: "/pay-vs-market", label: "Pay vs. market" },
-  { href: "https://www.dol.gov/agencies/eta/foreign-labor/performance", label: "Source: DOL OFLC", external: true },
+  { href: "/sources", label: "Sources" },
 ];
 
 export const SITE_NAME = "H1B Bench";

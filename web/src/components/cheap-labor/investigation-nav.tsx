@@ -1,3 +1,5 @@
+import { ArrowUpRight } from "@/components/arrow-up-right";
+
 export type InvestigationChapter = { index: number; label: string; available: boolean };
 
 export default function InvestigationNav({ chapters }: { chapters: InvestigationChapter[] }) {
@@ -13,7 +15,7 @@ export default function InvestigationNav({ chapters }: { chapters: Investigation
           </li>
         ))}
       </ol>
-      <a className="link inline-block" href="#reading-the-evidence">How to read the evidence <span aria-hidden="true">↗</span></a>
+      <a className="link inline-block" href="#reading-the-evidence">How to read the evidence<ArrowUpRight className="ml-1 inline-block size-[0.9em] align-[-0.08em]" /></a>
     </nav>
   );
 }

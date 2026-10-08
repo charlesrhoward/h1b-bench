@@ -172,3 +172,27 @@ export async function getJobStats(year = 2026, limit = 50, q?: string) {
   const { data } = await query;
   return (data ?? []) as JobYearStat[];
 }
+
+/** Rows per request; the API returns at most 1,000 rows at a time. */
+const SITEMAP_PAGE_SIZE = 1000;
+
+/**
+ * Employers with at least `minFilings` H-1B LCAs in one fiscal year, for sitemap.xml.
+ * Small filers are left out so the sitemap lists pages with enough data to be useful.
+ */
+export async function getSitemapEmployerIds(fiscalYear: number, minFilings: number) {
+  const ids: number[] = [];
+  for (let from = 0; ; from += SITEMAP_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("employer_year_stats")
+      .select("employer_id")
+      .eq("visa_class", "H-1B")
+      .eq("fiscal_year", fiscalYear)
+      .gte("filings", minFilings)
+      .order("employer_id")
+      .range(from, from + SITEMAP_PAGE_SIZE - 1);
+    if (error) throw new Error(`sitemap employers: ${error.message}`);
+    ids.push(...data.map((row) => Number(row.employer_id)));
+    if (data.length < SITEMAP_PAGE_SIZE) return ids;
+  }
+}

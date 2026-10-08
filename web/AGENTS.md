@@ -21,6 +21,11 @@ Read the root `AGENTS.md` first. It holds the purpose, data-accuracy, lint, and 
 - `src/lib/supabase.ts` creates the one client with `NEXT_PUBLIC_SUPABASE_URL` and
   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Never put a secret or service-role key in `web/`.
 - `src/lib/site.ts` holds `REPO_URL` and the navigation links.
+- `src/lib/pages.ts` holds each top-level page's title and description. Page metadata
+  (`pageMetadata(PAGES.x)`), `sitemap.xml`, `llms.txt`, and JSON-LD all read from it. A new
+  page gets an entry there, plus a `<JsonLd>` node from `src/lib/json-ld.ts`.
+- `robots.ts`, `sitemap.ts`, and `llms.txt/route.ts` in `src/app/` build those files. The
+  sitemap lists employers with at least 10 H-1B filings in FY2025, not all 180,000.
 
 ## Adding a /pay-vs-market finding
 
@@ -30,9 +35,13 @@ Read the root `AGENTS.md` first. It holds the purpose, data-accuracy, lint, and 
 3. Render it with `EvidenceSection` (`index`, `title`, `limits`, `source`). Put detail
    tables in `EvidenceDetails`. Link the method with `${REPO_URL}/blob/main/docs/...`.
 4. Add the finding to the table in the root `AGENTS.md`.
+5. If the finding uses a new file, add it to `src/lib/sources.ts` (the `/sources` page).
 
 ## Layout rules
 
+- Every page uses the one container from `layout.tsx` (`max-w-6xl`, the same as the nav).
+  Do not add a page-level `max-w-*` or `mx-auto` wrapper. Cap prose at a reading measure
+  (`max-w-3xl` or `max-w-2xl`, left-aligned) and let tables and charts use the full width.
 - No horizontal page overflow at phone width. Wrap tables in `overflow-x-auto`.
 - Use `<table data-hide="2 5">` (1-based columns) to hide less important columns on phones,
   and `data-hide-md` for tablets (`src/app/globals.css`).
@@ -59,13 +68,16 @@ The root `DESIGN.md` (Unbound) is the source. The app applies it like this:
   `type-promo`. Authored copy is serif; navigation, tables, and data are sans.
 - **Helpers:** `link` (inline accent link), `dropcap` (article opening), `ink-art` (line art
   that inverts in dark mode), `shadow-elevated`.
-- **Shared components:** `StatCard`, `YearTabs`, `Eyebrow`, `FiscalYearTag`.
+- **Shared components:** `StatCard`, `YearTabs`, `Eyebrow`, `FiscalYearTag`, `HeaderArt` (an
+  engraving behind a sub-page header; the parent must be `relative`).
 - **Light and dark** follow the OS. Lightning CSS compiles `light-dark()` into
   `--lightningcss-light`/`--lightningcss-dark` toggles driven by `prefers-color-scheme`, so
   setting `color-scheme` on an element does not switch the tokens. To preview light mode in
   a dark-mode browser, set `--lightningcss-light: initial` and `--lightningcss-dark: " "` on
   `<html>`.
 - **Images.** The Capitol engraving (`public/capitol-engraving.webp`) and the Open Graph card
-  (`src/app/opengraph-image.png`, `twitter-image.png`) were made with vmotif (webrenew
-  workspace, canvas `b5c45e0d-2606-4eaf-803a-470061bf234b`).
+  (`src/app/opengraph-image.png`, `twitter-image.png`) and the sub-page engravings
+  (`src/assets/art/`) were made with vmotif (webrenew workspace, canvas
+  `b5c45e0d-2606-4eaf-803a-470061bf234b`). Make new art there, with the Capitol engraving as
+  the style reference.
 

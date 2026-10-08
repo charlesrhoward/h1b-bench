@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getJobStats } from "@/lib/queries";
+import draftingTools from "@/assets/art/drafting-tools.webp";
+import HeaderArt from "@/components/header-art";
 import { FiscalYearTag } from "@/components/title-tags";
 import YearTabs, { FISCAL_YEARS } from "@/components/year-tabs";
 import { fmtInt, fmtPct } from "@/lib/format";
+import { PAGES } from "@/lib/pages";
+import { collectionPageJsonLd } from "@/lib/json-ld";
+import JsonLd from "@/components/json-ld";
 import { pageMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = pageMetadata({
-  title: "Occupation benchmarks — H1B Bench",
-  description:
-    "H-1B Labor Condition Applications by SOC occupation and fiscal year: filings, certification rate, median wage, and employer count. Source: DOL OFLC.",
-  path: "/jobs",
-});
+export const metadata: Metadata = pageMetadata(PAGES.jobs);
+
+const JSON_LD = collectionPageJsonLd(PAGES.jobs);
 
 export default async function JobsPage({
   searchParams,
@@ -27,18 +29,21 @@ export default async function JobsPage({
 
   return (
     <div className="space-y-8">
-      <Header fy={fy} term={term} count={rows.length} />
-
-      <YearTabs active={fy} hrefFor={(y) => `/jobs?year=${y}${term ? `&q=${encodeURIComponent(term)}` : ""}`}>
-        {term && (
-          <Link
-            href="/jobs"
-            className="rounded-full border border-neutral-tertiary px-3.5 py-1.5 text-sm text-neutral-secondary hover:border-neutral-tertiary-hover hover:text-neutral-secondary-hover"
-          >
-            Clear “{term}” ×
-          </Link>
-        )}
-      </YearTabs>
+      <JsonLd data={JSON_LD} />
+      <div className="relative flex flex-col justify-end gap-8 sm:min-h-48 lg:min-h-60">
+        <HeaderArt src={draftingTools} className="right-0 bottom-0 w-60 lg:w-76" />
+        <Header fy={fy} term={term} count={rows.length} />
+        <YearTabs active={fy} hrefFor={(y) => `/jobs?year=${y}${term ? `&q=${encodeURIComponent(term)}` : ""}`}>
+          {term && (
+            <Link
+              href="/jobs"
+              className="rounded-full border border-neutral-tertiary px-3.5 py-1.5 text-sm text-neutral-secondary hover:border-neutral-tertiary-hover hover:text-neutral-secondary-hover"
+            >
+              Clear “{term}” ×
+            </Link>
+          )}
+        </YearTabs>
+      </div>
 
       <div className="overflow-x-auto">
         <table className="w-full" data-hide="1 4 6">

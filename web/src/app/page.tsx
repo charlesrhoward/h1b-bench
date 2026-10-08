@@ -5,9 +5,13 @@ import { fmtCompact, fmtInt, fmtPct } from "@/lib/format";
 import { WORKFORCE_SHARE_METHOD } from "@/lib/workforce";
 import { Eyebrow, FiscalYearTag } from "@/components/title-tags";
 import StatCard from "@/components/stat-card";
+import JsonLd from "@/components/json-ld";
+import { lcaDatasetJsonLd } from "@/lib/json-ld";
 import WorkforceShareCell from "@/components/workforce-share-cell";
 
 export const dynamic = "force-dynamic";
+
+const JSON_LD = lcaDatasetJsonLd();
 
 export default async function Home() {
   const { years, totalFilings, totalCertified, employerCount } = await getOverviewStats();
@@ -17,6 +21,7 @@ export default async function Home() {
 
   return (
     <div className="space-y-16 sm:space-y-20">
+      <JsonLd data={JSON_LD} />
       <section className="grid items-center gap-10 md:grid-cols-[minmax(0,1fr)_16rem] md:gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_26rem]">
         <div className="space-y-6">
           <Eyebrow parts={["DOL OFLC disclosure data", "FY2020–FY2026 Q3"]} />
