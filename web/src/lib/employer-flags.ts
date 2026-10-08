@@ -51,7 +51,9 @@ async function fetchUnderpaid(ids: number[]): Promise<EmployerMarketGap[]> {
 async function fetchLayoffs(ids: number[]): Promise<LayoffRow[]> {
   const { data, error } = await supabase
     .from("employer_layoff_filings")
-    .select("employer_id, notices_followed, workers_laid_off, states, filings_after, positions_after, filings_before")
+    .select(
+      "employer_id, notices_followed, workers_laid_off, states, filings_after, positions_after, filings_before, filings_after_new_employment, filings_after_change_employer, filings_after_not_counted",
+    )
     .in("employer_id", ids);
   if (error) console.error("employer flags (layoffs):", error.message);
   return (data ?? []) as LayoffRow[];

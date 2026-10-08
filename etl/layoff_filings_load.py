@@ -11,10 +11,12 @@ from warn_load import employer_rows, top_filer_ids
 
 log = logging.getLogger(__name__)
 
+BREAKDOWN_COLS = ["filings_after_new_employment", "filings_after_change_employer", "filings_after_not_counted"]
 COMPANY_COLS = ["key", "company", "states", "notices_followed", "workers_laid_off", "first_notice",
-                "filings_after", "positions_after", "filings_after_90", "filings_before", "employer_id"]
+                "filings_after", "positions_after", "filings_after_90", "filings_before", "employer_id",
+                *BREAKDOWN_COLS]
 EMPLOYER_COLS = ["employer_id", "notices_followed", "workers_laid_off", "states", "filings_after",
-                 "positions_after", "filings_before"]
+                 "positions_after", "filings_before", *BREAKDOWN_COLS]
 
 
 def load_to_supabase(summary, companies, lca, top_n):

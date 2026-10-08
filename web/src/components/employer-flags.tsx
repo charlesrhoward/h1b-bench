@@ -5,6 +5,7 @@ import { FLAGS_METHOD_PATH, hasFlags, type EmployerFlags } from "@/lib/employer-
 import { fmtInt, fmtPct } from "@/lib/format";
 import { REPO_URL } from "@/lib/site";
 import { fmtGap } from "@/components/cheap-labor/market-gap-tables";
+import LayoffBreakdown from "@/components/cheap-labor/layoff-breakdown";
 
 const METHOD_URL = `${REPO_URL}/blob/main/${FLAGS_METHOD_PATH}`;
 
@@ -78,8 +79,10 @@ function LayoffsCard({ row }: { row: EmployerLayoffFilings }) {
       <p className="type-figure text-[2.75rem] text-error-primary sm:text-[3.25rem]">{fmtInt(row.workers_laid_off)}</p>
       <p className="type-small font-medium">
         workers in WARN layoff notices ({row.states.replaceAll(",", ", ")}). In the 12 months after them, the company
-        filed {fmtInt(row.filings_after)} certified H-1B filings for new workers.
+        filed {fmtInt(row.filings_after)} certified H-1B filings for workers new to the company. Extensions are not
+        in that number.
       </p>
+      <LayoffBreakdown row={row} />
       <p className="type-meta mt-auto">
         This shows the order of events only. It does not show that H-1B workers replaced the workers who were laid
         off. A filing is not a hire.{" "}
