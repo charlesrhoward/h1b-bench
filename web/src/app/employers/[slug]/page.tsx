@@ -49,9 +49,10 @@ const HEADER_ART = {
   default: {
     light: ironworkersLunch,
     dark: ironworkersLunchDark,
-    sizes: "(min-width: 1024px) 26rem, 14rem",
-    figure: "right-0 bottom-0 w-56 lg:w-104",
-    header: "sm:min-h-44 sm:pr-60 lg:min-h-80 lg:pr-112",
+    sizes: "(min-width: 1024px) 36rem, 18rem",
+    /** Large and faded, so it can sit a little behind the title. */
+    figure: "right-0 bottom-0 w-72 opacity-60 lg:w-144",
+    header: "sm:min-h-54 sm:pr-64 lg:min-h-108 lg:pr-120",
   },
 } as const;
 
