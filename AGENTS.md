@@ -38,7 +38,7 @@ a number.
 | 2–3 | Wage levels, H-1B dependent employers | LCA data, view `lca_dependency_profile` | `etl/load_supabase.py` |
 | 4 | Who sets the wage floor | `docs/pw-source-method.md` | `etl/pw_source.py --load` |
 | 5 | Back wages | `docs/back-wages-method.md` | `etl/back_wages.py --load` |
-| 6 | Layoff (WARN) notices | `docs/warn-method.md` | `etl/warn.py --load` |
+| 6 | Layoffs, then new-worker H-1B filings (48-state WARN) | `docs/layoff-filings-method.md` | `etl/layoff_filings.py --load` |
 | 7 | Multiple lottery registrations | `docs/lottery-method.md` | rows in `etl/schema.sql` (`uscis_registrations`) |
 | 8 | Green card filings | `docs/perm-lockin-method.md` | `etl/perm_lockin.py --load` |
 
@@ -46,7 +46,8 @@ a number.
 `docs/labor-pool-results.md`.
 
 `/explore` adds no new numbers. Its linked charts (state map, occupations, employers,
-comparison) read the labor-pool, market-gap, headcount, WHD, and WARN tables above.
+comparison) read the labor-pool, market-gap, headcount, and WHD tables above, plus the
+older Texas and California WARN table (`docs/warn-method.md`, `etl/warn.py`).
 
 ## Commands
 

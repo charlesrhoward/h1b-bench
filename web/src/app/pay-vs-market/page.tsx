@@ -12,7 +12,7 @@ import { PwPublisherTable, PwSourceTable } from "@/components/cheap-labor/pw-sou
 import BackWagesSection from "@/components/cheap-labor/sections/back-wages-section";
 import LotterySection from "@/components/cheap-labor/sections/lottery-section";
 import PermSection from "@/components/cheap-labor/sections/perm-section";
-import WarnSection from "@/components/cheap-labor/sections/warn-section";
+import LayoffFilingsSection from "@/components/cheap-labor/sections/layoff-filings-section";
 import WageLevelBar from "@/components/cheap-labor/wage-level-bar";
 import {
   BENEFICIARY_CENTRIC_FROM,
@@ -21,14 +21,14 @@ import {
   WAGE_LEVEL_SOURCE_URL,
   getBelowMedianLeaders,
   getDependencyProfile,
+  getLayoffFilingsCompanies,
+  getLayoffFilingsSummary,
   getMarketGapSummary,
   getPermLayoffEmployers,
   getPermLockinSummary,
   getPwSourceSummary,
   getPwSurveyPublishers,
   getUscisRegistrations,
-  getWarnCompanies,
-  getWarnSummary,
   getWhdTopEmployers,
   getWhdYears,
   totalWageLevels,
@@ -53,7 +53,7 @@ const JSON_LD = analysisJsonLd(PAGES.payVsMarket, [
   "market-gap-method.md",
   "pw-source-method.md",
   "back-wages-method.md",
-  "warn-method.md",
+  "layoff-filings-method.md",
   "lottery-method.md",
   "perm-lockin-method.md",
 ]);
@@ -61,7 +61,7 @@ const JSON_LD = analysisJsonLd(PAGES.payVsMarket, [
 const DOL_SOURCE = `DOL OFLC LCA disclosure data, certified H-1B filings, FY${CHEAP_LABOR_FY}.`;
 
 export default async function CheapLaborPage() {
-  const [profile, marketGap, leaders, pwSources, publishers, whdYears, whdTop, warnSummary, warnCompanies, lottery, permSummary, permEmployers] =
+  const [profile, marketGap, leaders, pwSources, publishers, whdYears, whdTop, layoffSummary, layoffCompanies, lottery, permSummary, permEmployers] =
     await Promise.all([
     getDependencyProfile(),
     getMarketGapSummary(),
@@ -70,8 +70,8 @@ export default async function CheapLaborPage() {
     getPwSurveyPublishers(),
     getWhdYears(),
     getWhdTopEmployers(),
-    getWarnSummary(),
-    getWarnCompanies(),
+    getLayoffFilingsSummary(),
+    getLayoffFilingsCompanies(),
     getUscisRegistrations(),
     getPermLockinSummary(),
     getPermLayoffEmployers(),
@@ -91,7 +91,7 @@ export default async function CheapLaborPage() {
           { index: 3, label: "The employer divide", available: profile.length > 0 },
           { index: 4, label: "Private salary surveys", available: pwSources.some((row) => row.source === "survey") && pwSources.some((row) => row.source === "oews") },
           { index: 5, label: "Proven wage violations", available: whdYears.length > 0 },
-          { index: 6, label: "Layoffs & H-1B filings", available: !!warnSummary },
+          { index: 6, label: "Layoffs, then H-1B filings", available: !!layoffSummary },
           { index: 7, label: "The lottery changed", available: lottery.some((row) => row.cap_fiscal_year < BENEFICIARY_CENTRIC_FROM) && lottery.some((row) => row.cap_fiscal_year >= BENEFICIARY_CENTRIC_FROM) },
           { index: 8, label: "The green card link", available: !!permSummary },
         ]} />
@@ -109,7 +109,7 @@ export default async function CheapLaborPage() {
             </p>
           </div>
           <BackWagesSection index={5} years={whdYears} top={whdTop} />
-          <WarnSection index={6} summary={warnSummary} companies={warnCompanies} />
+          <LayoffFilingsSection index={6} summary={layoffSummary} companies={layoffCompanies} />
           <LotterySection index={7} years={lottery} />
           <PermSection index={8} summary={permSummary} employers={permEmployers} />
           <section className="scroll-mt-8 space-y-6 border-t border-neutral-tertiary pt-12" id="reading-the-evidence" aria-labelledby="reading-guide-title">
