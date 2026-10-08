@@ -162,6 +162,13 @@
   font-variation-settings: "opsz" 144;
 }
 
+/* Supporting prose in cards, asides, and notes: one step below body, in the UI face. */
+@utility type-small {
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
 @utility type-meta {
   font-family: var(--font-ui);
   font-size: 0.8125rem;
@@ -326,4 +333,27 @@
 ::-webkit-scrollbar-thumb {
   background: var(--color-border-neutral-tertiary-hover);
   border-radius: 9999px;
+}
+
+/* Observable Plot charts on /explore: muted axes and grid, token ink everywhere else. */
+.plot-figure [aria-label*="-axis"] {
+  color: var(--color-fg-neutral-secondary);
+}
+
+.plot-figure [aria-label*="-grid"] {
+  color: var(--color-border-neutral-primary);
+}
+
+.plot-figure figure,
+.plot-figure svg {
+  max-width: 100%;
+}
+
+.plot-figure [aria-label="tip"] {
+  color: var(--color-fg-neutral-primary);
+}
+
+/* Range slider thumb and track in the accent color. */
+.explore-range {
+  accent-color: var(--color-fg-accent-primary);
 }

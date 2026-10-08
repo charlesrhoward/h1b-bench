@@ -20,10 +20,17 @@ Read the root `AGENTS.md` first. It holds the purpose, data-accuracy, lint, and 
   the client directly. The search API (`src/app/api/search/route.ts`) runs its own query.
 - `src/lib/supabase.ts` creates the one client with `NEXT_PUBLIC_SUPABASE_URL` and
   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Never put a secret or service-role key in `web/`.
-- `src/lib/site.ts` holds `REPO_URL` and the navigation links.
+- `src/lib/site.ts` holds `REPO_URL` and the navigation. `NAV_ITEMS` drives the desktop header
+  (`DesktopNav`); a `NavGroup` opens a dropdown, so add analysis pages to the "Findings"
+  group instead of widening the header. `NAV_LINKS` is the same list flattened for the
+  mobile menu.
 - `src/lib/pages.ts` holds each top-level page's title and description. Page metadata
   (`pageMetadata(PAGES.x)`), `sitemap.xml`, `llms.txt`, and JSON-LD all read from it. A new
   page gets an entry there, plus a `<JsonLd>` node from `src/lib/json-ld.ts`.
+- `/explore` is the exception to `force-dynamic`: it reads about 2,800 employers and 6,600
+  labor-pool cells (`src/lib/explore.ts`), so it rebuilds once a day (`revalidate = 86400`)
+  and sends the rows packed (`pack`/`unpack` in `src/lib/explore-model.ts`). Client
+  components import types and constants from `explore-model.ts`, never from `explore.ts`.
 - `robots.ts`, `sitemap.ts`, and `llms.txt/route.ts` in `src/app/` build those files. The
   sitemap lists employers with at least 10 H-1B filings in FY2025, not all 180,000.
 
@@ -64,12 +71,21 @@ The root `DESIGN.md` (Unbound) is the source. The app applies it like this:
   and `⌘K`), `font-dropcap`.
 - **Type scale** (`globals.css` utilities): `type-hero` (home only), `type-title` (page h1),
   `type-heading` (h2), `type-statement` (editorial statement headings), `type-body` (authored
-  paragraphs in serif), `type-figure` (headline numbers), `type-meta` (sources, notes),
-  `type-promo`. Authored copy is serif; navigation, tables, and data are sans.
+  paragraphs in serif), `type-small` (supporting prose in cards and asides), `type-figure`
+  (headline numbers), `type-meta` (sources, notes), `type-promo`. Authored copy is serif;
+  navigation, tables, and data are sans. Running text uses two sizes only: `type-body`, then
+  `type-small`/`type-meta`. Set a lead sentence apart by weight, not by a size in between,
+  and do not add one-off sizes such as `text-[17px]`.
 - **Helpers:** `link` (inline accent link), `dropcap` (article opening), `ink-art` (line art
   that inverts in dark mode), `shadow-elevated`.
 - **Shared components:** `StatCard`, `YearTabs`, `Eyebrow`, `FiscalYearTag`, `HeaderArt` (an
   engraving behind a sub-page header; the parent must be `relative`).
+- **Interactive charts** (`src/components/explore/`) use Observable Plot. `usePalette()` resolves
+  the chart tokens to rgb() values (Plot interpolates colors, so it cannot use `var()`), and
+  `PlotFigure` rebuilds a chart when its width, the color scheme, or its memoized builder
+  changes. Each chart sits in an `ExploreFigure`: controls, a readout sentence, the chart,
+  then notes, source, and method. Labels go through `placeLabels` so they do not overlap.
+  The dev server serves charts only on `localhost`; Next blocks dev assets on `127.0.0.1`.
 - **Light and dark** follow the OS. Lightning CSS compiles `light-dark()` into
   `--lightningcss-light`/`--lightningcss-dark` toggles driven by `prefers-color-scheme`, so
   setting `color-scheme` on an element does not switch the tokens. To preview light mode in
