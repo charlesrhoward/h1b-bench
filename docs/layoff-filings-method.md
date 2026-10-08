@@ -67,6 +67,16 @@ filing once, even when it falls after more than one of the company's notices.
    filings, with notices, workers, filings and positions after, filings within 90 days,
    and filings before.
 6. Of the filings after, how many list a worksite in the same state as the notice.
+7. **Breakdown (added 2026-10-08, before the numbers were published).** For each company and
+   in total, the certified H-1B filings received 1 to 365 days after its notices, split in
+   three. This answers whether the counted filings could be extensions.
+   - **New employment:** counted filings with `NEW_EMPLOYMENT` of 1 or more.
+   - **Change of employer:** counted filings with `NEW_EMPLOYMENT` of 0 and `CHANGE_EMPLOYER`
+     of 1 or more. These workers already hold H-1B status with another employer.
+   - **Not counted:** certified H-1B filings in the same windows that ask for no new worker.
+     They only continue, amend, or add a concurrent job for current workers (extensions and
+     amendments). They are shown so the reader can see what the count leaves out.
+   New employment plus change of employer equals the counted filings in measure 3.
 
 ## Verification
 
@@ -76,6 +86,9 @@ not appear on the state's portal or in the agency's archived pages, we drop it a
 in `docs/layoff-filings-results.md`.
 
 ## Known limits
+
+- "New employment" means new to the company. It can include a worker who is already in the
+  United States in another status, for example a student moving to H-1B.
 
 - An LCA certification is a filing step. It is not a visa, a hire, or a petition approval.
 - WARN notices do not list jobs. The new H-1B filings can be for different roles, sites, or

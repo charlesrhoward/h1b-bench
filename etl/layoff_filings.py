@@ -54,20 +54,23 @@ def load_notices():
 
 
 def load_filings():
-    """Certified H-1B LCAs asking for at least one worker new to the company."""
+    """Certified H-1B LCAs, split: counted (at least one worker new to the company) and not counted
+    (extensions, amendments, and concurrent jobs only; method measure 7)."""
     files = sorted(glob.glob(os.path.join(ROOT, "processed", "lca_FY*.parquet")))
     lca = pd.concat([pd.read_parquet(f, columns=LCA_COLS) for f in files], ignore_index=True)
     lca = lca.drop_duplicates("case_number")
     lca = lca[(lca["visa_class"] == "H-1B") & (lca["case_status"] == "Certified")].copy()
     lca["positions"] = lca["new_employment"].fillna(0) + lca["change_employer"].fillna(0)
-    lca = lca[lca["positions"] >= 1].copy()
     lca["received"] = pd.to_datetime(lca["received_date"], errors="coerce")
     lca["key"] = lca["employer_name"].map(company_key)
-    lca["name_normalized"] = lca["employer_name"].map(norm_name)
     lca = lca.dropna(subset=["key", "received"])
+    not_counted = lca.loc[lca["positions"] < 1, ["key", "received"]]
+    lca = lca[lca["positions"] >= 1].copy()
+    lca["name_normalized"] = lca["employer_name"].map(norm_name)
     first, last = lca["received"].min(), lca["received"].max()
     log.info(f"counted H-1B filings: {len(lca):,} (received {first:%Y-%m-%d} to {last:%Y-%m-%d})")
-    return lca
+    log.info(f"not counted (extensions, amendments, concurrent): {len(not_counted):,}")
+    return lca, not_counted
 
 
 def assign_keys(notices, filer_keys):
@@ -114,10 +117,20 @@ def company_sequence(company_notices, company_filings):
     return ns, fs
 
 
-def company_row(key, ns, fs):
-    """Company totals per the method's measures 3 to 6."""
+def not_counted_after(company_notices, not_counted_dates):
+    """Not-counted filings received 1 to FOLLOW_DAYS days after any of the company's notices."""
+    if len(not_counted_dates) == 0:
+        return 0
+    n_dates = np.sort(company_notices["notice_date"].to_numpy())
+    since, _ = days_since_notice(np.sort(not_counted_dates), n_dates)
+    return int((since <= FOLLOW_DAYS).sum())
+
+
+def company_row(key, ns, fs, not_counted):
+    """Company totals per the method's measures 3 to 7."""
     followed = ns[ns["followed"]]
     after = fs[fs["after"]]
+    new_employment = int((after["new_employment"].fillna(0) >= 1).sum())
     return {
         "key": key,
         "company": followed["company"].mode().iloc[0] if len(followed) else ns["company"].iloc[0],
@@ -131,17 +144,22 @@ def company_row(key, ns, fs):
         "filings_after_90": int(fs["after_short"].sum()),
         "filings_before": int(fs["before"].sum()),
         "filings_after_same_state": int((after["worksite_state"] == after["notice_state"]).sum()),
+        "filings_after_new_employment": new_employment,
+        "filings_after_change_employer": len(after) - new_employment,
+        "filings_after_not_counted": not_counted,
     }
 
 
-def sequences(notices, lca):
+def sequences(notices, lca, not_counted):
     """Per-company rows and all matched notices with follow-up flags."""
     filings_by_key = dict(tuple(lca.groupby("key")))
+    not_counted_by_key = {k: g["received"].to_numpy() for k, g in not_counted.groupby("key")}
     rows, flagged = [], []
     for key, company_notices in notices.dropna(subset=["key"]).groupby("key"):
         ns, fs = company_sequence(company_notices, filings_by_key[key])
         flagged.append(ns)
-        rows.append(company_row(key, ns, fs))
+        extra = not_counted_after(ns, not_counted_by_key.get(key, np.array([], dtype="datetime64[ns]")))
+        rows.append(company_row(key, ns, fs, extra))
     companies = pd.DataFrame(rows)
     companies = companies[companies["notices_followed"] > 0]
     return companies.sort_values("workers_laid_off", ascending=False), pd.concat(flagged)
@@ -162,13 +180,16 @@ def summarize(notices, matched, companies):
         "positions_after": int(companies["positions_after"].sum()),
         "filings_before": int(companies["filings_before"].sum()),
         "filings_after_same_state": int(companies["filings_after_same_state"].sum()),
+        "filings_after_new_employment": int(companies["filings_after_new_employment"].sum()),
+        "filings_after_change_employer": int(companies["filings_after_change_employer"].sum()),
+        "filings_after_not_counted": int(companies["filings_after_not_counted"].sum()),
     }
 
 
 def main():
-    lca = load_filings()
+    lca, not_counted = load_filings()
     notices = assign_keys(load_notices(), set(lca["key"]))
-    companies, matched = sequences(notices, lca)
+    companies, matched = sequences(notices, lca, not_counted)
     summary = summarize(notices, matched, companies)
     for k, v in summary.items():
         log.info(f"{k}: {v:,}" if isinstance(v, int) else f"{k}: {v}")

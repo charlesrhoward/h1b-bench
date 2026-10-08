@@ -212,7 +212,17 @@ export function totalWhd(years: WhdYear[]) {
   );
 }
 
-export type LayoffFilingsSummary = {
+/**
+ * Method measure 7: the counted filings split into new employment and change of employer, and the
+ * certified filings in the same windows that the count leaves out (extensions and amendments).
+ */
+export type LayoffFilingsBreakdown = {
+  filings_after_new_employment: number;
+  filings_after_change_employer: number;
+  filings_after_not_counted: number;
+};
+
+export type LayoffFilingsSummary = LayoffFilingsBreakdown & {
   notice_start: string;
   notice_end: string;
   states: number;
@@ -228,7 +238,7 @@ export type LayoffFilingsSummary = {
   filings_after_same_state: number;
 };
 
-export type LayoffFilingsCompany = {
+export type LayoffFilingsCompany = LayoffFilingsBreakdown & {
   key: string;
   company: string;
   states: string;
@@ -242,7 +252,7 @@ export type LayoffFilingsCompany = {
   employer_id: number | null;
 };
 
-export type EmployerLayoffFilings = {
+export type EmployerLayoffFilings = LayoffFilingsBreakdown & {
   notices_followed: number;
   workers_laid_off: number;
   states: string;
@@ -256,7 +266,7 @@ export async function getLayoffFilingsSummary() {
   const { data } = await supabase
     .from("layoff_filings_summary")
     .select(
-      "notice_start, notice_end, states, notices_in_window, notices_matched, notices_followed, notices_followed_90, companies_followed, workers_laid_off, filings_after, positions_after, filings_before, filings_after_same_state",
+      "notice_start, notice_end, states, notices_in_window, notices_matched, notices_followed, notices_followed_90, companies_followed, workers_laid_off, filings_after, positions_after, filings_before, filings_after_same_state, filings_after_new_employment, filings_after_change_employer, filings_after_not_counted",
     )
     .order("notice_start", { ascending: false })
     .limit(1)
@@ -269,7 +279,7 @@ export async function getLayoffFilingsCompanies() {
   const { data } = await supabase
     .from("layoff_filings_companies")
     .select(
-      "key, company, states, notices_followed, workers_laid_off, first_notice, filings_after, positions_after, filings_after_90, filings_before, employer_id",
+      "key, company, states, notices_followed, workers_laid_off, first_notice, filings_after, positions_after, filings_after_90, filings_before, employer_id, filings_after_new_employment, filings_after_change_employer, filings_after_not_counted",
     )
     .order("workers_laid_off", { ascending: false });
   return (data ?? []) as LayoffFilingsCompany[];
@@ -279,7 +289,9 @@ export async function getLayoffFilingsCompanies() {
 export async function getEmployerLayoffFilings(employerId: number) {
   const { data } = await supabase
     .from("employer_layoff_filings")
-    .select("notices_followed, workers_laid_off, states, filings_after, positions_after, filings_before")
+    .select(
+      "notices_followed, workers_laid_off, states, filings_after, positions_after, filings_before, filings_after_new_employment, filings_after_change_employer, filings_after_not_counted",
+    )
     .eq("employer_id", employerId)
     .maybeSingle();
   return data as EmployerLayoffFilings | null;
