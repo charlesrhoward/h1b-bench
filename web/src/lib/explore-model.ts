@@ -32,8 +32,11 @@ export type ExploreEmployer = {
   medianGap: number | null;
   backWages: number | null;
   whdCases: number | null;
+  /** Workers in WARN notices that new-worker H-1B filings followed within 12 months (notices Oct 2020 to Jun 2025). */
   laidOff: number | null;
   warnStates: string | null;
+  /** Certified new-worker H-1B LCAs received 1 to 365 days after those notices. */
+  filingsAfterLayoff: number | null;
 };
 
 /** One occupation group in one state (or "US"): H-1B demand against unemployed workers with that job history. */

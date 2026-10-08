@@ -18,7 +18,7 @@ const ROWS: Row[] = [
   { label: "Median gap to local median", value: (e) => orDash(e.medianGap, EMPLOYER_METRICS.medianGap.format) },
   { label: "% of workforce (approx.)", value: (e) => orDash(e.workforcePct, EMPLOYER_METRICS.workforcePct.format) },
   { label: "H-1B back wages owed, since FY2005", value: (e) => (e.backWages == null ? "None found" : `${fmtMoney(e.backWages)} (${fmtInt(e.whdCases)} ${e.whdCases === 1 ? "case" : "cases"})`) },
-  { label: "Laid off in WARN notices, FY2025", value: (e) => (e.laidOff == null ? "None found" : `${fmtInt(e.laidOff)} (${e.warnStates})`) },
+  { label: "Laid off in WARN notices, then new H-1B filings within 12 months (Oct 2020 to Jun 2025)", value: (e) => (e.laidOff == null ? "None found" : `${fmtInt(e.laidOff)} laid off (${e.warnStates}); ${fmtInt(e.filingsAfterLayoff)} filings after`) },
   { label: "Most common job title", value: (e) => e.topJob ?? "—", text: true },
   { label: "Most common worksite state", value: (e) => orDash(e.topState, stateName), text: true },
 ];

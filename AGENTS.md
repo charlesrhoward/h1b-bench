@@ -46,8 +46,9 @@ a number.
 `docs/labor-pool-results.md`.
 
 `/explore` adds no new numbers. Its linked charts (state map, occupations, employers,
-comparison) read the labor-pool, market-gap, headcount, and WHD tables above, plus the
-older Texas and California WARN table (`docs/warn-method.md`, `etl/warn.py`).
+comparison) read the labor-pool, market-gap, headcount, WHD, and layoff-filings tables above.
+The older Texas and California WARN table (`employer_warn`, `docs/warn-method.md`) is no longer
+read by the site. `etl/warn.py` still supplies `company_key`.
 
 ## Commands
 

@@ -16,7 +16,7 @@ export const revalidate = 86400;
 
 export const metadata: Metadata = pageMetadata(PAGES.explore);
 
-const JSON_LD = analysisJsonLd(PAGES.explore, ["labor-pool-method.md", "market-gap-method.md"]);
+const JSON_LD = analysisJsonLd(PAGES.explore, ["labor-pool-method.md", "market-gap-method.md", "layoff-filings-method.md"]);
 
 export default async function ExplorePage() {
   const data = await getExploreData();

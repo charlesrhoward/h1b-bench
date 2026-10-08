@@ -44,7 +44,7 @@ type EmployerRow = {
     employer_headcounts: Headcount | null;
     employer_whd_h1b: { back_wages: number; cases: number } | null;
     employer_market_gap: MarketGapRow[];
-    employer_warn: { workers_laid_off: number; states: string }[];
+    employer_layoff_filings: { workers_laid_off: number; states: string; filings_after: number } | null;
   } | null;
 };
 
@@ -54,7 +54,7 @@ const EMPLOYER_SELECT = `employer_id, filings, certified, worker_positions, medi
     employer_headcounts(employee_count, agreeing_filings, perm_filings, latest_received, match_method),
     employer_whd_h1b(back_wages, cases),
     employer_market_gap(filings_matched, below_median, median_gap),
-    employer_warn(workers_laid_off, states))`;
+    employer_layoff_filings(workers_laid_off, states, filings_after))`;
 
 /** Certified LCAs as a percent of the PERM headcount, only when that headcount is trustworthy and the share is at most 100%. */
 function reliableWorkforcePct(certified: number, hc: Headcount | null): number | null {
@@ -91,10 +91,14 @@ function whdFacts(whd: EmployerFacts["employer_whd_h1b"] | undefined) {
   return { backWages: Number(whd.back_wages), whdCases: whd.cases };
 }
 
-/** WARN layoffs in the EXPLORE_FY window. */
-function warnFacts(warn: EmployerFacts["employer_warn"][number] | undefined) {
-  if (!warn) return { laidOff: null, warnStates: null };
-  return { laidOff: warn.workers_laid_off, warnStates: warn.states };
+/** WARN notices (Oct 2020 to Jun 2025) that new-worker H-1B filings followed within 12 months (docs/layoff-filings-method.md). */
+function layoffFacts(layoffs: EmployerFacts["employer_layoff_filings"] | undefined) {
+  if (!layoffs) return { laidOff: null, warnStates: null, filingsAfterLayoff: null };
+  return {
+    laidOff: layoffs.workers_laid_off,
+    warnStates: layoffs.states.replaceAll(",", ", "),
+    filingsAfterLayoff: layoffs.filings_after,
+  };
 }
 
 /** Name, home state, and the PERM-based workforce share. */
@@ -121,11 +125,11 @@ function toExploreEmployer(row: EmployerRow): ExploreEmployer {
     medianWage: row.median_wage_annual == null ? null : Number(row.median_wage_annual),
     ...gapFacts(e?.employer_market_gap),
     ...whdFacts(e?.employer_whd_h1b),
-    ...warnFacts(e?.employer_warn[0]),
+    ...layoffFacts(e?.employer_layoff_filings),
   };
 }
 
-/** Employers with at least EXPLORE_MIN_FILINGS H-1B LCAs in EXPLORE_FY, with pay, market gap, headcount, WHD, and WARN facts. */
+/** Employers with at least EXPLORE_MIN_FILINGS H-1B LCAs in EXPLORE_FY, with pay, market gap, headcount, WHD, and layoff facts. */
 async function getExploreEmployers(): Promise<ExploreEmployer[]> {
   const rows = await fetchAll<EmployerRow>("explore employers", (from, to) =>
     supabase
@@ -135,7 +139,6 @@ async function getExploreEmployers(): Promise<ExploreEmployer[]> {
       .eq("fiscal_year", EXPLORE_FY)
       .gte("filings", EXPLORE_MIN_FILINGS)
       .eq("employers.employer_market_gap.lca_fiscal_year", EXPLORE_FY)
-      .eq("employers.employer_warn.lca_fiscal_year", EXPLORE_FY)
       .order("employer_id")
       .range(from, to)
       .overrideTypes<EmployerRow[], { merge: false }>(),
