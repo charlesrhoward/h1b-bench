@@ -119,6 +119,7 @@ Key pairs (light → dark):
 | fg error primary | `#c94a4a` | `#ce5a5a` |
 | border neutral primary | `#f2f2f2` | `#3f3f3f` |
 | chart utility yellow primary | `#fea010` | `#fea010` |
+| chart utility blue primary | `#437aff` | `#3c9fff` |
 | bg scrim | `#484848` | `#000000` |
 
 ### Full token set
@@ -243,6 +244,8 @@ Key pairs (light → dark):
   --color-chart-utility-yellow-secondary: light-dark(#ffc017, #be5b04);
   --color-chart-utility-yellow-tertiary: #fffae1;
   --color-chart-utility-yellow-tertiary: light-dark(#fffae1, #be5b04);
+  --color-chart-utility-blue-primary: #437aff;
+  --color-chart-utility-blue-primary: light-dark(#437aff, #3c9fff);
   --color-chart-neutral-primary: #b3b3b3;
   --color-chart-neutral-primary: light-dark(#b3b3b3, #d2d2d2);
   --color-chart-neutral-secondary: #b3b3b3;
@@ -291,7 +294,8 @@ Key pairs (light → dark):
   resolves to `transparent`; elevation reads from surface lightness instead.
 - **Chart colors are a separate layer.** Never pull `chart` tokens into UI
   chrome or vice versa; chart dark values are tuned for data-legibility, not
-  interface contrast.
+  interface contrast. Chart blue uses the utility blue values (`fg utility blue
+  primary`), so a chart has a third hue beside accent green and yellow.
 - **Status pairs travel together** (`*-background` + `*-text`) — mixing a
   background from one status with text from another breaks contrast in dark
   mode.

@@ -109,7 +109,7 @@ export default function CompanySection({ employers, state, compared, compareColo
           </div>
           <div className="flex flex-wrap gap-2">
             <Toggle label="Owed back wages" checked={showBackWages} swatch="bg-chart-yellow-primary" onChange={setShowBackWages} />
-            <Toggle label="Laid off, then filed" checked={showLayoffs} swatch="border-2 border-current" onChange={setShowLayoffs} />
+            <Toggle label="Laid off, then filed" checked={showLayoffs} swatch="border-2 border-chart-blue-primary" onChange={setShowLayoffs} />
             {state !== "US" ? <FilterChip label={`Top worksite: ${stateName(state)}`} onClear={onClearState} /> : null}
           </div>
         </>
@@ -119,7 +119,7 @@ export default function CompanySection({ employers, state, compared, compareColo
         `Each dot is one employer with at least ${fmtInt(MIN_FILINGS_STEPS[minStep])} H-1B LCA filings in FY2025. Dot size shows worker positions. Point at a dot to see the employer. Click it to add it to the comparison below.`,
         "The local median is DOL's Level III wage for the job and area. Offered pay is the bottom of the offered range. An employer can pay more.",
         "An employer's share below the local median shows only when at least 10 of its filings matched a local wage.",
-        "Yellow: H-1B back wages that employers agreed to pay after a WHD case, all years since FY2005. Ring: the employer filed a WARN layoff notice from Oct 2020 to Jun 2025, then filed for a new H-1B worker within 12 months. An H-1B filing is not a hire.",
+        "Yellow: H-1B back wages that employers agreed to pay after a WHD case, all years since FY2005. Blue ring: the employer filed a WARN layoff notice from Oct 2020 to Jun 2025, then filed for a new H-1B worker within 12 months. An H-1B filing is not a hire.",
         "The state filter uses each employer's most common worksite state. % of workforce is approximate: it uses headcounts that employers report on PERM filings.",
       ]}
       source="DOL OFLC LCA disclosure data and Online Wage Library, FY2025; PERM disclosure data; DOL WHD enforcement data; WARN notices (California EDD reports and a compilation of state labor agency sites)."
