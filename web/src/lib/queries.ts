@@ -180,20 +180,22 @@ const SITEMAP_PAGE_SIZE = 1000;
  * Employers with at least `minFilings` H-1B LCAs in one fiscal year, for sitemap.xml.
  * Small filers are left out so the sitemap lists pages with enough data to be useful.
  */
-export async function getSitemapEmployerIds(fiscalYear: number, minFilings: number) {
-  const ids: number[] = [];
+export async function getSitemapEmployers(fiscalYear: number, minFilings: number) {
+  const employers: { id: number; name: string }[] = [];
   for (let from = 0; ; from += SITEMAP_PAGE_SIZE) {
     const { data, error } = await supabase
       .from("employer_year_stats")
-      .select("employer_id")
+      .select("employer_id, employers(name)")
       .eq("visa_class", "H-1B")
       .eq("fiscal_year", fiscalYear)
       .gte("filings", minFilings)
       .order("employer_id")
       .range(from, from + SITEMAP_PAGE_SIZE - 1);
     if (error) throw new Error(`sitemap employers: ${error.message}`);
-    ids.push(...data.map((row) => Number(row.employer_id)));
-    if (data.length < SITEMAP_PAGE_SIZE) return ids;
+    // PostgREST returns the many-to-one join as an object; the untyped client infers an array.
+    const rows = data as unknown as { employer_id: number; employers: { name: string } | null }[];
+    employers.push(...rows.map((row) => ({ id: Number(row.employer_id), name: row.employers?.name ?? "" })));
+    if (data.length < SITEMAP_PAGE_SIZE) return employers;
   }
 }
 

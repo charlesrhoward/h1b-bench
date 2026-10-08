@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fmtInt } from "@/lib/format";
 import type { EmployerLayoffFilings, LayoffFilingsCompany } from "@/lib/cheap-labor";
+import { getEmployerLinker } from "@/lib/employer-tickers";
 
 /** "2020-10-01" -> "Oct 2020". */
 export function fmtMonth(isoDate: string) {
@@ -8,7 +9,8 @@ export function fmtMonth(isoDate: string) {
 }
 
 /** Companies with the most workers in WARN notices that new-worker H-1B filings followed. */
-export function LayoffFilingsTable({ rows }: { rows: LayoffFilingsCompany[] }) {
+export async function LayoffFilingsTable({ rows }: { rows: LayoffFilingsCompany[] }) {
+  const employerHref = await getEmployerLinker();
   return (
     <div className="overflow-x-auto">
       <table className="w-full" data-hide="2 4 6" data-hide-md="2">
@@ -28,7 +30,7 @@ export function LayoffFilingsTable({ rows }: { rows: LayoffFilingsCompany[] }) {
             <tr key={r.key}>
               <td>
                 {r.employer_id ? (
-                  <Link href={`/employers/${r.employer_id}`} className="hover:text-accent-primary">
+                  <Link href={employerHref({ id: r.employer_id, name: r.company })} className="hover:text-accent-primary">
                     {r.company}
                   </Link>
                 ) : (

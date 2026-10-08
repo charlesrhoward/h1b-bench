@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getTopEmployers, searchEmployerHits } from "@/lib/queries";
+import { getTopEmployers, searchEmployerHits, type EmployerYearStat } from "@/lib/queries";
 import { fmtInt, fmtPct } from "@/lib/format";
 import { PAGES } from "@/lib/pages";
 import { collectionPageJsonLd } from "@/lib/json-ld";
@@ -13,9 +13,32 @@ import { FiscalYearTag } from "@/components/title-tags";
 import WorkforceShareCell from "@/components/workforce-share-cell";
 import YearTabs, { FISCAL_YEARS } from "@/components/year-tabs";
 import { EmployerFlagPills } from "@/components/employer-flags";
-import { getEmployerFlags } from "@/lib/employer-flags";
+import { getEmployerFlags, type EmployerFlags } from "@/lib/employer-flags";
+import type { EmployerRef } from "@/lib/employer-path";
+import { getEmployerLinker } from "@/lib/employer-tickers";
 
 export const dynamic = "force-dynamic";
+
+/** Leaderboard employer cell: the linked name, then any warning flags. */
+function EmployerNameCell({
+  row,
+  employerHref,
+  flags,
+}: {
+  row: EmployerYearStat;
+  employerHref: (ref: EmployerRef) => string;
+  flags: EmployerFlags | undefined;
+}) {
+  const name = row.employers?.name ?? "";
+  return (
+    <td>
+      <Link href={employerHref({ id: row.employer_id, name })} className="font-medium hover:text-accent-primary">
+        {name}
+      </Link>{" "}
+      <EmployerFlagPills flags={flags} />
+    </td>
+  );
+}
 
 export const metadata: Metadata = pageMetadata(PAGES.employers);
 
@@ -31,7 +54,7 @@ export default async function EmployersPage({
 
   if (term) {
     const hits = await searchEmployerHits(term);
-    const flags = await getEmployerFlags(hits.map((h) => h.id));
+    const [flags, employerHref] = await Promise.all([getEmployerFlags(hits.map((h) => h.id)), getEmployerLinker()]);
     return (
       <div className="space-y-8">
         <div>
@@ -55,7 +78,7 @@ export default async function EmployersPage({
                 <tr key={h.id}>
                   <td className="tabular-nums text-neutral-secondary">{i + 1}</td>
                   <td>
-                    <Link href={`/employers/${h.id}`} className="font-medium hover:text-accent-primary">
+                    <Link href={employerHref(h)} className="font-medium hover:text-accent-primary">
                       {h.name}
                     </Link>{" "}
                     <EmployerFlagPills flags={flags.get(h.id)} />
@@ -80,7 +103,10 @@ export default async function EmployersPage({
 
   const fy = year ? Number(year) : 2026;
   const rows = await getTopEmployers(fy, 100);
-  const flags = await getEmployerFlags(rows.map((r) => r.employer_id));
+  const [flags, employerHref] = await Promise.all([
+    getEmployerFlags(rows.map((r) => r.employer_id)),
+    getEmployerLinker(),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -119,12 +145,7 @@ export default async function EmployersPage({
             {rows.map((r, i) => (
               <tr key={`${r.employer_id}-${r.fiscal_year}`}>
                 <td className="tabular-nums text-neutral-secondary">{i + 1}</td>
-                <td>
-                  <Link href={`/employers/${r.employer_id}`} className="font-medium hover:text-accent-primary">
-                    {r.employers?.name}
-                  </Link>{" "}
-                  <EmployerFlagPills flags={flags.get(r.employer_id)} />
-                </td>
+                <EmployerNameCell row={r} employerHref={employerHref} flags={flags.get(r.employer_id)} />
                 <td className="text-neutral-secondary">{r.employers?.state ?? "—"}</td>
                 <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
                 <td className="text-right tabular-nums text-accent-primary">{fmtPct(r.certified, r.filings)}</td>

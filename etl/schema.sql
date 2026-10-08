@@ -339,6 +339,15 @@ create table uscis_birth_country (
   primary key (fiscal_year, country)
 );
 
+-- Stock tickers for employer page URLs (docs/employer-tickers-method.md), loaded by
+-- etl/tickers.py --load. Name match confirmed by FEIN = SEC EIN; one row per employer and ticker.
+create table employer_tickers (
+  employer_id bigint primary key references employers(id),
+  ticker text not null unique check (ticker ~ '^[A-Z][A-Z.-]{0,9}$'),
+  cik integer not null,                  -- SEC Central Index Key
+  sec_name text not null                 -- company name as in company_tickers.json
+);
+
 -- PERM green card filings: job already filled, prior layoffs, DOL wait
 -- (docs/perm-lockin-method.md), loaded by etl/perm_lockin.py --load. Certified only.
 create table perm_lockin_summary (
@@ -399,6 +408,7 @@ alter table layoff_filings_companies enable row level security;
 alter table employer_layoff_filings enable row level security;
 alter table uscis_birth_country_years enable row level security;
 alter table uscis_birth_country enable row level security;
+alter table employer_tickers enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
@@ -426,6 +436,7 @@ create policy "public read layoff_filings_companies" on layoff_filings_companies
 create policy "public read employer_layoff_filings" on employer_layoff_filings for select using (true);
 create policy "public read uscis_birth_country_years" on uscis_birth_country_years for select using (true);
 create policy "public read uscis_birth_country" on uscis_birth_country for select using (true);
+create policy "public read employer_tickers" on employer_tickers for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
@@ -455,6 +466,7 @@ create policy "public read uscis_birth_country" on uscis_birth_country for selec
 --   create policy "bulk insert employer_layoff_filings" on employer_layoff_filings for insert with check (true);
 --   create policy "bulk insert uscis_birth_country_years" on uscis_birth_country_years for insert with check (true);
 --   create policy "bulk insert uscis_birth_country" on uscis_birth_country for insert with check (true);
+--   create policy "bulk insert employer_tickers" on employer_tickers for insert with check (true);
 
 -- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
 create view fy_overview with (security_invoker = true) as

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 type EmployerHit = {
   id: number;
+  href: string;
   name: string;
   city: string | null;
   state: string | null;
@@ -38,7 +39,7 @@ const ARROW_STEP: Record<string, number> = { ArrowDown: 1, ArrowUp: -1 };
 function toItems(data: SearchResponse): Item[] {
   return [
     ...data.employers.map(
-      (hit): Item => ({ kind: "employer", href: `/employers/${hit.id}`, hit }),
+      (hit): Item => ({ kind: "employer", href: hit.href, hit }),
     ),
     ...data.occupations.map(
       (hit): Item => ({

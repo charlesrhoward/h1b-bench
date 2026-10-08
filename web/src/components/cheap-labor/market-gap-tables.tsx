@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fmtInt, fmtPct } from "@/lib/format";
 import type { EmployerMarketGap, MarketGapSummary } from "@/lib/cheap-labor";
+import { getEmployerLinker } from "@/lib/employer-tickers";
 
 const DEPENDENCY_LABELS: Record<MarketGapSummary["dependency"], string> = {
   all: "All employers",
@@ -47,7 +48,8 @@ export function MarketGapTable({ rows }: { rows: MarketGapSummary[] }) {
 }
 
 /** Large sponsors with the highest share of filings below the local median. */
-export function BelowMedianLeaders({ rows }: { rows: EmployerMarketGap[] }) {
+export async function BelowMedianLeaders({ rows }: { rows: EmployerMarketGap[] }) {
+  const employerHref = await getEmployerLinker();
   return (
     <div className="overflow-x-auto">
       <table className="w-full" data-hide="2">
@@ -63,7 +65,7 @@ export function BelowMedianLeaders({ rows }: { rows: EmployerMarketGap[] }) {
           {rows.map((r) => (
             <tr key={r.employer_id}>
               <td>
-                <Link href={`/employers/${r.employer_id}`} className="hover:text-accent-primary">
+                <Link href={employerHref({ id: r.employer_id, name: r.employers?.name ?? `Employer ${r.employer_id}` })} className="hover:text-accent-primary">
                   {r.employers?.name ?? `Employer ${r.employer_id}`}
                 </Link>
               </td>

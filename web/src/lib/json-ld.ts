@@ -155,8 +155,7 @@ export function employerJsonLd(employer: {
   city: string | null;
   state: string | null;
   country: string | null;
-}): JsonLdNode {
-  const path = `/employers/${employer.id}`;
+}, path: string): JsonLdNode {
   return {
     "@context": "https://schema.org",
     "@graph": [
