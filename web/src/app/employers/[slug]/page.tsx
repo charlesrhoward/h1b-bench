@@ -27,8 +27,8 @@ import Breadcrumbs from "@/components/breadcrumbs";
 import HeaderFigure from "@/components/header-figure";
 import workerBox from "@/assets/art/worker-box.webp";
 import workerBoxDark from "@/assets/art/worker-box-dark.webp";
-import workerLaptop from "@/assets/art/worker-laptop.webp";
-import workerLaptopDark from "@/assets/art/worker-laptop-dark.webp";
+import ironworkersLunch from "@/assets/art/ironworkers-lunch.webp";
+import ironworkersLunchDark from "@/assets/art/ironworkers-lunch-dark.webp";
 import { ParentChip, ParentNote } from "@/components/employer-parent";
 import { EmployerFlagCards, EmployerFlagPills } from "@/components/employer-flags";
 import { employerFlags } from "@/lib/employer-flags";
@@ -36,6 +36,24 @@ import { loadEmployer } from "@/lib/employer-page";
 import { EMPLOYER_OG_ALT, EMPLOYER_OG_SIZE } from "@/lib/employer-og";
 
 export const dynamic = "force-dynamic";
+
+/** Header art: the worker with a box after layoffs, the ironworkers' lunch otherwise. The lunch scene is wide (4:3). */
+const HEADER_ART = {
+  layoffs: {
+    light: workerBox,
+    dark: workerBoxDark,
+    sizes: "(min-width: 1024px) 15rem, 11rem",
+    figure: "right-0 bottom-0 w-44 lg:w-60",
+    header: "sm:min-h-60 sm:pr-48 lg:min-h-80 lg:pr-64",
+  },
+  default: {
+    light: ironworkersLunch,
+    dark: ironworkersLunchDark,
+    sizes: "(min-width: 1024px) 26rem, 14rem",
+    figure: "right-0 bottom-0 w-56 lg:w-104",
+    header: "sm:min-h-44 sm:pr-60 lg:min-h-80 lg:pr-112",
+  },
+} as const;
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -78,15 +96,13 @@ export default async function EmployerDetail({ params }: Params) {
   const totalDenied = h1b.reduce((s, r) => s + r.denied, 0);
   const latestYear = h1b.length ? h1b[h1b.length - 1] : null;
 
+  const art = flags.layoffs ? HEADER_ART.layoffs : HEADER_ART.default;
+
   return (
     <div className="space-y-14">
       <JsonLd data={employerJsonLd(employer, `/employers/${segment}`)} />
-      <div className="relative sm:min-h-60 sm:pr-48 lg:min-h-80 lg:pr-64">
-        <HeaderFigure
-          light={flags.layoffs ? workerBox : workerLaptop}
-          dark={flags.layoffs ? workerBoxDark : workerLaptopDark}
-          className="right-0 bottom-0 w-44 lg:w-60"
-        />
+      <div className={`relative ${art.header}`}>
+        <HeaderFigure light={art.light} dark={art.dark} sizes={art.sizes} className={art.figure} />
         <Breadcrumbs
           trail={[
             { name: "Employers", href: "/employers" },

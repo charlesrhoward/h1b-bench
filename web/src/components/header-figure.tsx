@@ -9,17 +9,20 @@ import Image, { type StaticImageData } from "next/image";
 export default function HeaderFigure({
   light,
   dark,
+  sizes,
   className = "",
 }: {
   light: StaticImageData;
   dark: StaticImageData;
+  /** The `sizes` attribute for the rendered width, for example "(min-width: 1024px) 15rem, 11rem". */
+  sizes: string;
   className?: string;
 }) {
   const base = `pointer-events-none absolute -z-10 hidden h-auto select-none ${className}`;
   return (
     <>
-      <Image src={light} alt="" priority sizes="(min-width: 1024px) 15rem, 11rem" className={`${base} sm:block sm:dark:hidden`} />
-      <Image src={dark} alt="" priority sizes="(min-width: 1024px) 15rem, 11rem" className={`${base} sm:dark:block`} />
+      <Image src={light} alt="" priority sizes={sizes} className={`${base} sm:block sm:dark:hidden`} />
+      <Image src={dark} alt="" priority sizes={sizes} className={`${base} sm:dark:block`} />
     </>
   );
 }
