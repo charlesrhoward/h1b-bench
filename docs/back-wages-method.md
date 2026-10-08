@@ -11,7 +11,9 @@ owe, to how many workers, and which employers?
 ## Source
 
 DOL WHD concluded compliance actions (data.dol.gov, `WHD_enforcement.zip`, all concluded
-cases since FY2005). The columns used are `CASE_ID`, `LEGAL_NAME`, `TRADE_NM`, `ST_CD`,
+cases). DOL describes the file as cases since FY2005, but some H-1B cases have an earlier
+findings end date. The earliest is in FY1999 (3 cases). The site counts them in the year of
+that date. The columns used are `CASE_ID`, `LEGAL_NAME`, `TRADE_NM`, `ST_CD`,
 `FINDINGS_END_DATE`, `H1B_VIOLTN_CNT`, `H1B_BW_ATP_AMT` (back wages the employer agreed to
 pay), `H1B_EE_ATP_CNT` (employees owed back wages), and `H1B_CMP_ASSD_AMT` (civil money
 penalties assessed).

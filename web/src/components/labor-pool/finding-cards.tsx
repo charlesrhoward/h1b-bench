@@ -10,7 +10,7 @@ export default function FindingCards({ profile }: { profile: LcaYearProfile }) {
     },
     {
       value: fmtPct(profile.new_employment_filings, profile.certified_filings),
-      text: "of filings are for new hires. The other filings extend, amend, or move the jobs of H-1B workers who already work in the U.S.",
+      text: "of filings include a position for a worker who is new to the employer. The other filings extend, amend, or move the jobs of H-1B workers who already work in the U.S.",
     },
     {
       value: fmtPct(profile.top20_occupation_filings, profile.certified_filings),
