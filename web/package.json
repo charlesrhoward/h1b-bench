@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "preflight": "pnpm lint && pnpm typecheck && pnpm build && ../scripts/check-etl.sh",
     "prepare": "cd .. && husky web/.husky || true"
   },
