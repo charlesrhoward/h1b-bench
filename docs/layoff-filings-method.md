@@ -77,6 +77,24 @@ filing once, even when it falls after more than one of the company's notices.
      They only continue, amend, or add a concurrent job for current workers (extensions and
      amendments). They are shown so the reader can see what the count leaves out.
    New employment plus change of employer equals the counted filings in measure 3.
+8. **Timeline (added 2026-10-08, before the numbers were published).** For each company in
+   measure 3, the data for a timeline on its employer pages. It uses the same company key,
+   the same filings, and the same windows as measures 3 to 7.
+   - **Notices:** every matched notice in the notice window, with its notice date, state,
+     company name and site as written in the notice, and workers. "Followed" is measure 2.
+     For each notice: the counted filings received 1 to 365 days after it, and 1 to 365
+     days before it. One filing can fall after two notices, so the per-notice counts can
+     add up to more than the company totals in measures 3 and 4.
+   - **Months:** certified H-1B filings by the calendar month of `RECEIVED_DATE`, split as
+     in measure 7 (new employment, change of employer, not counted). The months run from
+     October 2019 to May 2026. June 2026 is left out: the data holds filings decided by
+     Jun 30, 2026, so filings received late in June that were still in review are missing.
+     Months before October 2019 are left out for the same reason at the start of the data.
+     The median filing is decided 7 days after it is received, and about 1 in 100 takes
+     more than 30 days, so the last months before June 2026 can be a little low.
+     Months with no filings have no row and show as zero.
+   Every employer name whose company key matches gets the company's timeline, the same as
+   the totals in `employer_layoff_filings`.
 
 ## Verification
 
