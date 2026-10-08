@@ -80,6 +80,15 @@ export const SOURCE_GROUPS: SourceGroup[] = [
           "https://www.uscis.gov/working-in-the-united-states/temporary-workers/h-1b-specialty-occupations/h-1b-electronic-registration-process",
         methods: ["lottery-method.md"],
       },
+      {
+        name: "Characteristics of H-1B Specialty Occupation Workers",
+        coverage: "FY2020 to FY2025 · yearly USCIS reports to Congress · Table 4a (Table 1a in FY2025)",
+        summary:
+          "Approved H-1B petitions by the worker's country of birth. The site copies the counts from the appendix table of each report and adds only each country's share of the year. An approval is a petition, not a person.",
+        usedOn: [HOME],
+        dataUrl: "https://www.uscis.gov/tools/reports-and-studies",
+        methods: ["country-of-birth-method.md"],
+      },
     ],
   },
   {
