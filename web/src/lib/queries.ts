@@ -196,3 +196,46 @@ export async function getSitemapEmployerIds(fiscalYear: number, minFilings: numb
     if (data.length < SITEMAP_PAGE_SIZE) return ids;
   }
 }
+
+/** USCIS approvals per fiscal year, from the "Characteristics of H-1B" reports. */
+export type BirthCountryYear = { fiscal_year: number; approved: number };
+
+/** Approved petitions for one place of birth, by fiscal year. */
+export type BirthCountryRow = { country: string; approved: Record<number, number> };
+
+/**
+ * Approved H-1B petitions by beneficiary country of birth (docs/country-of-birth-method.md):
+ * the yearly totals, and every year's count for the `limit` leading places in the latest year.
+ */
+export async function getBirthCountryShares(limit = 6) {
+  const [{ data: yearRows }, { data: leaderRows }] = await Promise.all([
+    supabase.from("uscis_birth_country_years").select("fiscal_year, approved").order("fiscal_year"),
+    supabase
+      .from("uscis_birth_country")
+      .select("country")
+      .neq("country", "Unknown")
+      .order("fiscal_year", { ascending: false })
+      .order("approved", { ascending: false })
+      .limit(limit),
+  ]);
+  const years = (yearRows ?? []) as BirthCountryYear[];
+  const leaders = ((leaderRows ?? []) as { country: string }[]).map((r) => r.country);
+  if (years.length === 0 || leaders.length === 0) return { years, countries: [] };
+
+  const { data } = await supabase
+    .from("uscis_birth_country")
+    .select("fiscal_year, country, approved")
+    .in("country", leaders);
+  const rows = (data ?? []) as { fiscal_year: number; country: string; approved: number }[];
+  return { years, countries: groupByCountry(leaders, rows) };
+}
+
+/** One row per place, in `order`, with its count for each fiscal year it appears in. */
+function groupByCountry(order: string[], rows: { fiscal_year: number; country: string; approved: number }[]) {
+  const byCountry = new Map<string, Record<number, number>>(order.map((c) => [c, {}]));
+  for (const row of rows) {
+    const counts = byCountry.get(row.country);
+    if (counts) counts[row.fiscal_year] = row.approved;
+  }
+  return order.map((country): BirthCountryRow => ({ country, approved: byCountry.get(country) ?? {} }));
+}

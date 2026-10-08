@@ -9,7 +9,8 @@
 -- -> market_gap_annual_wage_reload (truncate market_gap_summary, employer_market_gap,
 --    pw_source_summary, pw_survey_publishers + temporary insert policies; reload after the
 --    yearly-wage fix in docs/market-gap-method.md) -> drop_market_gap_reload_insert_policies
--- -> layoff_filings -> drop_layoff_filings_insert_policies.
+-- -> layoff_filings -> drop_layoff_filings_insert_policies -> uscis_birth_country
+-- -> drop_uscis_birth_country_insert_policies.
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -322,6 +323,22 @@ insert into uscis_registrations values
   (2025, 479953, 470342, 423028, 47314, 135137),
   (2026, 358737, 343981, 336153, 7828, 120141);
 
+-- Approved H-1B petitions by beneficiary country of birth (docs/country-of-birth-method.md),
+-- loaded by etl/country_of_birth.py --load from the USCIS "Characteristics of H-1B
+-- Specialty Occupation Workers" reports (Table 4a FY2020-FY2024, Table 1a FY2025).
+create table uscis_birth_country_years (
+  fiscal_year smallint primary key,      -- federal FY of the approval
+  approved integer not null,             -- sum of every country row, "Unknown" included
+  countries smallint not null            -- rows in the table, "Unknown" included
+);
+
+create table uscis_birth_country (
+  fiscal_year smallint not null references uscis_birth_country_years(fiscal_year),
+  country text not null,                 -- place of birth as USCIS labels it, one spelling
+  approved integer not null,
+  primary key (fiscal_year, country)
+);
+
 -- PERM green card filings: job already filled, prior layoffs, DOL wait
 -- (docs/perm-lockin-method.md), loaded by etl/perm_lockin.py --load. Certified only.
 create table perm_lockin_summary (
@@ -380,6 +397,8 @@ alter table employer_perm enable row level security;
 alter table layoff_filings_summary enable row level security;
 alter table layoff_filings_companies enable row level security;
 alter table employer_layoff_filings enable row level security;
+alter table uscis_birth_country_years enable row level security;
+alter table uscis_birth_country enable row level security;
 
 create policy "public read employers" on employers for select using (true);
 create policy "public read lca_cases" on lca_cases for select using (true);
@@ -405,6 +424,8 @@ create policy "public read employer_perm" on employer_perm for select using (tru
 create policy "public read layoff_filings_summary" on layoff_filings_summary for select using (true);
 create policy "public read layoff_filings_companies" on layoff_filings_companies for select using (true);
 create policy "public read employer_layoff_filings" on employer_layoff_filings for select using (true);
+create policy "public read uscis_birth_country_years" on uscis_birth_country_years for select using (true);
+create policy "public read uscis_birth_country" on uscis_birth_country for select using (true);
 
 -- Loader role policies: allow anon insert during bulk load. Dropped after the initial
 -- load (migration drop_bulk_insert_policies); re-create before any quarterly refresh:
@@ -432,6 +453,8 @@ create policy "public read employer_layoff_filings" on employer_layoff_filings f
 --   create policy "bulk insert layoff_filings_summary" on layoff_filings_summary for insert with check (true);
 --   create policy "bulk insert layoff_filings_companies" on layoff_filings_companies for insert with check (true);
 --   create policy "bulk insert employer_layoff_filings" on employer_layoff_filings for insert with check (true);
+--   create policy "bulk insert uscis_birth_country_years" on uscis_birth_country_years for insert with check (true);
+--   create policy "bulk insert uscis_birth_country" on uscis_birth_country for insert with check (true);
 
 -- Server-side per-year overview (avoids PostgREST's 1000-row response cap in the app)
 create view fy_overview with (security_invoker = true) as

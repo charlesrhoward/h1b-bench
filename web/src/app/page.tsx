@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getOverviewStats, getTopEmployers } from "@/lib/queries";
+import { getBirthCountryShares, getOverviewStats, getTopEmployers } from "@/lib/queries";
 import { fmtCompact, fmtInt, fmtPct } from "@/lib/format";
 import { WORKFORCE_SHARE_METHOD } from "@/lib/workforce";
 import { Eyebrow, FiscalYearTag } from "@/components/title-tags";
@@ -8,15 +8,17 @@ import StatCard from "@/components/stat-card";
 import JsonLd from "@/components/json-ld";
 import { lcaDatasetJsonLd } from "@/lib/json-ld";
 import WorkforceShareCell from "@/components/workforce-share-cell";
+import BirthCountrySection from "@/components/birth-country-section";
 
 export const dynamic = "force-dynamic";
 
 const JSON_LD = lcaDatasetJsonLd();
 
 export default async function Home() {
+  const birthCountriesPromise = getBirthCountryShares();
   const { years, totalFilings, totalCertified, employerCount } = await getOverviewStats();
   const latestYear = years.at(-1)?.[0] ?? 2025;
-  const top = await getTopEmployers(latestYear, 10);
+  const [top, birthCountries] = await Promise.all([getTopEmployers(latestYear, 10), birthCountriesPromise]);
   const maxFilings = Math.max(...years.map(([, v]) => v.filings), 1);
 
   return (
@@ -96,6 +98,8 @@ export default async function Home() {
           ))}
         </div>
       </section>
+
+      <BirthCountrySection years={birthCountries.years} countries={birthCountries.countries} />
 
       <section>
         <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">

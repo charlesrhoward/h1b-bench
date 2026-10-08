@@ -42,6 +42,9 @@ a number.
 | 7 | Multiple lottery registrations | `docs/lottery-method.md` | rows in `etl/schema.sql` (`uscis_registrations`) |
 | 8 | Green card filings | `docs/perm-lockin-method.md` | `etl/perm_lockin.py --load` |
 
+The home page section on country of birth uses `docs/country-of-birth-method.md` and
+`etl/country_of_birth.py --load` (USCIS approvals, not LCA data).
+
 `/labor-pool` uses `docs/labor-pool-method.md` (written before the first run) and
 `docs/labor-pool-results.md`.
 
