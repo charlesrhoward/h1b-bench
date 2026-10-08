@@ -29,7 +29,7 @@ export function LayoffFilingsSteps({ summary, noticeRange }: { summary: LayoffFi
 export function LayoffFilingsStats({ summary }: { summary: LayoffFilingsSummary }) {
   return (
     <div className="grid grid-cols-2 gap-x-6 gap-y-8 py-2 sm:grid-cols-4">
-      <StatCard label="Workers in the layoff notices" value={fmtInt(summary.workers_laid_off)} />
+      <StatCard label={`Workers in those ${fmtInt(summary.notices_followed)} notices`} value={fmtInt(summary.workers_laid_off)} />
       <StatCard label="New-worker H-1B filings in the next 12 months" value={fmtInt(summary.filings_after)} />
       <StatCard label="Positions those filings allow, at most" value={fmtInt(summary.positions_after)} />
       <StatCard label="Notices with a new filing within 90 days" value={fmtInt(summary.notices_followed_90)} />
@@ -37,7 +37,10 @@ export function LayoffFilingsStats({ summary }: { summary: LayoffFilingsSummary 
   );
 }
 
-/** New-worker filings in the year before the notices and the year after, on one scale. */
+/**
+ * New-worker filings in the year before the notices and the year after, on one scale.
+ * Same bar rows as ComparisonChart, but raw counts on a shared max instead of shares of a total.
+ */
 export function LayoffFilingsBeforeAfter({ summary }: { summary: LayoffFilingsSummary }) {
   const rows = [
     { label: "12 months before the notices", count: summary.filings_before, tone: "bg-chart-neutral-primary" },
@@ -76,8 +79,8 @@ export function LayoffFilingsExample({ companies }: { companies: LayoffFilingsCo
   return (
     <p>
       An example: of the companies in the table below, {example.company} filed the most after its notices. Its
-      WARN notices ({example.states.replaceAll(",", ", ")}, the first in {fmtMonth(example.first_notice)}) were for{" "}
-      {fmtInt(example.workers_laid_off)} workers. In the 12 months after them, it filed{" "}
+      layoff notices that a new filing followed ({example.states.replaceAll(",", ", ")}, the first in{" "}
+      {fmtMonth(example.first_notice)}) were for {fmtInt(example.workers_laid_off)} workers. In the 12 months after them, it filed{" "}
       {fmtInt(example.filings_after)} H-1B filings for new workers, {fmtInt(example.filings_after_90)} of them within
       90 days. In the 12 months before, it filed {fmtInt(example.filings_before)}.
     </p>

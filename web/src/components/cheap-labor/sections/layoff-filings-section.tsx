@@ -31,7 +31,7 @@ export default function LayoffFilingsSection({
     <EvidenceSection
       index={index}
       title="Companies laid off workers, then filed for new H-1B workers."
-      takeaway={`${fmtInt(summary.companies_followed)} companies filed layoff notices for ${fmtInt(summary.workers_laid_off)} workers. In the next 12 months, the same companies filed ${fmtInt(summary.filings_after)} H-1B filings for workers new to the company.`}
+      takeaway={`${fmtInt(summary.companies_followed)} companies filed ${fmtInt(summary.notices_followed)} layoff notices for ${fmtInt(summary.workers_laid_off)} workers. In the 12 months after those notices, the same companies filed ${fmtInt(summary.filings_after)} H-1B filings for workers new to the company.`}
       limits="An H-1B filing (LCA) is a step before a visa petition. It is not a hire. WARN notices do not list jobs, so the new H-1B jobs can be in different roles, sites, or business units than the layoff. Large employers file for H-1B workers all year, so we also show the year before each notice. WARN applies only to large layoffs, generally 50 or more workers at one site. Some states do not publish a notice date, and we drop those notices. Some states give the date the state received the notice instead. California lists each site of a layoff as its own notice. Company names must match exactly, so these counts are lower than the true totals."
       source={
         <>
