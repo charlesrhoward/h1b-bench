@@ -178,6 +178,25 @@
   color: var(--color-fg-neutral-secondary);
 }
 
+/*
+ * Employer warning flags (docs/employer-flags-method.md): solid error red with inverse text.
+ * The fill is the error foreground, not bg-error-primary: in dark mode bg-error-primary is a
+ * dim maroon, and a warning must stay loud in both schemes. fg-neutral-tertiary is white in
+ * light mode and near-black in dark mode, so the label keeps its contrast in both.
+ */
+@utility flag {
+  background-color: var(--color-fg-error-primary);
+  color: var(--color-fg-neutral-tertiary);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+@utility flag-frame {
+  border: 2px solid var(--color-fg-error-primary);
+}
+
 /* Decorative first letter at an article opening, about two lines tall. */
 @utility dropcap {
   display: flow-root;

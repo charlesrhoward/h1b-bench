@@ -12,6 +12,8 @@ import HeaderArt from "@/components/header-art";
 import { FiscalYearTag } from "@/components/title-tags";
 import WorkforceShareCell from "@/components/workforce-share-cell";
 import YearTabs, { FISCAL_YEARS } from "@/components/year-tabs";
+import { EmployerFlagPills } from "@/components/employer-flags";
+import { getEmployerFlags } from "@/lib/employer-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +31,7 @@ export default async function EmployersPage({
 
   if (term) {
     const hits = await searchEmployerHits(term);
+    const flags = await getEmployerFlags(hits.map((h) => h.id));
     return (
       <div className="space-y-8">
         <div>
@@ -54,7 +57,8 @@ export default async function EmployersPage({
                   <td>
                     <Link href={`/employers/${h.id}`} className="font-medium hover:text-accent-primary">
                       {h.name}
-                    </Link>
+                    </Link>{" "}
+                    <EmployerFlagPills flags={flags.get(h.id)} />
                   </td>
                   <td className="text-neutral-secondary">
                     {[h.city, h.state].filter(Boolean).join(", ") || "—"}
@@ -76,6 +80,7 @@ export default async function EmployersPage({
 
   const fy = year ? Number(year) : 2026;
   const rows = await getTopEmployers(fy, 100);
+  const flags = await getEmployerFlags(rows.map((r) => r.employer_id));
 
   return (
     <div className="space-y-8">
@@ -117,7 +122,8 @@ export default async function EmployersPage({
                 <td>
                   <Link href={`/employers/${r.employer_id}`} className="font-medium hover:text-accent-primary">
                     {r.employers?.name}
-                  </Link>
+                  </Link>{" "}
+                  <EmployerFlagPills flags={flags.get(r.employer_id)} />
                 </td>
                 <td className="text-neutral-secondary">{r.employers?.state ?? "—"}</td>
                 <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
