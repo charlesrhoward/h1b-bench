@@ -48,7 +48,7 @@ export function PwPublisherTable({ rows }: { rows: PwSurveyPublisher[] }) {
           <tr>
             <th>Survey publisher</th>
             <th className="text-right">Filings</th>
-            <th className="text-right">Below local median</th>
+            <th className="text-right">Below local median (of matched filings)</th>
           </tr>
         </thead>
         <tbody>

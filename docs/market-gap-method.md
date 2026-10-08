@@ -55,6 +55,9 @@ The match rate is published with the result.
 - OEWS wages describe all workers in the occupation and area, at all experience levels.
 - Filings that cannot be matched to an area or wage row are left out. They are not counted
   as above or below.
+- **DOL left the worksite county blank in most of its FY2025 Q4 file.** Of the 103,285
+  certified H-1B filings in that file, 91,706 (88.8%) have no county. In Q1 to Q3, none are
+  blank. These filings cannot match an area, so most Q4 filings are not in the result.
 
 ## Corrections
 
