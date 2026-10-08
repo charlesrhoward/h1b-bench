@@ -6,8 +6,11 @@ Inputs:
   data/processed/lca_FY*.parquet      filing counts, to pick one employer per ticker
   Supabase employers                  id, name_normalized, fein (read with the publishable key)
 
-  SUPABASE_URL=... SUPABASE_KEY=... ./venv/bin/python -u etl/tickers.py          # match + save
-  (cd etl && SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u tickers.py --load)
+  SEC_CONTACT=you@example.com SUPABASE_URL=... SUPABASE_KEY=... ./venv/bin/python -u etl/tickers.py
+  (cd etl && SEC_CONTACT=... SUPABASE_URL=... SUPABASE_KEY=... ../venv/bin/python -u tickers.py --load)
+
+SEC rejects requests (403) unless the User-Agent names a contact email. SEC_CONTACT supplies it, so
+no address is committed here.
 
 --load needs the temporary insert policy on employer_tickers from etl/schema.sql; truncate
 employer_tickers first on a refresh.
@@ -31,12 +34,15 @@ ROOT = os.path.join(os.path.dirname(__file__), "..", "data")
 SEC_DIR = os.path.join(ROOT, "raw", "sec")
 TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
-# SEC asks automated clients to name themselves; under its 10 requests/second limit.
-SEC_HEADERS = {"User-Agent": "H1B Bench https://github.com/charlesrhoward/h1b-bench"}
 SEC_PAUSE_SECONDS = 0.13
 TICKER_PATTERN = re.compile(r"^[A-Z][A-Z.-]{0,9}$")
 OUT = os.path.join(ROOT, "processed", "employer_tickers.parquet")
 COLS = ["employer_id", "ticker", "cik", "sec_name"]
+
+
+def sec_headers():
+    """SEC asks automated clients for a User-Agent with a contact email."""
+    return {"User-Agent": f"H1B Bench {os.environ['SEC_CONTACT']}"}
 
 
 def sec_tickers():
@@ -44,7 +50,7 @@ def sec_tickers():
     path = os.path.join(SEC_DIR, "company_tickers.json")
     if not os.path.exists(path):
         os.makedirs(SEC_DIR, exist_ok=True)
-        resp = requests.get(TICKERS_URL, headers=SEC_HEADERS, timeout=60)
+        resp = requests.get(TICKERS_URL, headers=sec_headers(), timeout=60)
         resp.raise_for_status()
         with open(path, "w") as f:
             f.write(resp.text)
@@ -75,7 +81,7 @@ def fetch_ein(cik):
     """SEC-reported EIN for one CIK, or None. Retries transient errors."""
     for _ in range(3):
         try:
-            resp = requests.get(SUBMISSIONS_URL.format(cik=cik), headers=SEC_HEADERS, timeout=30)
+            resp = requests.get(SUBMISSIONS_URL.format(cik=cik), headers=sec_headers(), timeout=30)
             if resp.status_code == 404:
                 return None
             resp.raise_for_status()
