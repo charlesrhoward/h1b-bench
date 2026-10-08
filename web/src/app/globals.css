@@ -193,10 +193,6 @@
   letter-spacing: 0.08em;
 }
 
-@utility flag-frame {
-  border: 2px solid var(--color-fg-error-primary);
-}
-
 /* Decorative first letter at an article opening, about two lines tall. */
 @utility dropcap {
   display: flow-root;
