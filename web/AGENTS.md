@@ -34,6 +34,12 @@ Read the root `AGENTS.md` first. It holds the purpose, data-accuracy, lint, and 
   components import types and constants from `explore-model.ts`, never from `explore.ts`.
 - `robots.ts`, `sitemap.ts`, and `llms.txt/route.ts` in `src/app/` build those files. The
   sitemap lists employers with at least 10 H-1B filings in FY2025, not all 180,000.
+- Employer URLs: `/employers/<ticker>` for EIN-confirmed public companies, otherwise
+  `/employers/<name-slug>-<id>` (`src/lib/employer-path.ts`, `docs/employer-tickers-method.md`).
+  Build links with `getEmployerLinker()` (server) or `employerPath()` (client); never write
+  `/employers/${id}` by hand. Old id URLs and stale slugs 308-redirect to the canonical URL.
+- Employer flags ("Underpaid", "Layoffs") follow `docs/employer-flags-method.md`
+  (`src/lib/employer-flags.ts`, `src/components/employer-flags.tsx`).
 
 ## Adding a /pay-vs-market finding
 

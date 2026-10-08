@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { fmtInt, fmtPct } from "@/lib/format";
 import { PERM_FY, type EmployerPerm, type PermLayoffEmployer } from "@/lib/cheap-labor";
+import { getEmployerLinker } from "@/lib/employer-tickers";
 
 /** Employers with the most certified green card filings after a reported layoff. */
-export function PermLayoffTable({ rows }: { rows: PermLayoffEmployer[] }) {
+export async function PermLayoffTable({ rows }: { rows: PermLayoffEmployer[] }) {
+  const employerHref = await getEmployerLinker();
   return (
     <div className="overflow-x-auto">
       <table className="w-full" data-hide="2">
@@ -20,7 +22,7 @@ export function PermLayoffTable({ rows }: { rows: PermLayoffEmployer[] }) {
             <tr key={r.name_key}>
               <td>
                 {r.employer_id ? (
-                  <Link href={`/employers/${r.employer_id}`} className="hover:text-accent-primary">
+                  <Link href={employerHref({ id: r.employer_id, name: r.name })} className="hover:text-accent-primary">
                     {r.name}
                   </Link>
                 ) : (

@@ -11,6 +11,7 @@ import WorkforceShareCell from "@/components/workforce-share-cell";
 import BirthCountrySection from "@/components/birth-country-section";
 import { EmployerFlagPills } from "@/components/employer-flags";
 import { getEmployerFlags } from "@/lib/employer-flags";
+import { getEmployerLinker } from "@/lib/employer-tickers";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export default async function Home() {
   const { years, totalFilings, totalCertified, employerCount } = await getOverviewStats();
   const latestYear = years.at(-1)?.[0] ?? 2025;
   const [top, birthCountries] = await Promise.all([getTopEmployers(latestYear, 10), birthCountriesPromise]);
-  const flags = await getEmployerFlags(top.map((r) => r.employer_id));
+  const [flags, employerHref] = await Promise.all([getEmployerFlags(top.map((r) => r.employer_id)), getEmployerLinker()]);
   const maxFilings = Math.max(...years.map(([, v]) => v.filings), 1);
 
   return (
@@ -132,7 +133,7 @@ export default async function Home() {
                 <tr key={r.employer_id}>
                   <td className="tabular-nums text-neutral-secondary">{i + 1}</td>
                   <td>
-                    <Link href={`/employers/${r.employer_id}`} className="font-medium hover:text-accent-primary">
+                    <Link href={employerHref({ id: r.employer_id, name: r.employers?.name ?? "" })} className="font-medium hover:text-accent-primary">
                       {r.employers?.name}
                     </Link>{" "}
                     <EmployerFlagPills flags={flags.get(r.employer_id)} />

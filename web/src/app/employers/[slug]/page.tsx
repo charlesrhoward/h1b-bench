@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
   getEmployer,
   getEmployerHeadcount,
@@ -27,30 +27,53 @@ import { employerJsonLd } from "@/lib/json-ld";
 import JsonLd from "@/components/json-ld";
 import { EmployerFlagCards, EmployerFlagPills } from "@/components/employer-flags";
 import { employerFlags } from "@/lib/employer-flags";
+import { employerSegment, parseEmployerParam } from "@/lib/employer-path";
+import { getTickerMap } from "@/lib/employer-tickers";
 
 export const dynamic = "force-dynamic";
 
-type Params = { params: Promise<{ id: string }> };
+type Params = { params: Promise<{ slug: string }> };
+
+/** Employer id from the URL segment: a trailing id, or a ticker from employer_tickers. */
+async function resolveEmployerId(slug: string): Promise<number | null> {
+  const param = parseEmployerParam(slug);
+  if (param.kind === "id") return param.id;
+  if (param.kind === "invalid") return null;
+  const { byTicker } = await getTickerMap();
+  return byTicker.get(param.ticker) ?? null;
+}
+
+/** The employer and its canonical URL segment, or null when the URL matches no employer. */
+async function loadEmployer(slug: string) {
+  const employerId = await resolveEmployerId(slug);
+  if (employerId == null) return null;
+  const [employer, { byId }] = await Promise.all([getEmployer(employerId), getTickerMap()]);
+  if (!employer) return null;
+  return { employer, segment: employerSegment({ ...employer, ticker: byId.get(employer.id) }) };
+}
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { id } = await params;
-  const employer = Number.isFinite(Number(id)) ? await getEmployer(Number(id)) : null;
-  if (!employer) return { title: "Employer not found — H1B Bench" };
+  const { slug } = await params;
+  const found = await loadEmployer(slug);
+  if (!found) return { title: "Employer not found — H1B Bench" };
+  const { employer, segment } = found;
   const place = [employer.city, employer.state].filter(Boolean).join(", ");
   return pageMetadata({
     title: `${employer.name} — H-1B filings and pay — H1B Bench`,
     description: `H-1B Labor Condition Applications filed by ${employer.name}${place ? ` (${place})` : ""}: filings by year, certification rate, median wage, and top roles. Source: DOL OFLC.`,
-    path: `/employers/${employer.id}`,
+    path: `/employers/${segment}`,
   });
 }
 
 export default async function EmployerDetail({ params }: Params) {
-  const { id } = await params;
-  const employerId = Number(id);
-  if (!Number.isFinite(employerId)) notFound();
+  const { slug } = await params;
+  const found = await loadEmployer(slug);
+  if (!found) notFound();
+  const { employer, segment } = found;
+  if (slug !== segment) permanentRedirect(`/employers/${segment}`);
+  const employerId = employer.id;
 
-  const [employer, stats, topJobs, headcount, marketGap, whd, layoffFilings, perm] = await Promise.all([
-    getEmployer(employerId),
+  const [stats, topJobs, headcount, marketGap, whd, layoffFilings, perm] = await Promise.all([
     getEmployerStats(employerId),
     getEmployerTopJobs(employerId),
     getEmployerHeadcount(employerId),
@@ -59,7 +82,6 @@ export default async function EmployerDetail({ params }: Params) {
     getEmployerLayoffFilings(employerId),
     getEmployerPerm(employerId),
   ]);
-  if (!employer) notFound();
 
   const flags = employerFlags(marketGap, layoffFilings);
   const h1b = stats.filter((s) => s.visa_class === "H-1B");
@@ -70,7 +92,7 @@ export default async function EmployerDetail({ params }: Params) {
 
   return (
     <div className="space-y-14">
-      <JsonLd data={employerJsonLd(employer)} />
+      <JsonLd data={employerJsonLd(employer, `/employers/${segment}`)} />
       <div>
         <Link href="/employers" className="text-sm text-neutral-secondary hover:text-neutral-secondary-hover">
           ← Leaderboard

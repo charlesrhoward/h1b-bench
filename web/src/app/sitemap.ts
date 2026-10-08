@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { PAGE_LIST } from "@/lib/pages";
-import { getSitemapEmployerIds } from "@/lib/queries";
+import { getSitemapEmployers } from "@/lib/queries";
+import { getEmployerLinker } from "@/lib/employer-tickers";
 import { absoluteUrl } from "@/lib/site";
 
 // Data loads quarterly, so a daily rebuild keeps the list current.
@@ -11,14 +12,17 @@ const SITEMAP_FISCAL_YEAR = 2025;
 const SITEMAP_MIN_FILINGS = 10;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const employerIds = await getSitemapEmployerIds(SITEMAP_FISCAL_YEAR, SITEMAP_MIN_FILINGS);
+  const [sitemapEmployers, employerHref] = await Promise.all([
+    getSitemapEmployers(SITEMAP_FISCAL_YEAR, SITEMAP_MIN_FILINGS),
+    getEmployerLinker(),
+  ]);
   const pages = PAGE_LIST.map((page) => ({
     url: absoluteUrl(page.path),
     changeFrequency: page.changeFrequency,
     priority: page.priority,
   }));
-  const employers = employerIds.map((id) => ({
-    url: absoluteUrl(`/employers/${id}`),
+  const employers = sitemapEmployers.map((employer) => ({
+    url: absoluteUrl(employerHref(employer)),
     changeFrequency: "monthly" as const,
     priority: 0.5,
   }));

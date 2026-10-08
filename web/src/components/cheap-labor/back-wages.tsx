@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fmtInt } from "@/lib/format";
 import type { EmployerWhd, WhdTopEmployer, WhdYear } from "@/lib/cheap-labor";
+import { getEmployerLinker } from "@/lib/employer-tickers";
 
 /** Whole dollars in millions with one decimal, e.g. $123.4M. */
 export function fmtMillions(n: number): string {
@@ -35,7 +36,8 @@ export function BackWagesByYear({ years }: { years: WhdYear[] }) {
 }
 
 /** Employers with the most H-1B back wages; links when the WHD name matches an employer. */
-export function BackWagesTable({ rows }: { rows: WhdTopEmployer[] }) {
+export async function BackWagesTable({ rows }: { rows: WhdTopEmployer[] }) {
+  const employerHref = await getEmployerLinker();
   return (
     <div className="overflow-x-auto">
       <table className="w-full" data-hide="2 3">
@@ -53,7 +55,7 @@ export function BackWagesTable({ rows }: { rows: WhdTopEmployer[] }) {
             <tr key={r.name_key}>
               <td>
                 {r.employer_id ? (
-                  <Link href={`/employers/${r.employer_id}`} className="hover:text-accent-primary">
+                  <Link href={employerHref({ id: r.employer_id, name: r.name })} className="hover:text-accent-primary">
                     {r.name}
                   </Link>
                 ) : (

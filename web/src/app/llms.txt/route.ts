@@ -9,7 +9,7 @@ const METHOD_URL = `${REPO_URL}/blob/main/docs`;
 function pagesSection() {
   const lines = PAGE_LIST.map((page) => `- [${page.name}](${absoluteUrl(page.path)}): ${page.description}`);
   lines.push(
-    `- Employer pages (${SITE_URL}/employers/{id}): one page per employer, with filings by year, certification rate, median wage, top roles, and any back wages, layoff notices, or green card filings found for it. Search them from the [employer leaderboard](${absoluteUrl(PAGES.employers.path)}).`,
+    `- Employer pages (${SITE_URL}/employers/{ticker} for public companies, such as ${SITE_URL}/employers/msft; otherwise ${SITE_URL}/employers/{name}-{id}): one page per employer, with filings by year, certification rate, median wage, top roles, and any back wages, layoff notices, or green card filings found for it. A page flags the employer as "Underpaid" or "Layoffs" when it meets the rules in docs/employer-flags-method.md. Search them from the [employer leaderboard](${absoluteUrl(PAGES.employers.path)}).`,
   );
   return lines.join("\n");
 }

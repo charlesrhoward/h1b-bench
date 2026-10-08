@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { employerPath } from "@/lib/employer-path";
 import type { EmployerHistoryRow, ExploreEmployer } from "@/lib/explore-model";
 import { EMPLOYER_METRICS, type EmployerMetric } from "@/lib/explore-stats";
 import { buildHistoryChart, buildStrip } from "./compare-charts";
@@ -141,7 +142,7 @@ export default function CompareSection({
           <CompareTable compared={compared} />
           <p className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
             {compared.map((e) => (
-              <Link key={e.id} href={`/employers/${e.id}`} className="link">
+              <Link key={e.id} href={employerPath(e)} className="link">
                 {e.name}: full employer page
               </Link>
             ))}

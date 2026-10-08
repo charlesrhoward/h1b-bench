@@ -1,8 +1,10 @@
 import type { NextRequest } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getEmployerLinker } from "@/lib/employer-tickers";
 
 export type EmployerHit = {
   id: number;
+  href: string;
   name: string;
   city: string | null;
   state: string | null;
@@ -22,13 +24,15 @@ export async function GET(request: NextRequest) {
     return Response.json({ employers: [], occupations: [] });
   }
 
-  const [employers, occupations] = await Promise.all([
+  const [employers, occupations, employerHref] = await Promise.all([
     supabase.rpc("search_employers", { q, lim: 7 }),
     supabase.rpc("search_occupations", { q, lim: 4 }),
+    getEmployerLinker(),
   ]);
+  const hits = (employers.data ?? []) as Omit<EmployerHit, "href">[];
 
   return Response.json({
-    employers: (employers.data ?? []) as EmployerHit[],
+    employers: hits.map((hit): EmployerHit => ({ ...hit, href: employerHref(hit) })),
     occupations: (occupations.data ?? []) as OccupationHit[],
   });
 }
