@@ -38,6 +38,9 @@ Read the root `AGENTS.md` first. It holds the purpose, data-accuracy, lint, and 
   `/employers/<name-slug>-<id>` (`src/lib/employer-path.ts`, `docs/employer-tickers-method.md`).
   Build links with `getEmployerLinker()` (server) or `employerPath()` (client); never write
   `/employers/${id}` by hand. Old id URLs and stale slugs 308-redirect to the canonical URL.
+- Subsidiaries of public companies get a "Subsidiary of <parent> <TICKER>" chip and are found by a
+  search for the parent's ticker (`employer_parents`, `docs/employer-parents-method.md`,
+  `src/components/employer-parent.tsx`). The parent ticker never becomes the subsidiary's URL.
 - Employer flags ("Underpaid", "Layoffs") follow `docs/employer-flags-method.md`
   (`src/lib/employer-flags.ts`, `src/components/employer-flags.tsx`).
 

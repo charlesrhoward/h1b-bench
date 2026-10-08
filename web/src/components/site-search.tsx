@@ -7,6 +7,9 @@ type EmployerHit = {
   id: number;
   href: string;
   ticker: string | null;
+  parent_ticker: string | null;
+  parent_name: string | null;
+  parent_is_self: boolean;
   name: string;
   city: string | null;
   state: string | null;
@@ -290,6 +293,18 @@ function ResultRow({
   );
 }
 
+/** Own ticker, or the parent's ticker marked as a subsidiary. */
+function TickerTag({ hit }: { hit: EmployerHit }) {
+  const own = hit.ticker ?? (hit.parent_is_self ? hit.parent_ticker : null);
+  if (own) return <span className="ml-2 font-code text-xs text-neutral-secondary">{own}</span>;
+  if (!hit.parent_ticker) return null;
+  return (
+    <span className="ml-2 text-xs text-neutral-secondary" title={`Subsidiary of ${hit.parent_name ?? hit.parent_ticker}`}>
+      <span className="font-code">{hit.parent_ticker}</span> subsidiary
+    </span>
+  );
+}
+
 function EmployerRow({
   item,
   index,
@@ -319,7 +334,7 @@ function EmployerRow({
       <span className="min-w-0">
         <span className={`block truncate text-sm ${active ? "text-neutral-primary-hover" : "text-neutral-primary"}`}>
           {hit.name}
-          {hit.ticker ? <span className="ml-2 font-code text-xs text-neutral-secondary">{hit.ticker}</span> : null}
+          <TickerTag hit={hit} />
         </span>
         <span className="block text-xs text-neutral-secondary">
           {[hit.city, hit.state].filter(Boolean).join(", ") || "—"}

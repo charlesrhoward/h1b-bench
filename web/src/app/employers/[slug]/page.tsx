@@ -24,6 +24,7 @@ import { pageMetadata } from "@/lib/site";
 import { employerJsonLd } from "@/lib/json-ld";
 import JsonLd from "@/components/json-ld";
 import Breadcrumbs from "@/components/breadcrumbs";
+import { ParentChip, ParentNote } from "@/components/employer-parent";
 import { EmployerFlagCards, EmployerFlagPills } from "@/components/employer-flags";
 import { employerFlags } from "@/lib/employer-flags";
 import { loadEmployer } from "@/lib/employer-page";
@@ -51,7 +52,7 @@ export default async function EmployerDetail({ params }: Params) {
   const { slug } = await params;
   const found = await loadEmployer(slug);
   if (!found) notFound();
-  const { employer, segment } = found;
+  const { employer, parent, segment } = found;
   if (slug !== segment) permanentRedirect(`/employers/${segment}`);
   const employerId = employer.id;
 
@@ -83,8 +84,9 @@ export default async function EmployerDetail({ params }: Params) {
           ]}
         />
         <h1 className="type-title mt-4 text-balance [overflow-wrap:anywhere]">{employer.name}</h1>
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <EmployerFlagPills flags={flags} />
+          <ParentChip parent={parent} />
         </div>
         <p className="mt-2 text-neutral-secondary">
           {[employer.city, employer.state, employer.country].filter(Boolean).join(", ")}
@@ -125,6 +127,7 @@ export default async function EmployerDetail({ params }: Params) {
           <EmployerBackWagesNote whd={whd} />
           <EmployerLayoffFilingsNote row={layoffFilings} />
           <EmployerPermNote perm={perm} />
+          <ParentNote parent={parent} />
         </div>
       </section>
 

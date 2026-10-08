@@ -7,6 +7,7 @@ import { loadEmployer } from "@/lib/employer-page";
 import { EMPLOYER_OG_ALT, EMPLOYER_OG_SIZE } from "@/lib/employer-og";
 import { fmtCompact, fmtInt, fmtPct } from "@/lib/format";
 import { getEmployerStats } from "@/lib/queries";
+import type { EmployerParent } from "@/lib/employer-tickers";
 import { FISCAL_YEARS } from "@/components/year-tabs";
 
 export const alt = EMPLOYER_OG_ALT;
@@ -44,10 +45,17 @@ type Stat = { label: string; value: string; alarm?: boolean };
 
 type Card = { name: string; place: string; ticker: string | null; flags: EmployerFlags; stats: Stat[] };
 
+/** Top-right label: the ticker, or "Subsidiary of <parent> · <ticker>". */
+function tickerLabel(ticker: string | null, parent: EmployerParent | null) {
+  if (ticker) return ticker;
+  if (!parent) return null;
+  return parent.relation === "subsidiary" ? `Subsidiary of ${parent.parent_name} · ${parent.parent_ticker}` : parent.parent_ticker;
+}
+
 async function loadCard(slug: string): Promise<Card | null> {
   const found = await loadEmployer(slug);
   if (!found) return null;
-  const { employer, ticker } = found;
+  const { employer, ticker, parent } = found;
   const [stats, gap, layoffs] = await Promise.all([
     getEmployerStats(employer.id),
     getEmployerMarketGap(employer.id),
@@ -59,7 +67,7 @@ async function loadCard(slug: string): Promise<Card | null> {
   return {
     name: employer.name,
     place: [employer.city, employer.state].filter(Boolean).join(", "),
-    ticker,
+    ticker: tickerLabel(ticker, parent),
     flags,
     stats: cardStats(h1b.reduce((sum, r) => sum + r.filings, 0), latest, flags),
   };
@@ -128,7 +136,7 @@ function Header({ ticker }: { ticker: string | null }) {
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
       <div style={{ fontFamily: "Playfair", fontWeight: 700, fontSize: 34, color: COLOR.fg }}>H1B Bench</div>
       {ticker ? (
-        <div style={{ fontFamily: "Inter", fontWeight: 700, fontSize: 26, color: COLOR.muted, letterSpacing: 2 }}>{ticker}</div>
+        <div style={{ fontFamily: "Inter", fontWeight: 700, fontSize: ticker.length > 8 ? 20 : 26, color: COLOR.muted, letterSpacing: ticker.length > 8 ? 0.5 : 2 }}>{ticker}</div>
       ) : null}
     </div>
   );
