@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getTopEmployers, searchEmployerHits, type EmployerYearStat } from "@/lib/queries";
+import { getTopEmployers, type EmployerYearStat } from "@/lib/queries";
+import { searchEmployersWithTickers } from "@/lib/employer-search";
 import { fmtInt, fmtPct } from "@/lib/format";
 import { PAGES } from "@/lib/pages";
 import { collectionPageJsonLd } from "@/lib/json-ld";
@@ -53,7 +54,7 @@ export default async function EmployersPage({
   const term = q?.trim() ?? "";
 
   if (term) {
-    const hits = await searchEmployerHits(term);
+    const hits = await searchEmployersWithTickers(term, 100);
     const [flags, employerHref] = await Promise.all([getEmployerFlags(hits.map((h) => h.id)), getEmployerLinker()]);
     return (
       <div className="space-y-8">
@@ -81,6 +82,7 @@ export default async function EmployersPage({
                     <Link href={employerHref(h)} className="font-medium hover:text-accent-primary">
                       {h.name}
                     </Link>{" "}
+                    {h.ticker ? <span className="font-code text-xs text-neutral-secondary">{h.ticker} </span> : null}
                     <EmployerFlagPills flags={flags.get(h.id)} />
                   </td>
                   <td className="text-neutral-secondary">

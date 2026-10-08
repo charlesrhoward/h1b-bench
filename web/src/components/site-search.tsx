@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 type EmployerHit = {
   id: number;
   href: string;
+  ticker: string | null;
   name: string;
   city: string | null;
   state: string | null;
@@ -175,7 +176,7 @@ export default function SiteSearch() {
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => query.trim().length >= 2 && setOpen(true)}
         onKeyDown={onKeyDown}
-        placeholder="Search employers, occupations…"
+        placeholder="Search employers, tickers, jobs…"
         role="combobox"
         aria-expanded={showDropdown}
         aria-controls="site-search-results"
@@ -318,6 +319,7 @@ function EmployerRow({
       <span className="min-w-0">
         <span className={`block truncate text-sm ${active ? "text-neutral-primary-hover" : "text-neutral-primary"}`}>
           {hit.name}
+          {hit.ticker ? <span className="ml-2 font-code text-xs text-neutral-secondary">{hit.ticker}</span> : null}
         </span>
         <span className="block text-xs text-neutral-secondary">
           {[hit.city, hit.state].filter(Boolean).join(", ") || "—"}
