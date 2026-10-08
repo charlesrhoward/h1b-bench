@@ -13,6 +13,7 @@ export type Palette = {
   accentQuaternary: string;
   yellow: string;
   yellowSecondary: string;
+  blue: string;
   neutral: string;
   neutralTertiary: string;
   ink: string;
@@ -29,6 +30,7 @@ const TOKENS: Record<keyof Palette, string> = {
   accentQuaternary: "--color-chart-accent-quaternary",
   yellow: "--color-chart-utility-yellow-primary",
   yellowSecondary: "--color-chart-utility-yellow-secondary",
+  blue: "--color-chart-utility-blue-primary",
   neutral: "--color-chart-neutral-primary",
   neutralTertiary: "--color-chart-neutral-tertiary",
   ink: "--color-fg-neutral-primary",

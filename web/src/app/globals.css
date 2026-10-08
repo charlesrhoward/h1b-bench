@@ -53,6 +53,7 @@
   --background-color-chart-neutral-primary: var(--color-chart-neutral-primary);
   --background-color-chart-neutral-tertiary: var(--color-chart-neutral-tertiary);
   --background-color-chart-yellow-primary: var(--color-chart-utility-yellow-primary);
+  --background-color-chart-blue-primary: var(--color-chart-utility-blue-primary);
 
   --text-color-neutral-primary: var(--color-fg-neutral-primary);
   --text-color-neutral-primary-hover: var(--color-fg-neutral-primary-hover);
@@ -73,6 +74,7 @@
   --border-color-accent-primary: var(--color-border-accent-primary);
   --border-color-accent-primary-hover: var(--color-border-accent-primary-hover);
   --border-color-chart-yellow-primary: var(--color-chart-utility-yellow-primary);
+  --border-color-chart-blue-primary: var(--color-chart-utility-blue-primary);
 
   --outline-color-accent-primary: var(--color-border-accent-primary);
   --placeholder-color-neutral-secondary: var(--color-fg-neutral-secondary);

@@ -135,9 +135,9 @@ export function buildCompanyChart(inputs: CompanyInputs, width: number, palette:
     style: chartStyle(palette),
     marks: [
       ...referenceMarks(ym, palette),
-      Plot.dot(points, { ...xy, fill: palette.neutral, fillOpacity: 0.5 }),
+      Plot.dot(points, { ...xy, fill: palette.neutral, fillOpacity: 0.35 }),
       Plot.dot(points.filter((p) => inputs.showBackWages && p.e.backWages != null), { ...xy, fill: palette.yellow, fillOpacity: 0.9 }),
-      Plot.dot(points.filter((p) => inputs.showLayoffs && p.e.laidOff != null), { ...xy, stroke: palette.ink, strokeWidth: 1.5 }),
+      Plot.dot(points.filter((p) => inputs.showLayoffs && p.e.laidOff != null), { ...xy, stroke: palette.blue, strokeWidth: 2 }),
       Plot.dot(points.filter((p) => inputs.matches.has(p.e.id)), { ...xy, stroke: palette.ink, strokeWidth: 1 }),
       Plot.dot(points.filter((p) => colorOf.has(p.e.id)), { ...xy, fill: (p: CompanyPoint) => colorOf.get(p.e.id), stroke: palette.ink, strokeWidth: 2 }),
       ...labelMarks(placed, { x: (p) => p.x, y: (p) => p.y, radius }, { fill: palette.ink, halo: palette.surface }),

@@ -122,6 +122,8 @@
   --color-chart-utility-yellow-secondary: light-dark(#ffc017, #be5b04);
   --color-chart-utility-yellow-tertiary: #fffae1;
   --color-chart-utility-yellow-tertiary: light-dark(#fffae1, #be5b04);
+  --color-chart-utility-blue-primary: #437aff;
+  --color-chart-utility-blue-primary: light-dark(#437aff, #3c9fff);
   --color-chart-neutral-primary: #b3b3b3;
   --color-chart-neutral-primary: light-dark(#b3b3b3, #d2d2d2);
   --color-chart-neutral-secondary: #b3b3b3;
