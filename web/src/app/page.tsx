@@ -14,6 +14,7 @@ import { getEmployerFlags } from "@/lib/employer-flags";
 import { getEmployerLinker } from "@/lib/employer-tickers";
 import { bodyFont } from "@/lib/body-font";
 import { displayFont } from "@/lib/display-font";
+import capitolEngraving from "@/assets/art/capitol-engraving.webp";
 
 export const revalidate = 3600;
 
@@ -67,10 +68,8 @@ export default async function Home() {
           </div>
         </div>
         <Image
-          src="/capitol-engraving.webp"
+          src={capitolEngraving}
           alt=""
-          width={870}
-          height={980}
           loading="eager"
           fetchPriority="high"
           sizes="(min-width: 1280px) 26rem, (min-width: 1024px) 22rem, (min-width: 768px) 16rem, 18rem"

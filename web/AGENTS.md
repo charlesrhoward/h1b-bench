@@ -18,6 +18,11 @@ Read the root `AGENTS.md` first. It holds the purpose, data-accuracy, lint, and 
   fetch cache. Home and analysis pages use `revalidate = 3600`; employer details use
   on-demand ISR (`generateStaticParams` returns `[]`). Search-parameter pages stay
   dynamic and reuse cached reads. Do not add `force-dynamic`: it bypasses that cache.
+  `/employers` and `/jobs` without `q` (no `year`, or a year in `src/lib/fiscal-years.ts`) are
+  rewritten in `next.config.ts` to `/leaderboards/{employers,jobs}/[year]`, which are built per
+  year and cached by the CDN. The public URL does not change. A search, or an unknown year,
+  reaches the per-request page. Both render the same component (`employer-leaderboard.tsx`,
+  `occupation-benchmarks.tsx`), so change the component, not one route.
   Query failures must throw, so a failed revalidation keeps the last valid page.
 - `src/lib/queries.ts`, `src/lib/cheap-labor.ts`, and `src/lib/labor-pool.ts` hold the
   Supabase queries for pages. Pages and components get data from these modules, not from
@@ -114,7 +119,7 @@ The root `DESIGN.md` (Unbound) is the source. The app applies it like this:
   setting `color-scheme` on an element does not switch the tokens. To preview light mode in
   a dark-mode browser, set `--lightningcss-light: initial` and `--lightningcss-dark: " "` on
   `<html>`.
-- **Images.** The Capitol engraving (`public/capitol-engraving.webp`) and the Open Graph card
+- **Images.** The Capitol engraving (`src/assets/art/capitol-engraving.webp`) and the Open Graph card
   (`src/app/opengraph-image.png`, `twitter-image.png`) and the sub-page engravings
   (`src/assets/art/`) were made with vmotif (webrenew workspace, canvas
   `b5c45e0d-2606-4eaf-803a-470061bf234b`). Make new art there, with the Capitol engraving as
