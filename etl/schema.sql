@@ -22,7 +22,10 @@
 --    index for recent certified roles; no data, normalization, or materialized-view reload)
 -- -> layoff_timeline (create employer_layoff_notices, employer_layoff_months + public read and
 --    temporary insert policies; layoff_filings.py --load-timeline, docs/layoff-filings-method.md
---    measure 8) -> drop_layoff_timeline_insert_policies.
+--    measure 8) -> drop_layoff_timeline_insert_policies
+-- -> search_employers_short_terms (2026-10-16: employers_name_lower_prefix, built concurrently
+--    first; drop duplicate employers_name_trgm_idx; search_employers escapes LIKE wildcards and
+--    matches 1-2 letter terms by name prefix; no data, normalization, or materialized-view reload).
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
@@ -94,6 +97,8 @@ create index lca_cases_soc_idx on lca_cases (soc_code);
 create index lca_cases_worksite_state_idx on lca_cases (worksite_state);
 create index lca_cases_job_title_trgm on lca_cases using gin (job_title gin_trgm_ops);
 create index employers_name_trgm on employers using gin (name gin_trgm_ops);
+-- 1-2 letter search terms (search_employers); build concurrently on a live database.
+create index employers_name_lower_prefix on employers (lower(name) text_pattern_ops);
 
 -- Per-employer per-year rollup powering the leaderboard
 create table employer_year_stats (
@@ -664,3 +669,70 @@ group by fiscal_year, coalesce(h1b_dependent::text, 'unknown');
 
 create unique index lca_dependency_profile_key on lca_dependency_profile (fiscal_year, dependency);
 grant select on lca_dependency_profile to anon, authenticated;
+
+-- Employer name search (site search, /employers?q=). `%` and `_` in the term are literal text.
+-- One or two letters make too few trigrams for a fuzzy match, and a substring scan of every name
+-- passes the 3 s anon statement timeout. Short terms match the start of the name through
+-- employers_name_lower_prefix and rank by all-time H-1B filings. Longer terms keep the fuzzy
+-- match: name prefix first, then similarity weighted by filings.
+create or replace function public.search_employers(q text, lim integer default 8)
+returns table(id bigint, name text, city text, state text, filings bigint, sim real)
+language sql
+stable
+set search_path to 'public', 'extensions'
+as $function$
+  with t as (
+    select lower(q) as prefix,
+           replace(replace(replace(q, '\', '\\'), '%', '\%'), '_', '\_') as lit,
+           char_length(q) < 3 as short
+  ),
+  short_hits as (
+    select e.id, e.name, e.city, e.state, coalesce(y.filings, 0)::bigint as filings,
+           greatest(extensions.similarity(e.name, q),
+                    extensions.word_similarity(q, e.name)) as sim
+    from public.employers e
+    cross join t
+    left join lateral (
+      select sum(s.filings) as filings from public.employer_year_stats s
+      where s.employer_id = e.id and s.visa_class = 'H-1B'
+    ) y on true
+    where t.short
+      and lower(e.name) ~>=~ t.prefix
+      and lower(e.name) ~<~ (t.prefix || chr(1114111))
+    order by filings desc, e.id
+    limit lim
+  ),
+  long_match as (
+    select e.id, e.name, e.city, e.state,
+           greatest(extensions.similarity(e.name, q),
+                    extensions.word_similarity(q, e.name)) as sim
+    from public.employers e, t
+    where not t.short
+      and (q <% e.name
+           or e.name % q
+           or e.name ilike '%' || t.lit || '%')
+    order by (e.name ilike t.lit || '%') desc, sim desc, e.id
+    limit greatest(lim * 6, 30)
+  ),
+  long_hits as (
+    select m.id, m.name, m.city, m.state, f.filings, m.sim,
+           row_number() over (
+             order by (m.name ilike t.lit || '%') desc,
+                      m.sim * (1 + ln(1 + f.filings::numeric) / 10) desc, m.id
+           ) as rank
+    from long_match m
+    cross join t
+    cross join lateral (
+      select coalesce(sum(s.filings), 0)::bigint as filings from public.employer_year_stats s
+      where s.employer_id = m.id and s.visa_class = 'H-1B'
+    ) f
+  ),
+  hits as (
+    select h.*, row_number() over (order by h.filings desc, h.id) as rank from short_hits h
+    union all
+    select h.* from long_hits h where h.rank <= lim
+  )
+  select hits.id, hits.name, hits.city, hits.state, hits.filings, hits.sim
+  from hits
+  order by hits.rank;
+$function$;
