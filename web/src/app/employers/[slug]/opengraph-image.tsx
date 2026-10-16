@@ -8,7 +8,7 @@ import { EMPLOYER_OG_ALT, EMPLOYER_OG_SIZE } from "@/lib/employer-og";
 import { fmtCompact, fmtInt, fmtPct } from "@/lib/format";
 import { getEmployerStats } from "@/lib/queries";
 import type { EmployerParent } from "@/lib/employer-tickers";
-import { FISCAL_YEARS } from "@/components/year-tabs";
+import { FISCAL_YEARS } from "@/lib/fiscal-years";
 
 export const alt = EMPLOYER_OG_ALT;
 export const size = EMPLOYER_OG_SIZE;
