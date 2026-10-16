@@ -70,6 +70,8 @@ export async function getTopEmployers(year?: number, limit = 50) {
     .select(`*, employers(name, state, employer_headcounts(${HEADCOUNT_COLUMNS}))`)
     .eq("visa_class", "H-1B")
     .order("filings", { ascending: false })
+    // Ties in filings otherwise come back in any order, and can swap who makes the limit.
+    .order("employer_id")
     .limit(limit);
   if (year) q = q.eq("fiscal_year", year);
   else q = q.eq("fiscal_year", 2026);

@@ -1,6 +1,5 @@
 import Link from "next/link";
-
-export const FISCAL_YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
+import { FISCAL_YEARS } from "@/lib/fiscal-years";
 
 /** Fiscal year chips. `hrefFor` builds each link so callers keep their own query params. */
 export default function YearTabs({
