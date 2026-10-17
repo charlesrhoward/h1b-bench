@@ -1,12 +1,26 @@
 import assert from "node:assert/strict";
+import { fileURLToPath } from "node:url";
 
 // Live check of the search_employers RPC (etl/schema.sql, migration search_employers_short_terms).
 // Before that migration, 1-2 letter terms and `%` or `_` scanned every employer name and passed
 // the 3 s anon statement timeout. Run this after any change to the function. It reads the
 // database in NEXT_PUBLIC_SUPABASE_URL with the publishable key, so expected names are real rows.
+loadEnvLocal();
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 assert.ok(url && key, "Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (web/.env.local).");
+
+/**
+ * Reads web/.env.local if it exists. Variables already set in the shell win. This does the job
+ * of `node --env-file-if-exists`, which needs Node 22.9; process.loadEnvFile needs Node 20.12.
+ */
+function loadEnvLocal() {
+  try {
+    process.loadEnvFile?.(fileURLToPath(new URL("../.env.local", import.meta.url)));
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+}
 
 // Round trip from a laptop. The database time for these terms is 1-60 ms.
 const BUDGET_MS = 1_000;
@@ -52,7 +66,8 @@ const counts = {
   "\\": await checkShortTerm("\\"),
   "a%": await checkShortTerm("a%"),
 };
-assert.equal(counts.in, 100, "\"in\" must fill the limit");
+// Common prefixes must fill the page. A wrong bound on the prefix range returns fewer rows.
+for (const term of ["in", "go"]) assert.equal(counts[term], 100, `"${term}" must fill the limit`);
 
 // 3+ letters keep the fuzzy match, with the name prefix first.
 const long = await search("infosys", 8);
