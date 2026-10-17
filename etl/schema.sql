@@ -24,7 +24,8 @@
 --    temporary insert policies; layoff_filings.py --load-timeline, docs/layoff-filings-method.md
 --    measure 8) -> drop_layoff_timeline_insert_policies
 -- -> search_employers_short_terms (2026-10-16: employers_name_lower_prefix, built concurrently
---    first; drop duplicate employers_name_trgm_idx; search_employers escapes LIKE wildcards and
+--    first; drop employers_name_trgm_idx, which search_functions created as a copy of
+--    employers_name_trgm: gin (name gin_trgm_ops); search_employers escapes LIKE wildcards and
 --    matches 1-2 letter terms by name prefix; no data, normalization, or materialized-view reload).
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
@@ -675,6 +676,11 @@ grant select on lca_dependency_profile to anon, authenticated;
 -- passes the 3 s anon statement timeout. Short terms match the start of the name through
 -- employers_name_lower_prefix and rank by all-time H-1B filings. Longer terms keep the fuzzy
 -- match: name prefix first, then similarity weighted by filings.
+-- The prefix range uses ~>=~ and ~<~, which compare bytes as text_pattern_ops does, so the index
+-- serves it. The upper bound adds chr(1114111) (U+10FFFF, the highest code point), so every name
+-- that starts with the prefix is in the range. A bound such as prefix || 'zzz' would drop names
+-- where a character above 'z' follows the prefix, for example 'iné' or 'in~'.
+-- After a change, run `cd web && pnpm check:search` against the database.
 create or replace function public.search_employers(q text, lim integer default 8)
 returns table(id bigint, name text, city text, state text, filings bigint, sim real)
 language sql
