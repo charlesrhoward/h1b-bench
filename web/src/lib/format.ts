@@ -20,11 +20,20 @@ type Location = {
   country: string | null;
 };
 
+const US_COUNTRY_NAMES = new Set(["US", "USA", "UNITEDSTATES", "UNITEDSTATESOFAMERICA"]);
+
+/** Normalize U.S. fallback labels, including parenthetical codes; keep other names as filed. */
+function countryLabel(country: string | undefined) {
+  if (!country) return undefined;
+  const key = country.toUpperCase().replace(/[.\s]/g, "").replace(/\((?:US|USA)\)$/, "");
+  return US_COUNTRY_NAMES.has(key) ? "United States" : country;
+}
+
 /** The ETL chooses each field's mode separately; country is a fallback, not part of a complete address. */
 export function displayLocationFields(address: Location) {
   const [city, state, country] = [address.city, address.state, address.country]
     .map((part) => part?.trim() || undefined);
-  return { city, state, country: city || state ? undefined : country };
+  return { city, state, country: city || state ? undefined : countryLabel(country) };
 }
 
 /** Prefer city/state; use country only when both are absent. */
