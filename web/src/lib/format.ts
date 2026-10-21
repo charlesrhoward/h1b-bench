@@ -14,6 +14,21 @@ export function fmtMoney(n: number | null | undefined): string {
   return "$" + Math.round(n).toLocaleString("en-US");
 }
 
+const US_COUNTRY_NAMES = new Set(["US", "USA", "UNITEDSTATES", "UNITEDSTATESOFAMERICA"]);
+
+/** Omit the U.S. suffix after a city or state; retain countries for foreign addresses. */
+export function fmtLocation({ city, state, country }: {
+  city: string | null;
+  state: string | null;
+  country: string | null;
+}): string {
+  const parts = [city?.trim(), state?.trim()].filter((part): part is string => Boolean(part));
+  const name = (country ?? "").trim();
+  const isUS = US_COUNTRY_NAMES.has(name.toUpperCase().replace(/[^A-Z]/g, ""));
+  if (name && (!isUS || parts.length === 0)) parts.push(name);
+  return parts.join(", ");
+}
+
 /**
  * Share as a percent with one decimal. Rounding never reaches "100.0%" or "0.0%" unless the share
  * is exact: 57,758 of 57,786 shows ">99.9%", not "100.0%", and 1 of 5,000 shows "<0.1%".

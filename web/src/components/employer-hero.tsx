@@ -6,6 +6,7 @@ import ironworkersLunch from "@/assets/art/ironworkers-lunch.webp";
 import ironworkersLunchDark from "@/assets/art/ironworkers-lunch-dark.webp";
 import type { EmployerFlags } from "@/lib/employer-flags";
 import type { loadEmployer } from "@/lib/employer-page";
+import { fmtLocation } from "@/lib/format";
 
 type Found = NonNullable<Awaited<ReturnType<typeof loadEmployer>>>;
 
@@ -32,7 +33,7 @@ function Identity({ found, flags }: { found: Found; flags: EmployerFlags }) {
         <ParentChip parent={parent} />
       </div>
       <p className="mt-2 text-neutral-secondary">
-        {[employer.city, employer.state, employer.country].filter(Boolean).join(", ")}
+        {fmtLocation(employer)}
       </p>
       <a
         href={`https://www.google.com/search?q=${encodeURIComponent(`${employer.name} official website`)}&btnI=1`}
