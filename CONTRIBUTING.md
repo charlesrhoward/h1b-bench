@@ -38,12 +38,13 @@ four pass; it is the required check on `main`, so a PR that fails any of them ca
 | Check     | Command (from `web/`) | Runs on                     |
 |-----------|-----------------------|-----------------------------|
 | Lint      | `pnpm lint`           | pre-commit + pre-push + CI  |
+| Location display | `pnpm check:format` | pre-push + CI |
 | Typecheck | `pnpm typecheck`      | pre-commit + pre-push + CI  |
 | Build     | `pnpm build`          | pre-push + CI               |
 | ETL (`etl/`, ruff) | `../scripts/check-etl.sh` | pre-push + CI      |
 
-`pnpm preflight` runs all four. The pre-push hook runs it on a clean checkout of each pushed
-commit (`scripts/preflight-clean.sh`): a temporary worktree with dependencies installed from
+`pnpm preflight` runs the checks in this table. The pre-push hook runs it on a clean
+checkout of each pushed commit (`scripts/preflight-clean.sh`): a temporary worktree with dependencies installed from
 that commit's lockfile. Uncommitted edits, untracked files, and output from a local `next dev`
 cannot make it pass, so a push that would fail CI fails on your machine first. It adds about
 20 seconds. Run it by hand with `pnpm preflight:clean`. `pnpm typecheck` runs `next typegen` before `tsc`, so it never

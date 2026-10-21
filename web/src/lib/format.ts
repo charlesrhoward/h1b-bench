@@ -14,21 +14,23 @@ export function fmtMoney(n: number | null | undefined): string {
   return "$" + Math.round(n).toLocaleString("en-US");
 }
 
-const US_COUNTRY_NAMES = new Set(["US", "USA", "UNITEDSTATES", "UNITEDSTATESOFAMERICA"]);
-
-/** Omit the U.S. suffix after a city or state; retain countries for foreign addresses. */
-export function fmtLocation({ city, state, country }: {
+type Location = {
   city: string | null;
   state: string | null;
   country: string | null;
-}): string {
-  const parts = [city?.trim(), state?.trim()].filter((part): part is string => Boolean(part));
-  const name = (country ?? "").trim();
-  // Ignore case, spaces, and punctuation in plain DOL country names and U.S. codes.
-  // Combined labels such as "United States (USA)" are outside this source format.
-  const isUS = US_COUNTRY_NAMES.has(name.toUpperCase().replace(/[^A-Z]/g, ""));
-  if (name && (!isUS || parts.length === 0)) parts.push(name);
-  return parts.join(", ");
+};
+
+/** The ETL chooses each field's mode separately; country is a fallback, not part of a complete address. */
+export function displayLocationFields(address: Location) {
+  const [city, state, country] = [address.city, address.state, address.country]
+    .map((part) => part?.trim() || undefined);
+  return { city, state, country: city || state ? undefined : country };
+}
+
+/** Prefer city/state; use country only when both are absent. */
+export function fmtLocation(address: Location): string {
+  const { city, state, country } = displayLocationFields(address);
+  return [city, state, country].filter(Boolean).join(", ");
 }
 
 /**

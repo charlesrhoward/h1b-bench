@@ -91,15 +91,28 @@ Each share is rounded on its own, so a row can miss 100% by 0.1. Rerun
 
 ### Employer profiles
 
-The current sources do not give worker countries by employer. The `country` field in
-`employers` is the employer's address country. It does not describe the workers.
+Company profiles have no worker-country breakdown in the data that H1B Bench loads.
+The `country` field in `employers` comes from an employer address. It does not describe
+the workers.
 
 The loaded PERM files are `PERM_Disclosure_Data_FY2025_Q4.xlsx` and
 `PERM_Disclosure_Data_FY2026_Q3.xlsx`, from the
 [DOL page for disclosure data](https://www.dol.gov/agencies/eta/foreign-labor/performance).
-Neither file has a worker country of birth or citizenship field. Their country fields
-describe the employer, contact, and attorney addresses.
+A check of each workbook's 137 column headers found these country fields:
 
-Employer profiles have no worker-country breakdown. A future breakdown needs a source
-that links each country to an employer and states whether it reports birth country or
-citizenship.
+- `EMP_COUNTRY`: employer address.
+- `EMP_POC_COUNTRY`: employer contact address.
+- `ATTY_AG_COUNTRY`: attorney or agent address.
+
+No header identifies a worker's country of birth, citizenship, or nationality. The
+[PERM parser](../etl/parse_perm.py) reads case and employer columns. It extracts no
+worker country or citizenship.
+
+A breakdown needs a source that links each country to an employer. The source must
+state whether it reports birth country or citizenship.
+
+The [LCA loader](../etl/load_supabase.py) selects city, state, and country separately.
+It uses each field's most common value. The country can conflict with the city or state.
+
+Profile labels and structured metadata use city and state when present. They use
+country only when both are absent. This display rule does not change the stored values.

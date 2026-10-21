@@ -89,6 +89,7 @@ export default async function EmployerLeaderboard({ fy }: { fy: number }) {
               <tr key={`${r.employer_id}-${r.fiscal_year}`}>
                 <td className="tabular-nums text-neutral-secondary">{i + 1}</td>
                 <EmployerNameCell row={r} employerHref={employerHref} flags={flags.get(r.employer_id)} />
+                {/* This column is State only; profile locations use fmtLocation. */}
                 <td className="text-neutral-secondary">{r.employers?.state ?? "—"}</td>
                 <td className="text-right tabular-nums">{fmtInt(r.filings)}</td>
                 <td className="text-right tabular-nums text-accent-primary">{fmtPct(r.certified, r.filings)}</td>

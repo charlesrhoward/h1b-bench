@@ -10,7 +10,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "check:redirects": "node scripts/check-redirects.mjs",
     "check:search": "node scripts/check-search.mjs",
-    "preflight": "pnpm lint && pnpm typecheck && pnpm build && ../scripts/check-etl.sh",
+    "check:format": "node --experimental-strip-types scripts/check-format.mjs",
+    "preflight": "pnpm lint && pnpm check:format && pnpm typecheck && pnpm build && ../scripts/check-etl.sh",
     "preflight:clean": "../scripts/preflight-clean.sh",
     "prepare": "cd .. && husky web/.husky || true"
   },
