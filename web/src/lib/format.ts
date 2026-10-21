@@ -24,6 +24,8 @@ export function fmtLocation({ city, state, country }: {
 }): string {
   const parts = [city?.trim(), state?.trim()].filter((part): part is string => Boolean(part));
   const name = (country ?? "").trim();
+  // Ignore case, spaces, and punctuation in plain DOL country names and U.S. codes.
+  // Combined labels such as "United States (USA)" are outside this source format.
   const isUS = US_COUNTRY_NAMES.has(name.toUpperCase().replace(/[^A-Z]/g, ""));
   if (name && (!isUS || parts.length === 0)) parts.push(name);
   return parts.join(", ");

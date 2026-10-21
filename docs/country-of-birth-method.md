@@ -89,14 +89,17 @@ Each share is rounded on its own, so a row can miss 100% by 0.1. Rerun
   Department of Labor filings. An LCA has no country of birth. These USCIS counts cannot be
   joined to an employer or an LCA.
 
-## Employer profiles
+### Employer profiles
 
 The current sources do not give worker countries by employer. The `country` field in
 `employers` is the employer's address country. It does not describe the workers.
 
-For FY2025 and FY2026 Q3, the loaded PERM files also have no worker country of birth or
-citizenship. Their country fields describe the employer, contact, and attorney addresses.
+The loaded PERM files are `PERM_Disclosure_Data_FY2025_Q4.xlsx` and
+`PERM_Disclosure_Data_FY2026_Q3.xlsx`, from the
+[DOL page for disclosure data](https://www.dol.gov/agencies/eta/foreign-labor/performance).
+Neither file has a worker country of birth or citizenship field. Their country fields
+describe the employer, contact, and attorney addresses.
 
-Employer profiles have no worker-country breakdown. The national USCIS shares
-above cannot supply one. A future employer breakdown needs a source that links each
-country to an employer and states whether it reports birth country or citizenship.
+Employer profiles have no worker-country breakdown. A future breakdown needs a source
+that links each country to an employer and states whether it reports birth country or
+citizenship.

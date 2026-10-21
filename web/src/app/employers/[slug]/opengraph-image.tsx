@@ -5,7 +5,7 @@ import { getEmployerLayoffFilings, getEmployerMarketGap } from "@/lib/cheap-labo
 import { employerFlags, type EmployerFlags } from "@/lib/employer-flags";
 import { loadEmployer } from "@/lib/employer-page";
 import { EMPLOYER_OG_ALT, EMPLOYER_OG_SIZE } from "@/lib/employer-og";
-import { fmtCompact, fmtInt, fmtPct } from "@/lib/format";
+import { fmtCompact, fmtInt, fmtLocation, fmtPct } from "@/lib/format";
 import { getEmployerStats } from "@/lib/queries";
 import type { EmployerParent } from "@/lib/employer-tickers";
 import { FISCAL_YEARS } from "@/lib/fiscal-years";
@@ -66,7 +66,7 @@ async function loadCard(slug: string): Promise<Card | null> {
   const flags = employerFlags(gap, layoffs);
   return {
     name: employer.name,
-    place: [employer.city, employer.state].filter(Boolean).join(", "),
+    place: fmtLocation(employer),
     ticker: tickerLabel(ticker, parent),
     flags,
     stats: cardStats(h1b.reduce((sum, r) => sum + r.filings, 0), latest, flags),
