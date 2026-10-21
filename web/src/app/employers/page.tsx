@@ -70,6 +70,7 @@ export default async function EmployersPage({
                     <SearchTickerTag hit={h} />
                     <EmployerFlagPills flags={flags.get(h.id)} />
                   </td>
+                  {/* Search has city/state only; profile locations use fmtLocation with a country fallback. */}
                   <td className="text-neutral-secondary">
                     {[h.city, h.state].filter(Boolean).join(", ") || "—"}
                   </td>

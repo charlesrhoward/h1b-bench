@@ -26,6 +26,7 @@ jobs:
       - uses: ./.github/actions/setup-web
       # Rules: web/eslint.shared-rules.mjs. Every rule is an error; inline disables and ts-ignore fail.
       - run: pnpm lint
+      - run: pnpm check:location
 
   typecheck:
     name: typecheck

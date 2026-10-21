@@ -13,6 +13,8 @@ first so we can agree on the approach before you build it.
 
 ### Frontend (`web/`)
 
+Use Node.js 22.15 or later for the location check's type stripping and module hooks.
+
 ```sh
 cd web
 pnpm install                     # also installs the pre-commit and pre-push hooks
@@ -35,15 +37,16 @@ The same checks run locally and in CI (`.github/workflows/ci.yml`). The `CI` wor
 `typecheck`, `etl`, and `build` as parallel jobs. The `preflight` job passes only when all
 four pass; it is the required check on `main`, so a PR that fails any of them cannot merge.
 
-| Check     | Command (from `web/`) | Runs on                     |
-|-----------|-----------------------|-----------------------------|
-| Lint      | `pnpm lint`           | pre-commit + pre-push + CI  |
-| Typecheck | `pnpm typecheck`      | pre-commit + pre-push + CI  |
-| Build     | `pnpm build`          | pre-push + CI               |
-| ETL (`etl/`, ruff) | `../scripts/check-etl.sh` | pre-push + CI      |
+| Check              | Command (from `web/`)     | Runs on                    |
+|--------------------|---------------------------|----------------------------|
+| Lint               | `pnpm lint`               | pre-commit + pre-push + CI |
+| Location display   | `pnpm check:location`     | pre-push + CI              |
+| Typecheck          | `pnpm typecheck`          | pre-commit + pre-push + CI |
+| Build              | `pnpm build`              | pre-push + CI              |
+| ETL (`etl/`, ruff) | `../scripts/check-etl.sh` | pre-push + CI              |
 
-`pnpm preflight` runs all four. The pre-push hook runs it on a clean checkout of each pushed
-commit (`scripts/preflight-clean.sh`): a temporary worktree with dependencies installed from
+`pnpm preflight` runs the checks in this table. The pre-push hook runs it on a clean
+checkout of each pushed commit (`scripts/preflight-clean.sh`): a temporary worktree with dependencies installed from
 that commit's lockfile. Uncommitted edits, untracked files, and output from a local `next dev`
 cannot make it pass, so a push that would fail CI fails on your machine first. It adds about
 20 seconds. Run it by hand with `pnpm preflight:clean`. `pnpm typecheck` runs `next typegen` before `tsc`, so it never
@@ -71,7 +74,7 @@ If a change trips a limit, split the code. Do not loosen a rule for one file.
 Run the checks by hand at any time:
 
 ```sh
-cd web && pnpm preflight                 # lint, typecheck, build, etl checks
+cd web && pnpm preflight                 # lint, location, typecheck, build, ETL checks
 scripts/check-etl.sh                     # etl checks only, from the repo root
 ```
 

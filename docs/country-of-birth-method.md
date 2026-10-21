@@ -88,3 +88,70 @@ Each share is rounded on its own, so a row can miss 100% by 0.1. Rerun
 - **Not the same data as the rest of H1B Bench.** The LCA numbers elsewhere on the site are
   Department of Labor filings. An LCA has no country of birth. These USCIS counts cannot be
   joined to an employer or an LCA.
+
+### Employer profiles
+
+Company profiles have no worker-country breakdown in the data that H1B Bench loads.
+The `country` field in `employers` comes from an employer address. It does not describe
+the workers.
+
+The loaded PERM files are `PERM_Disclosure_Data_FY2025_Q4.xlsx` and
+`PERM_Disclosure_Data_FY2026_Q3.xlsx`, from the
+[DOL page for disclosure data](https://www.dol.gov/agencies/eta/foreign-labor/performance).
+
+These files supply workforce headcounts. The [lock-in method](perm-lockin-method.md)
+uses only FY2025. It excludes the FY2026 file.
+
+A check of each workbook's 137 column headers found these country fields:
+
+- `EMP_COUNTRY`: employer address.
+- `EMP_POC_COUNTRY`: employer contact address.
+- `ATTY_AG_COUNTRY`: attorney or agent address.
+
+No header identifies a worker's country of birth, citizenship, or nationality. The
+[PERM parser](../etl/parse_perm.py) reads case and employer columns. It extracts no
+worker country or citizenship.
+
+To repeat the header check, put the source files from README step 5 in `data/raw/`.
+Run this command from the repository root. It reads headers only:
+
+```sh
+./venv/bin/python - <<'PY'
+from pathlib import Path
+from openpyxl import load_workbook
+
+names = ("PERM_Disclosure_Data_FY2025_Q4.xlsx", "PERM_Disclosure_Data_FY2026_Q3.xlsx")
+for name in names:
+    workbook = load_workbook(Path("data/raw") / name, read_only=True)
+    headers = next(workbook.worksheets[0].iter_rows(values_only=True))
+    words = ("COUNTRY", "BIRTH", "CITIZEN", "NATIONALITY")
+    fields = [h for h in headers if any(word in str(h).upper() for word in words)]
+    print(name, len(headers), fields)
+    workbook.close()
+PY
+```
+
+A breakdown needs a source that links each country to an employer. The source must
+state whether it reports birth country or citizenship.
+
+The [LCA loader](../etl/load_supabase.py) selects city, state, and country separately.
+It uses each field's most common value. The country can conflict with the city or state.
+
+Profile labels and structured metadata use city and state when present. They use
+country only when both are absent. This display rule does not change the stored values.
+
+For every record with a city or state, the structured address omits `addressCountry`
+on purpose. We accept less complete metadata because the stored fields do not confirm
+a complete address. A U.S. country value does not confirm that city and state, either.
+The same rule applies to U.S. country variants.
+
+Country-only labels show U.S. variants as "United States". Other country labels keep
+the source text, with outer spaces removed.
+
+A joint mode over the whole address could prevent combinations from different filings.
+It cannot fix an incorrect address within one application.
+
+That repair needs a separate source audit and reload of the city, state, and country
+fields in `employers`.
+This display change leaves that repair for separate data work. Other consumers must
+not treat the stored components as a verified complete address.

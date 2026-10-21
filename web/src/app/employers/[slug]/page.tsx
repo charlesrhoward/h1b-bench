@@ -7,7 +7,7 @@ import {
   getEmployerTopJobs,
   type EmployerYearStat,
 } from "@/lib/queries";
-import { fmtInt, fmtPct } from "@/lib/format";
+import { fmtInt, fmtLocation, fmtPct } from "@/lib/format";
 import {
   WORKFORCE_SHARE_METHOD,
   describeHeadcount,
@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const found = await loadEmployer(slug);
   if (!found) return { title: "Employer not found — H1B Bench" };
   const { employer, segment } = found;
-  const place = [employer.city, employer.state].filter(Boolean).join(", ");
+  const place = fmtLocation(employer);
   return pageMetadata({
     title: `${employer.name} — H-1B filings and pay — H1B Bench`,
     description: `H-1B Labor Condition Applications filed by ${employer.name}${place ? ` (${place})` : ""}: filings by year, certification rate, median wage, and top roles. Source: DOL OFLC.`,

@@ -2,6 +2,7 @@ import type { PageInfo } from "@/lib/pages";
 import { PAGES } from "@/lib/pages";
 import { REPO_URL, SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 import { SOURCE_GROUPS } from "@/lib/sources";
+import { displayLocationFields } from "@/lib/format";
 
 /** A schema.org node. Values are plain JSON, so JsonLd can serialize them. */
 export type JsonLdNode = { [key: string]: unknown };
@@ -156,6 +157,7 @@ export function employerJsonLd(employer: {
   state: string | null;
   country: string | null;
 }, path: string): JsonLdNode {
+  const { city, state, country } = displayLocationFields(employer);
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -170,9 +172,9 @@ export function employerJsonLd(employer: {
           name: employer.name,
           address: {
             "@type": "PostalAddress",
-            addressLocality: employer.city ?? undefined,
-            addressRegion: employer.state ?? undefined,
-            addressCountry: employer.country ?? undefined,
+            addressLocality: city,
+            addressRegion: state,
+            addressCountry: country,
           },
         },
       },
