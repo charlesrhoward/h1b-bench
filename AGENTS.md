@@ -61,8 +61,8 @@ cd web && pnpm preflight:clean        # the same on a clean checkout of HEAD (pr
 scripts/check-etl.sh                  # etl checks only, from the repo root
 ```
 
-The `CI` workflow runs `lint`, `typecheck`, `etl`, and `build`. The required `preflight` check passes only
-when all four pass. Admins cannot bypass it.
+The `CI` workflow runs `lint`, `typecheck`, `etl`, `build`, and `data-api-grants`.
+The required `preflight` check passes only when all five pass. Admins cannot bypass it.
 
 ## Lint policy: no exceptions
 
