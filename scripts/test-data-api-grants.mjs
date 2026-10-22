@@ -140,6 +140,7 @@ function proof() {
   verifySchemaUsage(baseline)
   verifyReplayFiles()
   verifySecurityControls(withBaseline, security, securityFixture)
+  query(readFileSync(join(root, 'scripts/data-api-grants/rpc-access.sql'), 'utf8'))
   assert.deepEqual(compareSnapshots(withBaseline, capture('after-fixtures')), [], 'Fixture and sentinel checks must roll back')
 }
 

@@ -72,6 +72,8 @@ function grantStatement(row) {
 }
 
 function schemaUsageRows(snapshot) {
+  // Export direct API-role USAGE only. PUBLIC schema ACLs are still compared
+  // in the full contract; the artifact does not broaden PUBLIC schema access.
   return (snapshot.schema_acl ?? [])
     .filter((row) => row.grantee !== 'PUBLIC' && apiRoles.has(row.grantee) && row.privilege === 'USAGE')
     .map((row) => ({ ...row, kind: 'n', schema: 'public', name: 'public' }))
@@ -81,7 +83,13 @@ export function generateGrants(snapshot) {
   for (const role of snapshot.roles) {
     if (role.inherited.length) throw new Error(`Review inherited privileges for ${role.role} before generating grants`)
   }
-  const rows = [...(snapshot.relation_acl ?? []), ...(snapshot.column_acl ?? []), ...schemaUsageRows(snapshot)]
+  const relationRows = [...(snapshot.relation_acl ?? []), ...(snapshot.column_acl ?? [])]
+  for (const row of relationRows) {
+    if (!apiRoles.has(row.grantee) && row.grantee !== row.owner) {
+      throw new Error(`Review additional grantee ${row.grantee} on ${row.name} before generating grants`)
+    }
+  }
+  const rows = [...relationRows, ...schemaUsageRows(snapshot)]
     .filter((row) => apiRoles.has(row.grantee))
   const statements = groupGrants(rows).map(grantStatement)
   if (!statements.length) throw new Error('No API grants found; review the snapshot before creating a baseline')

@@ -60,6 +60,8 @@ Capture production metadata with `snapshot.sql`. Use `inspect.mjs summary`,
 outside Git. Snapshot output inside any Git repository is rejected, including
 paths reached through symlinks. Refresh project identity through the live list first.
 The generator stops on inherited access or non-owner grantors.
+It also rejects non-owner relation/column grants to additional roles instead
+of silently omitting them. Review those roles before generating an artifact.
 The before/after comparison includes default privileges. The rebuild contract
 omits defaults because the October 30 simulation intentionally changes them.
 
@@ -119,3 +121,12 @@ failed replay just to make the check pass.
 Production application remains pending. Review the exact grants-only artifact
 and refresh the permission snapshot before application. Record an applied change
 in the schema history only after its production verification succeeds.
+
+## RPC execution scope
+
+Function EXECUTE defaults are separate from October 30's table/sequence change.
+The proof invokes `search_employers` as anon, authenticated and service_role,
+and checks a fresh invoker-function sentinel with the existing PUBLIC EXECUTE
+default. Rolled-back revokes must deny both the actual search RPC and the
+sentinel. No production function grants or defaults are changed. This is an
+execution check, not a full catalog contract for every routine or definer body.

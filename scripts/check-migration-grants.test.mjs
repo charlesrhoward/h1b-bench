@@ -91,6 +91,25 @@ test('migration adapter rejects unsupported, duplicate and backdated new names',
 })
 
 const roles = ['anon', 'authenticated', 'service_role'].map((role) => ({ role, inherited: [] }))
+test('generator fails explicitly on additional relation or column grantees', () => {
+  for (const category of ['relation_acl', 'column_acl']) {
+    assert.throws(() => generateGrants({ roles, [category]: [
+      { owner: 'postgres', grantee: 'dedicated_loader', name: 'employers' },
+    ] }), /Review additional grantee dedicated_loader on employers/)
+  }
+  const owner = { schema: 'public', name: 'report', kind: 'r', owner: 'postgres',
+    grantor: 'postgres', privilege: 'SELECT', grantable: false }
+  const sql = generateGrants({ roles, relation_acl: [
+    { ...owner, grantee: 'postgres' }, { ...owner, grantee: 'PUBLIC' },
+  ] })
+  assert.match(sql, /to PUBLIC;/)
+  assert.doesNotMatch(sql, /to "postgres"/)
+})
+test('named GRANT ALL and REVOKE ALL are explicit access decisions', () => {
+  for (const decision of ['grant all on public.report to anon', 'revoke all on public.report from anon']) {
+    assert.deepEqual(findGrantProblems(`create table public.report(id int); ${decision};`), [])
+  }
+})
 test('catalog generator preserves materialized-view, sequence, column and grant-option ACLs', () => {
   const base = { schema: 'public', owner: 'postgres', grantor: 'postgres', grantee: 'anon', privilege: 'SELECT', grantable: false }
   const sql = generateGrants({ roles, relation_acl: [
