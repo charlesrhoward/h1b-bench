@@ -6,12 +6,15 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { compareSnapshots } from './data-api-grants/metadata.mjs'
+import { verifySecurityControls } from './data-api-grants/security-controls.mjs'
+import { assertSecurityPosture } from './data-api-grants/security-posture.mjs'
 import { schemaReplay, wrapGrantArtifact } from './lib/schema-replay.mjs'
 import { assertSnapshotContract, parseProofArguments, proofDirectory,
   proofUsage, stopProofDatabase, writeProofSnapshot } from './data-api-grants/proof-support.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const config = JSON.parse(readFileSync(join(root, 'scripts/migration-grants.config.json'), 'utf8'))
+const security = JSON.parse(readFileSync(join(root, 'scripts/data-api-grants/security-contract.json'), 'utf8'))
 const project = `grants-${randomUUID().slice(0, 8)}`
 const scratch = mkdtempSync(join(tmpdir(), `${project}-`))
 const migrations = join(scratch, 'supabase/migrations')
@@ -29,6 +32,14 @@ let outputDirectory = scratch
 
 function capture(name) {
   const current = snapshot()
+  writeProofSnapshot(outputDirectory, name, current)
+  assertSecurityPosture(current, security)
+  return current
+}
+
+function securityFixture(name, sql) {
+  const body = snapshotSql.replace(/^begin[^;]*;/m, '').replace(/^commit;$/m, '')
+  const current = JSON.parse(query(`begin; ${sql}\n${body}\nrollback;`))
   writeProofSnapshot(outputDirectory, name, current)
   return current
 }
@@ -128,6 +139,7 @@ function proof() {
   verifySentinels()
   verifySchemaUsage(baseline)
   verifyReplayFiles()
+  verifySecurityControls(withBaseline, security, securityFixture)
   assert.deepEqual(compareSnapshots(withBaseline, capture('after-fixtures')), [], 'Fixture and sentinel checks must roll back')
 }
 
@@ -150,7 +162,7 @@ try {
     }
     query("do $$ begin if to_regclass('cron.job') is not null then perform cron.unschedule(jobid) from cron.job; end if; end $$;")
     proof()
-    process.stdout.write('Data API proof passed: fresh replay, full permission contract, negative control, idempotency, private sentinels, and role checks.\n')
+    process.stdout.write('Data API proof passed: fresh replay, full permission contract, idempotency, private sentinels, role checks, and RLS/policy/view security negative controls.\n')
     if (options.snapshotDirectory) process.stdout.write(`Proof snapshots: ${outputDirectory}\n`)
     success = true
   }

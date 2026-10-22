@@ -70,6 +70,19 @@ with objects as (
   from pg_default_acl d left join pg_namespace n on n.oid = d.defaclnamespace
   cross join lateral aclexplode(d.defaclacl) a
   where d.defaclnamespace = 0 or n.nspname = 'public'
+), policies as (
+  select schemaname as schema, tablename as name, policyname as policy,
+    permissive, roles, cmd as command, qual as using_expression,
+    with_check as check_expression
+  from pg_policies where schemaname = 'public'
+), views as (
+  select n.nspname as schema, c.relname as name, pg_get_userbyid(c.relowner) as owner,
+    array(select option from unnest(c.reloptions) option order by option collate "C") as options,
+    coalesce((select option_value::boolean from pg_options_to_table(c.reloptions)
+      where option_name = 'security_invoker'), false) as security_invoker,
+    pg_relation_is_updatable(c.oid, true) as updatable
+  from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind = 'v'
 ), records as (
   select 'objects' as category, to_jsonb(x) as item from inventory x
   union all select 'relation_acl', to_jsonb(x) from relation_acl x
@@ -79,6 +92,8 @@ with objects as (
   union all select 'roles', to_jsonb(x) from roles x
   union all select 'schema_acl', to_jsonb(x) from schema_acl x
   union all select 'defaults', to_jsonb(x) from defaults x
+  union all select 'policies', to_jsonb(x) from policies x
+  union all select 'views', to_jsonb(x) from views x
 ), grouped as (
   select category, jsonb_agg(item order by item::text collate "C") as items
   from records group by category

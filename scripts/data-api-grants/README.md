@@ -16,7 +16,8 @@ pnpm test:data-api-grants
 
 The database check requires Docker, Supabase CLI 2.120.0 and free ports
 56320–56322. It creates a unique disposable project. It never resets an existing
-project. Cleanup stops only that unique project.
+project. Cleanup stops only that unique project. Runs on one host must be
+sequential because the ports are fixed; unique IDs isolate state and cleanup.
 
 The check rebuilds the schema with the October 30 defaults. Without the generated
 grants block, the same objects lose expected access. The standalone artifact
@@ -32,6 +33,20 @@ the artifact's three explicit USAGE grants restore API-role access.
 The contract includes 33 tables, 2 ordinary views, 2 materialized views and
 2 sequences. It covers direct and effective permissions, explicit column ACLs,
 grant options, ownership, RLS flags, schema ownership/access and API-role inheritance.
+It also pins every public policy's command, roles, permissiveness and expressions,
+plus ordinary views' options, ownership and writability.
+
+Before any digest comparison, explicit security invariants require RLS on every
+public table, invoker security on every ordinary view, and no public-role table
+ownership, role inheritance, superuser access or RLS bypass. H1B permits no write
+policies or writable views in `security-contract.json`. Refreshing expected
+digests cannot bypass these invariants. Temporary loader policies must not be
+added to the replayed schema or this contract.
+
+Rolled-back database controls disable RLS, add an anonymous insert policy, remove
+view invoker security and change a SELECT policy. Each must be detected, and the
+final snapshot must equal the pre-fixture snapshot. These controls run only in
+the uniquely named disposable database, never in production.
 
 `etl/schema.sql` contains the generated grants for fresh builds. The standalone
 artifact is `etl/grants/20261022181311_explicit_data_api_grants.sql`.
@@ -42,7 +57,8 @@ against production.
 
 Capture production metadata with `snapshot.sql`. Use `inspect.mjs summary`,
 `inspect.mjs grants` and `inspect.mjs compare` to inspect it. Store raw snapshots
-outside Git. Refresh the project identity through the live project list first.
+outside Git. Snapshot output inside any Git repository is rejected, including
+paths reached through symlinks. Refresh project identity through the live list first.
 The generator stops on inherited access or non-owner grantors.
 The before/after comparison includes default privileges. The rebuild contract
 omits defaults because the October 30 simulation intentionally changes them.
@@ -50,6 +66,8 @@ omits defaults because the October 30 simulation intentionally changes them.
 The source guard checks `etl/schema.sql` directly. It also rejects inline
 relation-creation SQL in Python loaders. Put runtime schema DDL in checked SQL
 files with explicit grants. Register additional schema files in the configuration.
+Its tested `migrations` adapter is retained for repositories that use a migration
+history; H1B's only configured adapter is `schema`.
 
 Update the expected contract only after a review of the intended role access.
 Record the tuple diff. Do not replace expected digests merely because CI fails.

@@ -26,5 +26,13 @@
   "schema_acl": {
     "rows": 7,
     "sha256": "de32753f1d486eae4ba645f3e63d5c6b96f26a9334d8529d36ad2357946ff319"
+  },
+  "policies": {
+    "rows": 33,
+    "sha256": "ccddf806c4cf1cf7624b8ba6434182f5fd6e820d2f203ae503cf4a27fa4256b1"
+  },
+  "views": {
+    "rows": 2,
+    "sha256": "345a070c728ce22f7eb36926f54c308f12bbd8d9409f55779d44fa4581e6a665"
   }
 }

@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { execFileSync } from 'node:child_process'
+import { existsSync, mkdtempSync, mkdirSync, realpathSync, statSync, writeFileSync } from 'node:fs'
+import { basename, dirname, join, resolve } from 'node:path'
 import { isDeepStrictEqual, parseArgs } from 'node:util'
 import { categories, summarize } from './metadata.mjs'
 
 export const proofUsage = `Usage: node scripts/test-data-api-grants.mjs [--snapshot-dir DIR]
 Requires Supabase CLI, Docker, and free local ports 56320–56322.
+Run sequentially on each host; unique project IDs isolate cleanup, not ports.
 Uses only its unique disposable project. Optional private snapshots are saved
-in a unique directory under DIR for exact comparisons and failure diagnosis.
+in a unique directory under DIR, outside Git, for comparisons and diagnosis.
 `
 
 export function parseProofArguments(args) {
@@ -19,10 +21,29 @@ export function parseProofArguments(args) {
 }
 
 export function proofDirectory(directory, scratch) {
-  if (!directory) return scratch
-  const path = resolve(directory)
+  const path = privateSnapshotPath(directory ?? scratch)
+  if (!directory) return path
   mkdirSync(path, { recursive: true, mode: 0o700 })
   return mkdtempSync(join(path, 'proof-'))
+}
+
+function privateSnapshotPath(directory) {
+  let ancestor = resolve(directory)
+  const suffix = []
+  while (!existsSync(ancestor)) {
+    suffix.unshift(basename(ancestor))
+    ancestor = dirname(ancestor)
+  }
+  assert.ok(statSync(ancestor).isDirectory(), 'Snapshot parent must be a directory')
+  ancestor = realpathSync(ancestor)
+  try {
+    execFileSync('git', ['-C', ancestor, 'rev-parse', '--absolute-git-dir'],
+      { stdio: ['ignore', 'pipe', 'ignore'] })
+  } catch (error) {
+    if (error.status === 128) return join(ancestor, ...suffix)
+    throw error
+  }
+  throw new Error('Snapshot output must be outside Git repositories, including symlink targets')
 }
 
 export function writeProofSnapshot(directory, name, snapshot) {

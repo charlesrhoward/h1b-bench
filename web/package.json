@@ -12,7 +12,7 @@
     "check:search": "node scripts/check-search.mjs",
     "check:location": "node --experimental-strip-types scripts/check-location.mjs",
     "security:migration-grants": "node ../scripts/check-migration-grants.mjs",
-    "test:migration-grants": "node --test ../scripts/check-migration-grants.test.mjs ../scripts/schema-grants.test.mjs",
+    "test:migration-grants": "node --test ../scripts/*grants.test.mjs",
     "test:data-api-grants": "node ../scripts/test-data-api-grants.mjs",
     "preflight": "pnpm lint && pnpm check:location && pnpm security:migration-grants && pnpm test:migration-grants && pnpm typecheck && pnpm build && ../scripts/check-etl.sh",
     "preflight:clean": "../scripts/preflight-clean.sh",

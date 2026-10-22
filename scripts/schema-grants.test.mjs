@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises'
+import { mkdtemp, readFile, realpath, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -60,7 +60,7 @@ test('contract mismatch identifies the category and preserves private actual row
   try {
     const output = proofDirectory(directory, '/unused')
     assert.notEqual(proofDirectory(directory, '/unused'), output)
-    assert.equal(proofDirectory(undefined, directory), directory)
+    assert.equal(proofDirectory(undefined, directory), await realpath(directory))
     const actual = { objects: [{ name: 'new_table' }] }
     const path = writeProofSnapshot(output, 'actual', actual)
     const expected = summarize({ objects: [] })

@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 
 export const categories = ['objects', 'relation_acl', 'column_acl',
-  'effective_relations', 'effective_columns', 'roles', 'schema_acl']
+  'effective_relations', 'effective_columns', 'roles', 'schema_acl', 'policies', 'views']
 const identifier = (name) => `"${name.replaceAll('"', '""')}"`
 const target = (name) => name === 'PUBLIC' ? name : identifier(name)
 const apiRoles = new Set(['anon', 'authenticated', 'service_role', 'PUBLIC'])
