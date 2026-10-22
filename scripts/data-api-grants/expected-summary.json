@@ -1,0 +1,30 @@
+{
+  "objects": {
+    "rows": 39,
+    "sha256": "7856c6e816ae0255a8e3610cc70051bc7e5a381e6e72ba9a7ad7afef12e94322"
+  },
+  "relation_acl": {
+    "rows": 1208,
+    "sha256": "bcd9ceb13a13955c6daf3cb83e6bd7e1888ce359ecf9fd543d10bb0433ae4ede"
+  },
+  "column_acl": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "effective_relations": {
+    "rows": 894,
+    "sha256": "85a86c3085fe06a59e2e017f624f8a9cf49433eb0ffe29b7fe4d6cf4c1356e1a"
+  },
+  "effective_columns": {
+    "rows": 3600,
+    "sha256": "06f31de8705118358c6a2d8d21ed9319c3dc497b018cdb69c0680a12a41b08bc"
+  },
+  "roles": {
+    "rows": 3,
+    "sha256": "a38877eee257d6aa579b4f10a56170f6561abb1f2e2c05cf263d547012ecd215"
+  },
+  "schema_acl": {
+    "rows": 7,
+    "sha256": "da53d151661dc39982b3303cadd1c5dfb5a7d26186a96033fb3a33392d953c98"
+  }
+}

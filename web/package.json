@@ -6,18 +6,21 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "node ../scripts/lint.mjs web scripts eslint.config.mjs --max-warnings 0",
     "typecheck": "next typegen && tsc --noEmit",
     "check:redirects": "node scripts/check-redirects.mjs",
     "check:search": "node scripts/check-search.mjs",
     "check:location": "node --experimental-strip-types scripts/check-location.mjs",
-    "preflight": "pnpm lint && pnpm check:location && pnpm typecheck && pnpm build && ../scripts/check-etl.sh",
+    "security:migration-grants": "node ../scripts/check-migration-grants.mjs",
+    "test:migration-grants": "node --test ../scripts/check-migration-grants.test.mjs ../scripts/schema-grants.test.mjs",
+    "test:data-api-grants": "node ../scripts/test-data-api-grants.mjs",
+    "preflight": "pnpm lint && pnpm check:location && pnpm security:migration-grants && pnpm test:migration-grants && pnpm typecheck && pnpm build && ../scripts/check-etl.sh",
     "preflight:clean": "../scripts/preflight-clean.sh",
     "prepare": "cd .. && husky web/.husky || true"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs}": [
-      "eslint --fix --max-warnings 0"
+      "node ../scripts/lint.mjs --fix --max-warnings 0"
     ]
   },
   "dependencies": {

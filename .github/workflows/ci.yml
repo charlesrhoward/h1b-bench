@@ -17,6 +17,24 @@ defaults:
     working-directory: web
 
 jobs:
+  data-api-grants:
+    name: Data API permission contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+      - name: Prove fresh-schema access and restrictions
+        run: node scripts/test-data-api-grants.mjs
+
   lint:
     name: lint
     runs-on: ubuntu-latest
@@ -27,6 +45,8 @@ jobs:
       # Rules: web/eslint.shared-rules.mjs. Every rule is an error; inline disables and ts-ignore fail.
       - run: pnpm lint
       - run: pnpm check:location
+      - name: Verify explicit Data API access decisions
+        run: pnpm security:migration-grants && pnpm test:migration-grants
 
   typecheck:
     name: typecheck
@@ -76,17 +96,18 @@ jobs:
   preflight:
     name: preflight
     if: always()
-    needs: [lint, typecheck, etl, build]
+    needs: [lint, typecheck, etl, build, data-api-grants]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     defaults:
       run:
         working-directory: .
     steps:
-      - name: Require lint, typecheck, etl, and build to succeed
+      - name: Require all application and database checks to succeed
         run: |
           echo "lint=${{ needs.lint.result }} typecheck=${{ needs.typecheck.result }} etl=${{ needs.etl.result }} build=${{ needs.build.result }}"
           test "${{ needs.lint.result }}" = success
           test "${{ needs.typecheck.result }}" = success
           test "${{ needs.etl.result }}" = success
           test "${{ needs.build.result }}" = success
+          test "${{ needs['data-api-grants'].result }}" = success
