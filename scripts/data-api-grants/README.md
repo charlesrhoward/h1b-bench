@@ -118,9 +118,17 @@ node scripts/data-api-grants/inspect.mjs summary /private/path/production.json >
 Review the tuple and summary diffs together. Never refresh the contract from a
 failed replay just to make the check pass.
 
-Production application remains pending. Review the exact grants-only artifact
-and refresh the permission snapshot before application. Record an applied change
-in the schema history only after its production verification succeeds.
+Production baseline `20261022181311` was applied on 2026-10-22 at 21:34 UTC
+from the artifact merged in PR #49 (`6abf1af`). All 120 GRANT statements matched
+the fresh production snapshot before application. The before/after comparison
+found zero changes across all nine contract categories and default privileges.
+Public routine definitions, ownership, configuration and ACLs also matched.
+The production ledger records the version and its 120 statements; the applied
+change is recorded in the schema history. No application data was changed.
+
+For any future application, review the exact grants-only artifact and refresh
+the permission snapshot first. Record an applied change in the schema history
+only after its production verification succeeds.
 
 ## RPC execution scope
 

@@ -26,7 +26,9 @@
 -- -> search_employers_short_terms (2026-10-16: employers_name_lower_prefix, built concurrently
 --    first; drop employers_name_trgm_idx, which search_functions created as a copy of
 --    employers_name_trgm: gin (name gin_trgm_ops); search_employers escapes LIKE wildcards and
---    matches 1-2 letter terms by name prefix; no data, normalization, or materialized-view reload).
+--    matches 1-2 letter terms by name prefix; no data, normalization, or materialized-view reload)
+-- -> explicit_data_api_grants (20261022181311, applied 2026-10-22: 120 existing grants;
+--    verified zero permission, RLS, policy, ownership, view, default or routine changes).
 -- pg_trgm lives in the extensions schema; anon bulk-insert policies are dropped after load.
 
 create schema if not exists extensions;
