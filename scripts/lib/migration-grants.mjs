@@ -101,7 +101,8 @@ function skipIfNotExists(tokens, index) {
 function creationAt(tokens, index) {
   let next = index + 1
   if (isWord(tokens[next], 'or') && isWord(tokens[next + 1], 'replace')) next += 2
-  if (['unlogged', 'temporary', 'temp', 'materialized', 'foreign'].some((value) => isWord(tokens[next], value))) next++
+  while (['global', 'local', 'unlogged', 'temporary', 'temp', 'materialized', 'foreign', 'recursive']
+    .some((value) => isWord(tokens[next], value))) next++
   const kind = tokens[next]?.value
   if (!['table', 'view', 'sequence'].includes(kind)) return null
   return relationAt(tokens, skipIfNotExists(tokens, next + 1), kind === 'sequence' ? 'sequence' : 'table')
@@ -151,12 +152,24 @@ function privilegeTargets(statement, problems) {
   return namedTargets(statement, next, kind)
 }
 
+function isRoutine(statement) {
+  const next = isWord(statement[1], 'or') && isWord(statement[2], 'replace') ? 3 : 1
+  return isWord(statement[0], 'create')
+    && ['function', 'procedure'].some((value) => isWord(statement[next], value))
+}
+
 function inspectRoutineBodies(statement, problems) {
-  for (const token of statement.filter((item) => item.type === 'body')) {
-    const inner = tokenize(token.value)
-    if (createdRelations(inner).length || inner.some((item) => isWord(item, 'execute'))) {
-      problems.push('uses runtime object DDL or dynamic EXECUTE in a routine; use explicit schema SQL')
-    }
+  if (!isRoutine(statement)) return
+  const as = statement.findIndex((token) => isWord(token, 'as'))
+  if (as < 0) return
+  const body = statement[as + 1]
+  if (!['body', 'string'].includes(body?.type)) {
+    problems.push('cannot inspect routine body; use dollar-quoted SQL')
+    return
+  }
+  const inner = tokenize(body.value)
+  if (createdRelations(inner).length || inner.some((item) => isWord(item, 'execute'))) {
+    problems.push('uses runtime object DDL or dynamic EXECUTE in a routine; use explicit schema SQL')
   }
 }
 

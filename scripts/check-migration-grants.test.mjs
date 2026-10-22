@@ -12,6 +12,8 @@ for (const statement of [
   'CREATE UNLOGGED TABLE public.missing(id int);',
   'CREATE VIEW public.missing AS SELECT 1;',
   'CREATE OR REPLACE VIEW public.missing AS SELECT 1;',
+  'CREATE RECURSIVE VIEW public.missing(n) AS SELECT 1;',
+  'CREATE OR REPLACE RECURSIVE VIEW public.missing(n) AS SELECT 1;',
   'CREATE MATERIALIZED VIEW public.missing AS SELECT 1;',
   'CREATE SEQUENCE public.missing;',
   'DO $$ BEGIN CREATE TABLE public.missing(id int); END $$;',
@@ -22,12 +24,14 @@ for (const statement of [
 for (const statement of [
   'CREATE TABLE public.ok(id int); GRANT SELECT ON TABLE public.ok TO anon;',
   'CREATE VIEW public.ok AS SELECT 1; REVOKE ALL ON public.ok FROM PUBLIC, anon, authenticated;',
+  'CREATE RECURSIVE VIEW public.ok(n) AS SELECT 1; GRANT SELECT ON public.ok TO anon;',
   'CREATE SEQUENCE public.ok; GRANT USAGE ON SEQUENCE public.ok TO service_role;',
   'DO $$ BEGIN CREATE TABLE public.ok(id int); GRANT SELECT ON public.ok TO anon; END $$;',
   'CREATE TABLE public."Mixed.Case"(id int); GRANT SELECT ON public."Mixed.Case" TO anon;',
   'CREATE TABLE public."a""b"(id int); GRANT SELECT ON public."a""b" TO anon;',
   'CREATE TABLE private.ok(id int);',
   "INSERT INTO logs VALUES ('CREATE TABLE public.fake(id int);');",
+  'INSERT INTO logs VALUES ($$CREATE TABLE public.fake(id int);$$);',
   '-- CREATE TABLE public.fake(id int);\n/* nested /* CREATE TABLE fake */ comment */ SELECT 1;',
 ]) {
   test(`accepts explicit decision or non-DDL: ${statement}`, () => assert.deepEqual(findGrantProblems(statement), []))
@@ -44,6 +48,13 @@ test('rejects dynamic DO-block DDL', () => {
 })
 test('rejects runtime DDL inside a function', () => {
   assert.ok(findGrantProblems('CREATE FUNCTION f() RETURNS void AS $$ BEGIN CREATE TABLE x(id int); END $$ LANGUAGE plpgsql;').length)
+})
+test('rejects runtime DDL and dynamic SQL in single-quoted routine bodies', () => {
+  assert.ok(findGrantProblems("CREATE FUNCTION f() RETURNS void AS 'BEGIN CREATE TABLE public.x(id int); END' LANGUAGE plpgsql;").length)
+  assert.ok(findGrantProblems("CREATE FUNCTION f() RETURNS void AS 'BEGIN EXECUTE command; END' LANGUAGE plpgsql;").length)
+})
+test('rejects unsupported routine-body quoting instead of skipping it', () => {
+  assert.ok(findGrantProblems("CREATE FUNCTION f() RETURNS void AS E'BEGIN CREATE TABLE public.x(id int); END' LANGUAGE plpgsql;").length)
 })
 for (const kind of ['TABLES', 'SEQUENCES']) {
   test(`rejects blanket ${kind} grant`, () => {
