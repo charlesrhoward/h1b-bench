@@ -79,16 +79,20 @@ function schemaUsageRows(snapshot) {
     .map((row) => ({ ...row, kind: 'n', schema: 'public', name: 'public' }))
 }
 
+function assertKnownGrantees(rows) {
+  for (const row of rows) {
+    if (!apiRoles.has(row.grantee) && row.grantee !== row.owner) {
+      throw new Error(`Review additional grantee ${row.grantee} on ${row.name} before generating grants`)
+    }
+  }
+}
+
 export function generateGrants(snapshot) {
   for (const role of snapshot.roles) {
     if (role.inherited.length) throw new Error(`Review inherited privileges for ${role.role} before generating grants`)
   }
   const relationRows = [...(snapshot.relation_acl ?? []), ...(snapshot.column_acl ?? [])]
-  for (const row of relationRows) {
-    if (!apiRoles.has(row.grantee) && row.grantee !== row.owner) {
-      throw new Error(`Review additional grantee ${row.grantee} on ${row.name} before generating grants`)
-    }
-  }
+  assertKnownGrantees(relationRows)
   const rows = [...relationRows, ...schemaUsageRows(snapshot)]
     .filter((row) => apiRoles.has(row.grantee))
   const statements = groupGrants(rows).map(grantStatement)
