@@ -124,6 +124,13 @@ test('generator stops on inherited access and non-owner grantors', () => {
     { grantee: 'anon', owner: 'postgres', grantor: 'custom', name: 'foo' },
   ] }), /grantor/)
 })
+test('generator includes existing direct API schema USAGE without adding CREATE', () => {
+  const sql = generateGrants({ roles, schema_acl: roles.map(({ role }) => ({
+    grantee: role, privilege: 'USAGE', grantor: 'pg_database_owner', owner: 'pg_database_owner', grantable: false,
+  })) })
+  for (const { role } of roles) assert.ok(sql.includes(`grant USAGE on schema "public" to "${role}";`))
+  assert.doesNotMatch(sql, /CREATE|to PUBLIC/)
+})
 test('comparison detects column, sequence and grant-option changes', () => {
   const before = { column_acl: [{ name: 'private', grantable: false }], relation_acl: [{ kind: 'S', privilege: 'USAGE' }] }
   const after = { column_acl: [{ name: 'private', grantable: true }] }

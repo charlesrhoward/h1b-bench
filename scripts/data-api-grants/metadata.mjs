@@ -56,18 +56,25 @@ function groupGrants(rows) {
 }
 
 function grantStatement(row) {
-    const object = row.kind === 'S' ? 'sequence' : 'table'
-    const privileges = [...row.privileges].sort().map((privilege) =>
-      row.column ? `${privilege} (${identifier(row.column)})` : privilege).join(', ')
-    const option = row.grantable ? ' with grant option' : ''
-  return `grant ${privileges} on ${object} ${identifier(row.schema)}.${identifier(row.name)} to ${target(row.grantee)}${option};`
+  const object = { S: 'sequence', n: 'schema' }[row.kind] ?? 'table'
+  const privileges = [...row.privileges].sort().map((privilege) =>
+    row.column ? `${privilege} (${identifier(row.column)})` : privilege).join(', ')
+  const option = row.grantable ? ' with grant option' : ''
+  const name = row.kind === 'n' ? identifier(row.name) : `${identifier(row.schema)}.${identifier(row.name)}`
+  return `grant ${privileges} on ${object} ${name} to ${target(row.grantee)}${option};`
+}
+
+function schemaUsageRows(snapshot) {
+  return (snapshot.schema_acl ?? [])
+    .filter((row) => row.grantee !== 'PUBLIC' && apiRoles.has(row.grantee) && row.privilege === 'USAGE')
+    .map((row) => ({ ...row, kind: 'n', schema: 'public', name: 'public' }))
 }
 
 export function generateGrants(snapshot) {
   for (const role of snapshot.roles) {
     if (role.inherited.length) throw new Error(`Review inherited privileges for ${role.role} before generating grants`)
   }
-  const rows = [...(snapshot.relation_acl ?? []), ...(snapshot.column_acl ?? [])]
+  const rows = [...(snapshot.relation_acl ?? []), ...(snapshot.column_acl ?? []), ...schemaUsageRows(snapshot)]
     .filter((row) => apiRoles.has(row.grantee))
   const statements = groupGrants(rows).map(grantStatement)
   if (!statements.length) throw new Error('No API grants found; review the snapshot before creating a baseline')

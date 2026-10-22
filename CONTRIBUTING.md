@@ -33,9 +33,10 @@ processed data live in `data/` and are gitignored — never commit them.
 
 ## Preflight
 
-The same checks run locally and in CI (`.github/workflows/ci.yml`). The `CI` workflow runs `lint`,
-`typecheck`, `etl`, and `build` as parallel jobs. The `preflight` job passes only when all
-four pass; it is the required check on `main`, so a PR that fails any of them cannot merge.
+The same application checks run locally and in CI (`.github/workflows/ci.yml`).
+CI also runs the database permission contract. The `preflight` job passes only
+when `lint`, `typecheck`, `etl`, `build`, and `data-api-grants` all pass; it is the
+required check on `main`, so a PR that fails any of them cannot merge.
 
 | Check              | Command (from `web/`)     | Runs on                    |
 |--------------------|---------------------------|----------------------------|

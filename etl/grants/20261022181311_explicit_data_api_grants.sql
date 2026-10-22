@@ -1,6 +1,8 @@
 -- Explicit Data API grants; generated from production catalogs on 2026-10-22.
 -- charlesrhoward/h1b-bench#47. Preserves existing privileges, including materialized views,
 -- sequences and grant options. No RLS, ownership or default-privilege changes.
+-- Intentionally mirrors Supabase's pre-change default ACLs for zero behavior change.
+-- Review privilege narrowing separately; these broad grants are not a least-privilege policy.
 -- Review the snapshot immediately before application.
 begin;
 
@@ -121,5 +123,8 @@ grant SELECT, UPDATE, USAGE on sequence "public"."employer_layoff_notices_id_seq
 grant SELECT, UPDATE, USAGE on sequence "public"."employers_id_seq" to "anon";
 grant SELECT, UPDATE, USAGE on sequence "public"."employers_id_seq" to "authenticated";
 grant SELECT, UPDATE, USAGE on sequence "public"."employers_id_seq" to "service_role";
+grant USAGE on schema "public" to "anon";
+grant USAGE on schema "public" to "authenticated";
+grant USAGE on schema "public" to "service_role";
 
 commit;

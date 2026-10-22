@@ -55,7 +55,8 @@ with objects as (
       and pg_has_role(r.oid, p.oid, 'USAGE') order by p.rolname collate "C") as inherited
   from api_roles r
 ), schema_acl as (
-  select case when a.grantee = 0 then 'PUBLIC' else pg_get_userbyid(a.grantee) end as grantee,
+  select pg_get_userbyid(n.nspowner) as owner,
+    case when a.grantee = 0 then 'PUBLIC' else pg_get_userbyid(a.grantee) end as grantee,
     pg_get_userbyid(a.grantor) as grantor, a.privilege_type as privilege,
     a.is_grantable as grantable
   from pg_namespace n cross join lateral aclexplode(

@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, readdirSync, cpSync, rmSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, readdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { compareSnapshots, summarize } from './data-api-grants/metadata.mjs'
+import { compareSnapshots } from './data-api-grants/metadata.mjs'
+import { schemaReplay, wrapGrantArtifact } from './lib/schema-replay.mjs'
+import { assertSnapshotContract, parseProofArguments, proofDirectory,
+  proofUsage, writeProofSnapshot } from './data-api-grants/proof-support.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const config = JSON.parse(readFileSync(join(root, 'scripts/migration-grants.config.json'), 'utf8'))
@@ -21,6 +24,13 @@ const run = (command, args, input) => execFileSync(command, args, {
 const query = (sql) => run('docker', ['exec', '-i', container, 'psql', '-U', 'postgres',
   '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-qAt'], sql)
 const snapshot = () => JSON.parse(query(snapshotSql))
+let outputDirectory = scratch
+
+function capture(name) {
+  const current = snapshot()
+  writeProofSnapshot(outputDirectory, name, current)
+  return current
+}
 
 function prepare() {
   mkdirSync(migrations, { recursive: true })
@@ -47,15 +57,9 @@ enabled = false
 [edge_runtime]
 enabled = false
 `)
-  if (config.mode === 'migrations') {
-    for (const name of readdirSync(join(root, config.directory))) {
-      if (name.endsWith('.sql') && name !== config.baseline) cpSync(join(root, config.directory, name), join(migrations, name))
-    }
-  } else {
-    const sql = readFileSync(join(root, config.schemaFiles[0]), 'utf8')
-    assert.ok(sql.includes('-- BEGIN explicit Data API grants'), 'Expected the generated schema grants block')
-    writeFileSync(join(migrations, '20261006000000_schema.sql'), sql.split('-- BEGIN explicit Data API grants')[0])
-  }
+  assert.equal(config.mode, 'schema', 'H1B database proof requires schema mode')
+  const sources = config.schemaFiles.map((file) => readFileSync(join(root, file), 'utf8'))
+  writeFileSync(join(migrations, '20261006000000_schema.sql'), schemaReplay(sources).sql)
   writeFileSync(join(migrations, '00000000000000_LOCAL_ONLY_simulate_oct30.sql'),
     'alter default privileges for role postgres in schema public revoke all on tables from anon, authenticated, service_role;\n'
     + 'alter default privileges for role postgres in schema public revoke all on sequences from anon, authenticated, service_role;\n')
@@ -75,42 +79,64 @@ function verifySentinels() {
   }
 }
 
-function verifyResortSchema() {
-  if (config.mode !== 'migrations') return
-  const expected = JSON.parse(readFileSync(join(root, 'scripts/data-api-grants/resort-schema.expected.json'), 'utf8'))
-  const actual = JSON.parse(query(readFileSync(join(root, 'scripts/data-api-grants/resort-schema.sql'), 'utf8')))
-  delete actual.ledger_matches
-  assert.deepEqual(actual, expected, 'Recovered resort schema must match production metadata')
-  query(readFileSync(join(root, 'scripts/data-api-grants/resort-access.sql'), 'utf8'))
+function verifySchemaUsage(baseline) {
+  const grants = baseline.split('\n').filter((line) => line.startsWith('grant ') && line.includes(' on schema '))
+  assert.equal(grants.length, 3, 'Expected explicit public-schema USAGE for all three API roles')
+  const check = "select bool_or(has_schema_privilege(role, 'public', 'USAGE')) from unnest(array['anon','authenticated','service_role']) r(role)"
+  const restored = check.replace('bool_or', 'bool_and')
+  query(`begin;
+    revoke usage on schema public from public, anon, authenticated, service_role;
+    do $$ begin if (${check}) then raise exception 'Schema negative control still has access'; end if; end $$;
+    ${grants.join('\n')}
+    do $$ begin if not (${restored}) then raise exception 'Explicit schema grants did not restore access'; end if; end $$;
+    rollback;`)
+}
+
+function verifyReplayFiles() {
+  const block = wrapGrantArtifact('begin;\ngrant select on public.proof_parent to anon;\ncommit;')
+  const { sql } = schemaReplay([
+    `create table public.proof_parent(id int primary key);\n${block}\ncreate table public.proof_suffix(id int);`,
+    'create table public.proof_child(parent_id int references public.proof_parent(id));',
+  ])
+  query(`begin; ${sql}
+    insert into public.proof_parent values(7);
+    insert into public.proof_child values(7);
+    insert into public.proof_suffix values(7);
+    do $$ begin
+      if not exists(select 1 from public.proof_child join public.proof_parent on parent_id=id)
+        then raise exception 'Multi-file replay lost a schema dependency'; end if;
+    end $$;
+    rollback;`)
 }
 
 function proof() {
   const expected = JSON.parse(readFileSync(join(root, 'scripts/data-api-grants/expected-summary.json'), 'utf8'))
-  const without = snapshot()
-  assert.deepEqual(summarize(without).objects, expected.objects, 'Negative control must contain the same objects')
-  const baselineFile = config.baselineFile ?? join(config.directory, config.baseline)
-  query(readFileSync(join(root, baselineFile), 'utf8'))
-  const withBaseline = snapshot()
-  assert.deepEqual(summarize(withBaseline), expected, 'Full rebuilt permissions must match the production contract')
+  const without = capture('without-baseline')
+  assertSnapshotContract(without, { objects: expected.objects }, join(outputDirectory, 'without-baseline.json'))
+  const baseline = readFileSync(join(root, config.baselineFile), 'utf8')
+  query(baseline)
+  const withBaseline = capture('with-baseline')
+  assertSnapshotContract(withBaseline, expected, join(outputDirectory, 'with-baseline.json'))
   assert.deepEqual([...new Set(withBaseline.effective_relations.filter((row) => row.kind === 'S')
     .map((row) => row.privilege))].sort(), ['SELECT', 'UPDATE', 'USAGE'],
   'Snapshot must check every sequence privilege')
   assert.ok(compareSnapshots(without, withBaseline).some((diff) => diff.category === 'effective_relations'),
     'Negative control must lose effective relation access')
-  for (const name of config.preBaselineMigrations ?? []) query(readFileSync(join(root, config.directory, name), 'utf8'))
-  query(readFileSync(join(root, baselineFile), 'utf8'))
-  assert.deepEqual(compareSnapshots(withBaseline, snapshot()), [], 'Reapplication must preserve every permission tuple')
+  query(baseline)
+  assert.deepEqual(compareSnapshots(withBaseline, capture('reapplied')), [], 'Reapplication must preserve every permission tuple')
   verifySentinels()
-  verifyResortSchema()
-  assert.deepEqual(compareSnapshots(withBaseline, snapshot()), [], 'Fixture and sentinel checks must roll back')
+  verifySchemaUsage(baseline)
+  verifyReplayFiles()
+  assert.deepEqual(compareSnapshots(withBaseline, capture('after-fixtures')), [], 'Fixture and sentinel checks must roll back')
 }
 
 let success = false
 try {
-  if (process.argv.includes('--help')) {
-    process.stdout.write('Usage: node scripts/test-data-api-grants.mjs\nRequires Supabase CLI, Docker, and free local ports 56320–56322. Uses only its unique disposable project.\n')
+  const options = parseProofArguments(process.argv.slice(2))
+  if (options.help) {
+    process.stdout.write(proofUsage)
   } else {
-    if (process.argv.length > 2) throw new Error('Unexpected argument; use --help')
+    outputDirectory = proofDirectory(options.snapshotDirectory, scratch)
     prepare()
     try { run('supabase', ['db', 'start', '--workdir', scratch]) }
     catch (error) {
@@ -120,10 +146,12 @@ try {
     query("do $$ begin if to_regclass('cron.job') is not null then perform cron.unschedule(jobid) from cron.job; end if; end $$;")
     proof()
     process.stdout.write('Data API proof passed: fresh replay, full permission contract, negative control, idempotency, private sentinels, and role checks.\n')
+    if (options.snapshotDirectory) process.stdout.write(`Proof snapshots: ${outputDirectory}\n`)
     success = true
   }
 } catch (error) {
   process.stderr.write(`${error.stack}\n`)
+  process.stderr.write(`Proof snapshots: ${outputDirectory}\n`)
   process.exitCode = 1
 } finally {
   // Never stop a project that this invocation did not create.

@@ -33,7 +33,13 @@ jobs:
         with:
           version: 2.120.0
       - name: Prove fresh-schema access and restrictions
-        run: node scripts/test-data-api-grants.mjs
+        run: node scripts/test-data-api-grants.mjs --snapshot-dir "$RUNNER_TEMP/data-api-grants"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: data-api-permission-snapshots
+          path: ${{ runner.temp }}/data-api-grants/
+          retention-days: 7
 
   lint:
     name: lint
@@ -105,7 +111,7 @@ jobs:
     steps:
       - name: Require all application and database checks to succeed
         run: |
-          echo "lint=${{ needs.lint.result }} typecheck=${{ needs.typecheck.result }} etl=${{ needs.etl.result }} build=${{ needs.build.result }}"
+          echo "lint=${{ needs.lint.result }} typecheck=${{ needs.typecheck.result }} etl=${{ needs.etl.result }} build=${{ needs.build.result }} data-api-grants=${{ needs['data-api-grants'].result }}"
           test "${{ needs.lint.result }}" = success
           test "${{ needs.typecheck.result }}" = success
           test "${{ needs.etl.result }}" = success
