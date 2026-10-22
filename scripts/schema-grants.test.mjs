@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { test } from 'node:test'
 import { assertGrantArtifact, grantEnd, grantStart, schemaReplay, wrapGrantArtifact } from './lib/schema-replay.mjs'
 import { assertSnapshotContract, parseProofArguments, proofDirectory,
-  writeProofSnapshot } from './data-api-grants/proof-support.mjs'
+  stopProofDatabase, writeProofSnapshot } from './data-api-grants/proof-support.mjs'
 import { summarize } from './data-api-grants/metadata.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -72,4 +72,30 @@ test('contract mismatch identifies the category and preserves private actual row
     assert.equal((await stat(output)).mode & 0o777, 0o700)
     assertSnapshotContract(actual, summarize(actual), path)
   } finally { await rm(directory, { recursive: true, force: true }) }
+})
+test('full contract rejects missing or unknown categories; partial comparison requires an explicit selection', () => {
+  const actual = { objects: [{ name: 'report' }] }
+  const summary = summarize(actual)
+  const partial = { objects: summary.objects }
+  assert.throws(() => assertSnapshotContract(actual, partial, '/private/actual.json'), /permission categories/)
+  assert.throws(() => assertSnapshotContract(actual, { ...summary, unknown: {} }, '/private/actual.json'), /permission categories/)
+  assertSnapshotContract(actual, partial, '/private/actual.json', ['objects'])
+})
+test('cleanup skips preparation failures and failed starts with no owned database', () => {
+  const state = { project: 'owned-proof', container: 'owned-container', scratch: '/private/proof' }
+  const calls = []
+  const run = (command, args) => { calls.push([command, args]); throw new Error('No database container') }
+  stopProofDatabase({ ...state, startAttempted: false, started: false }, run)
+  assert.deepEqual(calls, [])
+  stopProofDatabase({ ...state, startAttempted: true, started: false }, run)
+  assert.deepEqual(calls, [['docker', ['container', 'inspect', state.container]]])
+})
+test('cleanup stops only the successful or partially created proof project', () => {
+  const state = { project: 'owned-proof', container: 'owned-container', scratch: '/private/proof', startAttempted: true }
+  for (const started of [true, false]) {
+    const calls = []
+    stopProofDatabase({ ...state, started }, (command, args) => { calls.push([command, args]) })
+    assert.deepEqual(calls.at(-1), ['supabase', ['stop', '--project-id', state.project, '--no-backup', '--workdir', state.scratch]])
+    assert.equal(calls.length, started ? 1 : 2)
+  }
 })

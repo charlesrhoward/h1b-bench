@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { auditMigrationGrants, findGrantProblems } from './check-migration-grants.mjs'
-import { generateGrants, compareSnapshots } from './data-api-grants/metadata.mjs'
+import { generateGrants, compareSnapshots, summarize } from './data-api-grants/metadata.mjs'
 
 for (const statement of [
   'CREATE TABLE public.missing(id int);',
@@ -141,4 +141,13 @@ test('comparison detects default privilege changes', () => {
   const before = { defaults: [{ creator: 'postgres', privilege: 'INSERT', grantee: 'anon' }] }
   assert.equal(compareSnapshots(before, {}).length, 1)
   assert.deepEqual(compareSnapshots(before, before), [])
+})
+test('nested permission fields are preserved while object key order is ignored', () => {
+  const before = { objects: [{ name: 'report', policy: { roles: ['anon'], flags: { allowed: false } } }] }
+  const reordered = { objects: [{ policy: { flags: { allowed: false }, roles: ['anon'] }, name: 'report' }] }
+  const changed = { objects: [{ name: 'report', policy: { roles: ['anon'], flags: { allowed: true } } }] }
+  assert.deepEqual(summarize(before), summarize(reordered))
+  assert.deepEqual(compareSnapshots(before, reordered), [])
+  assert.notDeepEqual(summarize(before), summarize(changed))
+  assert.equal(compareSnapshots(before, changed).length, 2)
 })

@@ -6,7 +6,14 @@ export const categories = ['objects', 'relation_acl', 'column_acl',
 const identifier = (name) => `"${name.replaceAll('"', '""')}"`
 const target = (name) => name === 'PUBLIC' ? name : identifier(name)
 const apiRoles = new Set(['anon', 'authenticated', 'service_role', 'PUBLIC'])
-const canonical = (value) => JSON.stringify(value, Object.keys(value).sort())
+function sortKeys(value) {
+  if (Array.isArray(value)) return value.map(sortKeys)
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, sortKeys(value[key])]))
+  }
+  return value
+}
+const canonical = (value) => JSON.stringify(sortKeys(value))
 
 function unwrapSnapshot(result) {
   if (Array.isArray(result.rows)) return result.rows[0]?.snapshot

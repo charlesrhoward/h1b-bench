@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, readdirSync, rmSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { compareSnapshots } from './data-api-grants/metadata.mjs'
 import { schemaReplay, wrapGrantArtifact } from './lib/schema-replay.mjs'
 import { assertSnapshotContract, parseProofArguments, proofDirectory,
-  proofUsage, writeProofSnapshot } from './data-api-grants/proof-support.mjs'
+  proofUsage, stopProofDatabase, writeProofSnapshot } from './data-api-grants/proof-support.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const config = JSON.parse(readFileSync(join(root, 'scripts/migration-grants.config.json'), 'utf8'))
@@ -16,6 +16,7 @@ const project = `grants-${randomUUID().slice(0, 8)}`
 const scratch = mkdtempSync(join(tmpdir(), `${project}-`))
 const migrations = join(scratch, 'supabase/migrations')
 const container = `supabase_db_${project}`
+const lifecycle = { project, container, scratch, startAttempted: false, started: false }
 const snapshotSql = readFileSync(join(root, 'scripts/data-api-grants/snapshot.sql'), 'utf8')
 const run = (command, args, input) => execFileSync(command, args, {
   cwd: root, input, encoding: 'utf8', maxBuffer: 20 * 1024 * 1024,
@@ -112,7 +113,7 @@ function verifyReplayFiles() {
 function proof() {
   const expected = JSON.parse(readFileSync(join(root, 'scripts/data-api-grants/expected-summary.json'), 'utf8'))
   const without = capture('without-baseline')
-  assertSnapshotContract(without, { objects: expected.objects }, join(outputDirectory, 'without-baseline.json'))
+  assertSnapshotContract(without, { objects: expected.objects }, join(outputDirectory, 'without-baseline.json'), ['objects'])
   const baseline = readFileSync(join(root, config.baselineFile), 'utf8')
   query(baseline)
   const withBaseline = capture('with-baseline')
@@ -138,7 +139,11 @@ try {
   } else {
     outputDirectory = proofDirectory(options.snapshotDirectory, scratch)
     prepare()
-    try { run('supabase', ['db', 'start', '--workdir', scratch]) }
+    lifecycle.startAttempted = true
+    try {
+      run('supabase', ['db', 'start', '--workdir', scratch])
+      lifecycle.started = true
+    }
     catch (error) {
       writeFileSync(join(scratch, 'startup.log'), `${error.stdout ?? ''}\n${error.stderr ?? ''}`)
       throw new Error(`Disposable database startup failed. Inspect ${join(scratch, 'startup.log')}`)
@@ -154,10 +159,8 @@ try {
   process.stderr.write(`Proof snapshots: ${outputDirectory}\n`)
   process.exitCode = 1
 } finally {
-  // Never stop a project that this invocation did not create.
-  if (success || readdirSync(scratch).includes('supabase')) {
-    try { run('supabase', ['stop', '--project-id', project, '--no-backup', '--workdir', scratch]) }
-    catch (error) { process.stderr.write(`Cleanup failed for ${project}: ${error.message}\n`); process.exitCode = 1 }
-  }
-  if (success || !readdirSync(scratch).includes('supabase')) rmSync(scratch, { recursive: true })
+  // Stop a successful start, or this invocation's partially created database.
+  try { stopProofDatabase(lifecycle, run) }
+  catch (error) { process.stderr.write(`Cleanup failed for ${project}: ${error.message}\n`); process.exitCode = 1 }
+  if (success || !lifecycle.startAttempted) rmSync(scratch, { recursive: true })
 }

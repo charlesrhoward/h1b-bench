@@ -624,7 +624,6 @@ from c join top20 t using (fiscal_year)
 group by c.fiscal_year;
 
 create unique index lca_year_profile_fy on lca_year_profile (fiscal_year);
-grant select on lca_year_profile to anon, authenticated;
 
 -- Measure 2 (defined after Measure 1 results were seen; see docs/labor-pool-results.md):
 -- new H-1B positions the unemployed alone could fill = sum over occupations of
@@ -645,7 +644,6 @@ select lca_fiscal_year, 'same_state',
        sum(least(greatest(supply_est - supply_moe, 0), new_positions))::int
 from labor_pool where state <> 'US' group by lca_fiscal_year;
 
-grant select on labor_pool_fillable to anon, authenticated;
 
 -- Certified H-1B LCAs per fiscal year, split by DOL "H-1B dependent" status: wage level mix,
 -- offers exactly at the prevailing-wage floor, and offered pay. lca_cases has no prevailing-wage unit, so
@@ -669,7 +667,6 @@ where visa_class = 'H-1B' and case_status = 'Certified'
 group by fiscal_year, coalesce(h1b_dependent::text, 'unknown');
 
 create unique index lca_dependency_profile_key on lca_dependency_profile (fiscal_year, dependency);
-grant select on lca_dependency_profile to anon, authenticated;
 
 -- Employer name search (site search, /employers?q=). `%` and `_` in the term are literal text.
 -- One or two letters make too few trigrams for a fuzzy match, and a substring scan of every name

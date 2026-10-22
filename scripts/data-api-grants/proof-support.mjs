@@ -1,7 +1,8 @@
+import assert from 'node:assert/strict'
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { isDeepStrictEqual, parseArgs } from 'node:util'
-import { summarize } from './metadata.mjs'
+import { categories, summarize } from './metadata.mjs'
 
 export const proofUsage = `Usage: node scripts/test-data-api-grants.mjs [--snapshot-dir DIR]
 Requires Supabase CLI, Docker, and free local ports 56320–56322.
@@ -30,12 +31,27 @@ export function writeProofSnapshot(directory, name, snapshot) {
   return path
 }
 
-export function assertSnapshotContract(snapshot, expected, path) {
+export function assertSnapshotContract(snapshot, expected, path, selected = categories) {
+  assert.deepEqual(Object.keys(expected).sort(), [...selected].sort(),
+    'Expected contract must contain exactly the selected permission categories')
   const actual = summarize(snapshot)
-  const changed = Object.keys(expected).filter((category) => !isDeepStrictEqual(actual[category], expected[category]))
+  const changed = selected.filter((category) => !isDeepStrictEqual(actual[category], expected[category]))
   if (!changed.length) return
   throw new Error(`Permission contract mismatch: ${changed.join(', ')}.\n`
     + `Actual rows: ${path}\n`
     + 'Compare with reviewed production rows: node scripts/data-api-grants/inspect.mjs compare PRODUCTION_SNAPSHOT ACTUAL_SNAPSHOT\n'
     + 'See scripts/data-api-grants/README.md before updating expected-summary.json.')
+}
+
+function databaseContainerExists(container, run) {
+  try {
+    run('docker', ['container', 'inspect', container])
+    return true
+  } catch { return false }
+}
+
+export function stopProofDatabase(state, run) {
+  if (!state.startAttempted) return
+  if (!state.started && !databaseContainerExists(state.container, run)) return
+  run('supabase', ['stop', '--project-id', state.project, '--no-backup', '--workdir', state.scratch])
 }
