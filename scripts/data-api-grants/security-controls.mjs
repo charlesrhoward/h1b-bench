@@ -10,6 +10,10 @@ export function verifySecurityControls(baseline, contract, fixture) {
   assertSecurityPosture(baseline, contract)
   const table = baseline.objects.find((row) => ['r', 'p'].includes(row.kind))
   const view = baseline.views[0]
+  assert.ok(table, 'Expected at least one table to test RLS')
+  assert.ok(view, 'Expected at least one ordinary view to test security_invoker')
+  assert.ok(baseline.policies.some((row) => row.command === 'SELECT'),
+    'Expected at least one SELECT policy to test policy-expression capture')
   const disabled = fixture('rls-disabled', `alter table ${relation(table)} disable row level security;`)
   assert.throws(() => assertSecurityPosture(disabled, contract), /RLS must be enabled/)
   const inserted = fixture('public-insert-policy', `create policy grants_proof_public_insert

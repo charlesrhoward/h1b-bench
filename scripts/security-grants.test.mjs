@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { mkdtemp, readFile, realpath, rm, stat, symlink } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, realpath, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test } from 'node:test'
 import { assertSecurityPosture } from './data-api-grants/security-posture.mjs'
+import { verifySecurityControls } from './data-api-grants/security-controls.mjs'
 import { assertSnapshotContract, proofDirectory, writeProofSnapshot } from './data-api-grants/proof-support.mjs'
 import { compareSnapshots, summarize } from './data-api-grants/metadata.mjs'
 
@@ -129,4 +130,43 @@ test('snapshot output rejects worktrees, other Git repositories and symlink alia
     assert.deepEqual(JSON.parse(await readFile(path, 'utf8')), snapshot())
     assert.equal(proofDirectory(undefined, directory), await realpath(directory))
   } finally { await rm(directory, { recursive: true, force: true }) }
+})
+
+test('snapshot output fails closed on Git ownership and configuration errors', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'proof-git-error-'))
+  const bin = join(directory, 'bin')
+  const previous = process.env.PATH
+  try {
+    await mkdir(bin)
+    for (const message of ['detected dubious ownership in repository', 'bad config line 1']) {
+      await writeFile(join(bin, 'git'), `#!/bin/sh\necho 'fatal: ${message}' >&2\nexit 128\n`, { mode: 0o700 })
+      process.env.PATH = `${bin}:${previous}`
+      try {
+        assert.throws(() => proofDirectory(join(directory, 'never-created'), directory),
+          (error) => error.status === 128 && error.stderr.includes(message))
+      } finally { process.env.PATH = previous }
+    }
+    await assert.rejects(stat(join(directory, 'never-created')), { code: 'ENOENT' })
+    for (const detail of ['or any of the parent directories): .git', 'or any parent up to mount point /mnt)']) {
+      await writeFile(join(bin, 'git'), `#!/bin/sh\necho 'fatal: not a git repository (${detail}' >&2\nexit 128\n`)
+      process.env.PATH = `${bin}:${previous}`
+      try { assert.ok(proofDirectory(join(directory, 'outside-check'), directory)) }
+      finally { process.env.PATH = previous }
+    }
+  } finally { await rm(directory, { recursive: true, force: true }) }
+})
+
+test('database controls diagnose missing prerequisites before running mutations', () => {
+  for (const target of ['table', 'view', 'SELECT policy']) {
+    const actual = snapshot()
+    if (target === 'table') actual.objects = actual.objects.filter((row) => row.kind !== 'r')
+    if (target === 'view') {
+      actual.objects = actual.objects.filter((row) => row.kind !== 'v')
+      actual.views = []
+    }
+    if (target === 'SELECT policy') actual.policies = []
+    const description = target === 'view' ? 'ordinary view' : target
+    assert.throws(() => verifySecurityControls(actual, contract, () => assert.fail('Must not mutate')),
+      (error) => error.message.includes(`Expected at least one ${description}`))
+  }
 })

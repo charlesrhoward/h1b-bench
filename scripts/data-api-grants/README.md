@@ -69,6 +69,13 @@ files with explicit grants. Register additional schema files in the configuratio
 Its tested `migrations` adapter is retained for repositories that use a migration
 history; H1B's only configured adapter is `schema`.
 
+Every new table, view, materialized view or sequence needs an explicit reviewed
+access decision in the schema SQL; no automatic API grants are restored. When
+regenerating the embedded baseline, update its standalone artifact together
+and review the exact tuple changes. The source guard, artifact equality check
+and database contract enforce this before merge. Do not restore blanket default
+grants: they would undo October 30's deny-by-default protection.
+
 Update the expected contract only after a review of the intended role access.
 Record the tuple diff. Do not replace expected digests merely because CI fails.
 

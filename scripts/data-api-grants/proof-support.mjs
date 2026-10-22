@@ -38,9 +38,10 @@ function privateSnapshotPath(directory) {
   ancestor = realpathSync(ancestor)
   try {
     execFileSync('git', ['-C', ancestor, 'rev-parse', '--absolute-git-dir'],
-      { stdio: ['ignore', 'pipe', 'ignore'] })
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, LC_ALL: 'C' } })
   } catch (error) {
-    if (error.status === 128) return join(ancestor, ...suffix)
+    const outside = /^fatal: not a git repository \((?:or any of the parent directories|or any parent up to mount point [^\r\n]+)\)(?:: \.git)?$/m
+    if (error.status === 128 && outside.test(error.stderr)) return join(ancestor, ...suffix)
     throw error
   }
   throw new Error('Snapshot output must be outside Git repositories, including symlink targets')
