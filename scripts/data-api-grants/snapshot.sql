@@ -15,7 +15,7 @@ with objects as (
     pg_get_userbyid(a.grantor) as grantor, a.privilege_type as privilege,
     a.is_grantable as grantable
   from objects o cross join lateral aclexplode(coalesce(o.relacl,
-    acldefault(case when o.relkind = 'S' then 'S'::"char" else 'r'::"char" end,
+    acldefault(case when o.relkind = 'S' then 's'::"char" else 'r'::"char" end,
       o.relowner))) a
 ), column_acl as (
   select o.nspname as schema, o.relname as name, col.attname as column,
@@ -39,7 +39,7 @@ with objects as (
       else has_table_privilege(r.oid, o.oid, p.privilege_type) end as allowed
   from objects o cross join api_roles r
   cross join lateral aclexplode(acldefault(
-    case when o.relkind = 'S' then 'S'::"char" else 'r'::"char" end,
+    case when o.relkind = 'S' then 's'::"char" else 'r'::"char" end,
     o.relowner)) p
 ), effective_columns as (
   select o.relname as name, col.attname as column, r.rolname as role,

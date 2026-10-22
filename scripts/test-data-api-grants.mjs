@@ -62,18 +62,17 @@ enabled = false
 }
 
 function verifySentinels() {
-  query(`begin;
-    create table public.grants_unexposed_sentinel(id bigint);
-    create sequence public.grants_unexposed_sentinel_seq;
-    do $$ declare r text; begin
-      foreach r in array array['anon','authenticated','service_role'] loop
-        if has_table_privilege(r,'public.grants_unexposed_sentinel','SELECT')
-          or has_sequence_privilege(r,'public.grants_unexposed_sentinel_seq','USAGE') then
-          raise exception 'Unexpected default access for %',r;
-        end if;
-      end loop;
-    end $$;
-    rollback;`)
+  const sql = readFileSync(join(root, 'scripts/data-api-grants/sentinels.sql'), 'utf8')
+  query(`begin; ${sql} rollback;`)
+  for (const grant of [
+    'grant insert on tables to anon',
+    'grant select on sequences to authenticated',
+  ]) {
+    assert.throws(() => query(`begin;
+      alter default privileges for role postgres in schema public ${grant};
+      ${sql} rollback;`), /Unexpected default access/,
+    `Sentinel must detect permissive defaults: ${grant}`)
+  }
 }
 
 function verifyResortSchema() {
@@ -93,6 +92,9 @@ function proof() {
   query(readFileSync(join(root, baselineFile), 'utf8'))
   const withBaseline = snapshot()
   assert.deepEqual(summarize(withBaseline), expected, 'Full rebuilt permissions must match the production contract')
+  assert.deepEqual([...new Set(withBaseline.effective_relations.filter((row) => row.kind === 'S')
+    .map((row) => row.privilege))].sort(), ['SELECT', 'UPDATE', 'USAGE'],
+  'Snapshot must check every sequence privilege')
   assert.ok(compareSnapshots(without, withBaseline).some((diff) => diff.category === 'effective_relations'),
     'Negative control must lose effective relation access')
   for (const name of config.preBaselineMigrations ?? []) query(readFileSync(join(root, config.directory, name), 'utf8'))
@@ -100,6 +102,7 @@ function proof() {
   assert.deepEqual(compareSnapshots(withBaseline, snapshot()), [], 'Reapplication must preserve every permission tuple')
   verifySentinels()
   verifyResortSchema()
+  assert.deepEqual(compareSnapshots(withBaseline, snapshot()), [], 'Fixture and sentinel checks must roll back')
 }
 
 let success = false

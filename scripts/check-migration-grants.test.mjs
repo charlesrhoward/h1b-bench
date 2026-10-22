@@ -119,3 +119,8 @@ test('comparison detects column, sequence and grant-option changes', () => {
   assert.equal(compareSnapshots(before, after).length, 3)
   assert.deepEqual(compareSnapshots(before, before), [])
 })
+test('comparison detects default privilege changes', () => {
+  const before = { defaults: [{ creator: 'postgres', privilege: 'INSERT', grantee: 'anon' }] }
+  assert.equal(compareSnapshots(before, {}).length, 1)
+  assert.deepEqual(compareSnapshots(before, before), [])
+})

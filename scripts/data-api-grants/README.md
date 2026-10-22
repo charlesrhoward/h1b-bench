@@ -18,7 +18,9 @@ project. Cleanup stops only that unique project.
 The check rebuilds the schema with the October 30 defaults. Without the generated
 grants block, the same objects lose expected access. The standalone artifact
 then restores the complete production permission contract. Reapplication must
-change no tuples. New ungranted sentinel objects must remain private.
+change no tuples. New ungranted sentinel objects must remain private for every
+table and sequence privilege. INSERT-only and sequence SELECT-only default
+grants must fail the sentinel assertion in rolled-back negative controls.
 
 The contract includes 33 tables, 2 ordinary views, 2 materialized views and
 2 sequences. It covers direct and effective permissions, explicit column ACLs,
@@ -32,6 +34,8 @@ Capture production metadata with `snapshot.sql`. Use `inspect.mjs summary`,
 `inspect.mjs grants` and `inspect.mjs compare` to inspect it. Store raw snapshots
 outside Git. Refresh the project identity through the live project list first.
 The generator stops on inherited access or non-owner grantors.
+The before/after comparison includes default privileges. The rebuild contract
+omits defaults because the October 30 simulation intentionally changes them.
 
 The source guard checks `etl/schema.sql` directly. It also rejects inline
 relation-creation SQL in Python loaders. Put runtime schema DDL in checked SQL

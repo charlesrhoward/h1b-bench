@@ -30,7 +30,9 @@ export function summarize(snapshot) {
 }
 
 export function compareSnapshots(before, after) {
-  return categories.flatMap((category) => {
+  // Defaults intentionally differ in the October 30 rebuild simulation, but
+  // production before/after comparisons must still detect changes to them.
+  return [...categories, 'defaults'].flatMap((category) => {
     const left = new Set((before[category] ?? []).map(canonical))
     const right = new Set((after[category] ?? []).map(canonical))
     return [
