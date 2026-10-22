@@ -1,0 +1,8 @@
+{
+  "mode": "schema",
+  "schemaFiles": [
+    "etl/schema.sql"
+  ],
+  "runtimeDirectory": "etl",
+  "baselineFile": "etl/grants/20261022181311_explicit_data_api_grants.sql"
+}

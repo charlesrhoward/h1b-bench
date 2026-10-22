@@ -33,14 +33,16 @@ processed data live in `data/` and are gitignored — never commit them.
 
 ## Preflight
 
-The same checks run locally and in CI (`.github/workflows/ci.yml`). The `CI` workflow runs `lint`,
-`typecheck`, `etl`, and `build` as parallel jobs. The `preflight` job passes only when all
-four pass; it is the required check on `main`, so a PR that fails any of them cannot merge.
+The same application checks run locally and in CI (`.github/workflows/ci.yml`).
+CI also runs the database permission contract. The `preflight` job passes only
+when `lint`, `typecheck`, `etl`, `build`, and `data-api-grants` all pass; it is the
+required check on `main`, so a PR that fails any of them cannot merge.
 
 | Check              | Command (from `web/`)     | Runs on                    |
 |--------------------|---------------------------|----------------------------|
 | Lint               | `pnpm lint`               | pre-commit + pre-push + CI |
 | Location display   | `pnpm check:location`     | pre-push + CI              |
+| SQL access decisions | `pnpm security:migration-grants` + `pnpm test:migration-grants` | pre-push + CI |
 | Typecheck          | `pnpm typecheck`          | pre-commit + pre-push + CI |
 | Build              | `pnpm build`              | pre-push + CI              |
 | ETL (`etl/`, ruff) | `../scripts/check-etl.sh` | pre-push + CI              |
@@ -52,6 +54,11 @@ cannot make it pass, so a push that would fail CI fails on your machine first. I
 20 seconds. Run it by hand with `pnpm preflight:clean`. `pnpm typecheck` runs `next typegen` before `tsc`, so it never
 depends on types that a local `next dev` left behind (`next-env.d.ts`, `.next/types`). `scripts/check-etl.sh` uses `./venv/bin/ruff` when it is
 ruff 0.16.10, otherwise `uvx ruff@0.16.10` or `pipx run ruff==0.16.10`.
+
+CI also runs the Data API permission contract in a disposable Supabase database.
+The required `preflight` check includes that job. Run it locally with
+`cd web && pnpm test:data-api-grants`; Docker and Supabase CLI are required.
+See `scripts/data-api-grants/README.md` for the contract and production procedure.
 
 Lint rules live in `web/eslint.shared-rules.mjs`. Every rule is an error, and warnings
 also fail (`--max-warnings 0`). The main limits:
